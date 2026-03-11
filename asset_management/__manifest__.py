@@ -8,7 +8,7 @@
     'category': 'Operations',
     'author': 'WebbyCrown Solutions',
     'website': 'https://www.webbycrown.com',
-    'depends': ['base', 'product', 'hr', 'account', 'l10n_ae'],
+    'depends': ['base', 'product', 'hr', 'account'],
     'data': [
         'security/security.xml',
         'security/ir.model.access.csv',

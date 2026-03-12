@@ -1,3 +1,4 @@
+from odoo.exceptions import UserError
 import io
 import base64
 from odoo import models, fields

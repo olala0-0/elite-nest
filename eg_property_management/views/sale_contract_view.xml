@@ -1,0 +1,164 @@
+<odoo>
+    <data>
+        <record id="sale_contract_list_view" model="ir.ui.view">
+            <field name="name">sale.contract.list</field>
+            <field name="model">sale.contract</field>
+            <field name="arch" type="xml">
+                <list>
+                    <field name="name"/>
+                    <field name="property_id"/>
+                    <field name="property_type"/>
+                    <field name="tenant_id" string="Customer"/>
+                    <field name="landlord_id"/>
+                    <field name="total_area"/>
+                    <field name="sell_amount"/>
+                    <field name="total_amount"/>
+                    <field name="activity_ids" widget="list_activity"/>
+                    <field name="state" widget="badge"/>
+                </list>
+            </field>
+        </record>
+
+        <record id="sale_contract_form_view" model="ir.ui.view">
+            <field name="name">sale.contract.form</field>
+            <field name="model">sale.contract</field>
+            <field name="arch" type="xml">
+                <form string="Sale Contract">
+                    <header>
+                        <button name="action_state_draft" type="object" string="Reset to Draft"
+                                class="btn-secondary" invisible="state in ['draft']"/>
+                        <button name="action_state_booked" type="object" string="Booked"
+                                class="btn-primary" invisible="state in ['booked','sold','refund']"/>
+                        <button name="action_state_sold" type="object" string="Sold"
+                                class="btn-success" invisible="state in ['draft','sold','refund']"/>
+                        <button name="action_state_refund" type="object" string="Refund"
+                                class="btn-danger" invisible="state in ['draft','sold','refund']"/>
+                        <button name="action_create_broker_bill" string="Create Broker Bill" type="object"
+                                class="btn-primary"
+                                invisible="not broker_id or not broker_commission or state != 'booked' or has_broker_bill == True"/>
+                        <field name="state" widget="statusbar" statusbar_visible="draft,booked,sold"/>
+                    </header>
+                    <sheet>
+                        <div class="oe_button_box" name="button_box">
+                            <button type="object" class="oe_stat_button" icon="fa-files-o"
+                                    name="action_view_invoices" string="Invoices">
+                            </button>
+                            <button type="object" class="oe_stat_button" icon="fa-list-alt"
+                                    name="action_view_broker_bills" string="Brokers">
+                            </button>
+                        </div>
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                        <group string="General Information">
+                            <field name="create_date" required="1"/>
+                            <field name="company_id" required="1"/>
+                            <field name="sale_contract"/>
+                        </group>
+
+                        <group string="Property Details">
+                            <group>
+                                <field name="property_id" required="1" domain="[('property_for','=','sale')]"/>
+                                <div class="o_address_format">
+                                    <field name="street" placeholder="Street..." class="o_address_street"/>
+                                    <field name="street2" placeholder="Street 2..." class="o_address_street"/>
+                                    <field name="city" placeholder="City" class="o_address_city"/>
+
+                                    <field name="state_id" class="o_address_state" placeholder="State"
+                                           options="{'no_open': True, 'no_quick_create': True}"
+                                           context="{'country_id': country_id, 'default_country_id': country_id, 'zip': zip}"
+                                           can_create="True" can_write="True"/>
+
+                                    <field name="zip" placeholder="ZIP" class="o_address_zip"/>
+
+                                    <field name="country_id" placeholder="Country" class="o_address_country"
+                                           options="{'no_open': True, 'no_create': True}" can_create="True"
+                                           can_write="True"/>
+                                </div>
+                            </group>
+                            <group>
+                                <field name="property_type" widget="radio" options="{'horizontal': true}"
+                                       default='land' required="1"/>
+                                <field name="residential_type_id" required="1"/>
+                            </group>
+                        </group>
+                        <group string="Financial Information">
+                            <field name="total_area"/>
+                            <field name="sell_amount"/>
+                            <field name="total_amount"/>
+                            <!--                            <field name="price"/>-->
+                        </group>
+                        <group string="CRM">
+                            <field name="lead_id" domain="[('property_id', '=', property_id)]"
+                                   options="{'no_open': True, 'no_quick_create': True}"/>
+                        </group>
+
+                        <group>
+                            <group string="Tenant Information">
+                                <field name="tenant_id" required="1"/>
+                                <field name="tenant_phone"/>
+                                <field name="tenant_email"/>
+                            </group>
+
+                            <group string="Landlord Information">
+                                <field name="landlord_id" required="1"/>
+                                <field name="landlord_phone"/>
+                                <field name="landlord_email"/>
+                            </group>
+
+                            <group string="Sales Representative">
+                                <field name="user_id" required="1"/>
+                                <field name="phone"/>
+                                <field name="email"/>
+                            </group>
+
+                            <group string="Broker Information">
+                                <field name="broker_id"/>
+                                <field name="broker_phone"/>
+                                <field name="broker_email"/>
+                                <field name="broker_commission"/>
+                            </group>
+                        </group>
+                    </sheet>
+                    <chatter/>
+                </form>
+            </field>
+        </record>
+        <record id="view_sale_contract_search" model="ir.ui.view">
+            <field name="name">sale.contract.search</field>
+            <field name="model">sale.contract</field>
+            <field name="arch" type="xml">
+                <search>
+                    <field name="name" string="Contract Number"/>
+                    <field name="tenant_id" string="Customer"/>
+                    <field name="landlord_id" string="Landlord"/>
+                    <field name="property_id" string="Property"/>
+                    <field name="state" string="State"/>
+                    <field name="property_type" string="Property Type"/>
+                    <field name="residential_type_id" string="Residential Type"/>
+                    <filter string="Draft Contracts" name="filter_draft" domain="[('state', '=', 'draft')]"/>
+                    <filter string="Booked Contracts" name="filter_booked" domain="[('state', '=', 'booked')]"/>
+                    <filter string="Sold Contracts" name="filter_sold" domain="[('state', '=', 'sold')]"/>
+                    <filter string="Refunded Contracts" name="filter_refund" domain="[('state', '=', 'refund')]"/>
+                    <filter string="Sale Contracts by Property" name="group_by_property"
+                            context="{'group_by':'property_id'}"/>
+                    <filter string="Sale Contracts by Customer" name="group_by_customer"
+                            context="{'group_by':'tenant_id'}"/>
+                    <filter string="Sale Contracts by Landlord" name="group_by_landlord"
+                            context="{'group_by':'landlord_id'}"/>
+                    <separator/>
+                    <filter string="Company" name="group_by_company" context="{'group_by':'company_id'}"/>
+                    <filter string="Sale Type" name="group_by_sale_type" context="{'group_by':'property_type'}"/>
+                </search>
+            </field>
+        </record>
+
+        <record id="action_sale_contract" model="ir.actions.act_window">
+            <field name="name">Sale Contracts</field>
+            <field name="res_model">sale.contract</field>
+            <field name="view_mode">list,form,activity</field>
+        </record>
+        <menuitem id="property_sale_contract_menu" name="Sale Contracts" parent="property_management_menu" sequence="60"
+                  action="action_sale_contract"/>
+    </data>
+</odoo>

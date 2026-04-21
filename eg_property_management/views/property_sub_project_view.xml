@@ -1,0 +1,347 @@
+<odoo>
+    <record id="property_sub_project_list_view" model="ir.ui.view">
+        <field name="name">property.sub.project.list</field>
+        <field name="model">property.sub.project</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="code" string="Code"/>
+                <field name="name" string="Name"/>
+                <field name="property_type" string="Type"/>
+                <field name="residential_type_id" string="SubType"/>
+                <field name="property_for"/>
+                <field name="state_id" string="Region"/>
+                <field name="company_id"/>
+                <field name="state" widget="badge"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="property_sub_project_form_view" model="ir.ui.view">
+        <field name="name">property.sub.project.form</field>
+        <field name="model">property.sub.project</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,available"/>
+                    <button name="action_set_draft" string="Reset to Draft" type="object" class="btn-secondary"
+                            invisible="state in ['draft','close']"/>
+                    <button name="action_set_available" string="Available" type="object" class="btn-primary"
+                            invisible="state in ['available','close']"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button type="object" class="oe_stat_button" name="action_open_documents"
+                                icon="fa-file-text-o">
+                            <field name="document_count" widget="statinfo" string="Documents"/>
+                        </button>
+
+                        <button type="object" class="oe_stat_button" name="action_open_property_detail"
+                                icon="fa-building">
+                            <field name="property_detail_count" widget="statinfo" string="Property"/>
+                        </button>
+                    </div>
+                    <field name="image_1920" widget="image" class="oe_avatar"/>
+                    <h1>
+                        <field name="name" placeholder="Project Name"/>
+                    </h1>
+                    <field name="code" placeholder="Code" readonly="1"/>
+                    <br/>
+                    <group string="Project Details">
+                        <field name="project_id" required="1"/>
+                    </group>
+                    <group string="Sub Project Details">
+                        <field name="property_type" widget="radio" options="{'horizontal': true}" required="1"/>
+                        <field name="residential_type_id" required="1"/>
+                        <field name="property_for" widget="radio" options="{'horizontal': true}" required="1"/>
+                        <field name="landlord_id" required="1"/>
+                        <field name="company_id" required="1"/>
+                    </group>
+                    <group>
+                        <group string="Address Details">
+                            <div class="o_address_format">
+                                <field name="street" placeholder="Street..." class="o_address_street"/>
+                                <field name="street2" placeholder="Street 2..." class="o_address_street"/>
+                                <field name="city" placeholder="City" class="o_address_city"/>
+
+                                <field name="state_id" class="o_address_state" placeholder="State" can_write="True"
+                                       options="{'no_open': True, 'no_quick_create': True}" can_create="True"
+                                       context="{'country_id': country_id, 'default_country_id': country_id, 'zip': zip}"/>
+                                <field name="zip" placeholder="ZIP" class="o_address_zip"/>
+                                <field name="country_id" placeholder="Country" can_create="True" can_write="True"
+                                       options="{'no_open': True, 'no_create': True}" class="o_address_country"/>
+                            </div>
+                        </group>
+                        <group string="Additional Details">
+                            <field name="construction_year" required="1"/>
+                            <field name="date_of_project" required="1"/>
+                            <field name="brochure" widget="url" placeholder="https://example.com/brochure.pdf"/>
+                            <field name="website" widget="url" placeholder="https://example.com"/>
+                        </group>
+                    </group>
+                    <hr style="border: 1px solid #000;"/>
+                    <group>
+                        <group>
+                            <field name="latitude"/>
+                        </group>
+                        <group>
+                            <field name="longitude"/>
+                        </group>
+                    </group>
+                    <hr style="border: 1px solid #000;"/>
+                    <separator string="Availability"/>
+                    <group class="o_row">
+                        <field name="is_description"/>
+                        <field name="has_images"/>
+                        <field name="has_amenities"/>
+                        <field name="has_specifications"/>
+                        <field name="has_nearby_connectivities"/>
+                    </group>
+                    <notebook>
+                        <page string="Basic Details">
+                            <group>
+                                <field name="valuation_of" widget="radio" options="{'horizontal': true}"/>
+                                <field name="currency_id" invisible="1"/>
+                            </group>
+                            <group string="Area of Project">
+                                <field name="total_subprojects"/>
+                                <field name="total_property_area"/>
+                                <field name="available_area"/>
+                            </group>
+                            <group string="Valuation of Project">
+                                <field name="total_value"/>
+                                <field name="total_maintenance"/>
+                                <field name="total_collection"/>
+                                <field name="scope_collection"/>
+                            </group>
+                        </page>
+                        <page string="Description" invisible="is_description == False">
+                            <field name="description" placeholder="Description..."/>
+                        </page>
+                        <page string="Images" name="property_images" invisible="has_images == False">
+                            <field name="image_ids" mode="kanban" context="{'default_property_id': id}">
+                                <kanban default_group_by="">
+                                    <field name="name"/>
+                                    <field name="image"/>
+                                    <field name="file_size"/>
+                                    <templates>
+                                        <t t-name="card">
+                                            <div class="o_kanban_record p-2 w-100 oe_kanban_global_click"
+                                                 style="border:1px solid #ddd; border-radius:10px; background:#fff;">
+                                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                                    <span class="fw-bold">
+                                                        <field name="name"/>
+                                                    </span>
+                                                    <span class="badge bg-success">
+                                                        <field name="file_size"/>
+                                                    </span>
+                                                </div>
+                                                <div class="text-center">
+                                                    <field name="image" widget="image" options="{'size':[250,180]}"
+                                                           class="rounded shadow-sm"/>
+                                                </div>
+                                            </div>
+                                        </t>
+                                    </templates>
+                                </kanban>
+                                <form string="Add Image">
+                                    <sheet>
+                                        <group>
+                                            <field name="name" required="1"/>
+                                            <field name="image" widget="image" required="1"/>
+                                        </group>
+                                    </sheet>
+                                </form>
+                            </field>
+                        </page>
+                        <page string="Amenities" name="property_amenities" invisible="has_amenities == False">
+                            <field name="amenity_ids" mode="kanban" context="{'default_property_id': id}">
+                                <kanban>
+                                    <field name="name"/>
+                                    <field name="icon"/>
+                                    <templates>
+                                        <t t-name="card">
+                                            <div class="o_kanban_record text-center oe_kanban_global_click">
+                                                <field name="icon" widget="image" class="o_kanban_image"/>
+                                                <div>
+                                                    <field name="name"/>
+                                                </div>
+                                            </div>
+                                        </t>
+                                    </templates>
+                                </kanban>
+                                <form string="Add Amenity">
+                                    <sheet>
+                                        <group>
+                                            <field name="name" required="1"/>
+                                            <field name="icon" widget="image" required="1"/>
+                                        </group>
+                                    </sheet>
+                                </form>
+                            </field>
+                        </page>
+                        <page string="Specifications" name="property_specifications"
+                              invisible="has_specifications == False">
+                            <field name="specification_ids" mode="kanban" context="{'default_property_id': id}">
+                                <kanban sample="1" class="o_kanban_view">
+                                    <field name="name"/>
+                                    <field name="description"/>
+                                    <field name="image"/>
+                                    <field name="is_premium"/>
+
+                                    <templates>
+                                        <t t-name="card" class="o_kanban_record oe_kanban_global_click">
+
+                                            <widget name="web_ribbon" title="Premium"
+                                                    bg_color="bg-warning text-dark"
+                                                    invisible="not is_premium"/>
+                                            <div class="d-flex align-items-center gap-3 p-3"
+                                                 style="border:1px solid #e0e0e0; border-radius:12px; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+
+                                                <div style="flex:0 0 80px; text-align:center;">
+                                                    <field name="image" widget="image"
+                                                           options="{'size':[80,80]}"
+                                                           class="rounded"/>
+                                                </div>
+
+                                                <div style="flex:1;">
+                                                    <div class="fw-bold" style="font-size:15px; margin-bottom:4px;">
+                                                        <field name="name"/>
+                                                    </div>
+                                                    <div style="color:#666; font-size:13px; line-height:1.4; white-space:normal;">
+                                                        <field name="description"/>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </t>
+                                    </templates>
+                                </kanban>
+
+                                <form string="Add Specification">
+                                    <sheet>
+                                        <group>
+                                            <field name="name" required="1"/>
+                                            <field name="description" required="1"/>
+                                            <field name="image" widget="image" required="1"/>
+                                            <field name="is_premium"/>
+                                        </group>
+                                    </sheet>
+                                </form>
+                            </field>
+                        </page>
+                        <page string="Nearby Connectivities" name="property_nearby_connectivities"
+                              invisible="has_nearby_connectivities == False">
+                            <field name="connectivity_ids" mode="kanban" context="{'default_property_id': id}">
+                                <kanban>
+                                    <field name="name"/>
+                                    <field name="icon"/>
+                                    <field name="distance"/>
+                                    <templates>
+                                        <t t-name="card">
+                                            <div class="o_kanban_record text-center p-3 w-100 oe_kanban_global_click"
+                                                 style="border:1px solid #ddd; border-radius:12px; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+
+                                                <div class="mb-2">
+                                                    <field name="icon" widget="image" options="{'size':[60,60]}"
+                                                           class="rounded"/>
+                                                </div>
+
+                                                <div class="fw-bold text-primary" style="font-size:14px;">
+                                                    <field name="name"/>
+                                                </div>
+                                                <div class="fw-bold text-primary" style="font-size:14px;">
+                                                    <field name="description"/>
+                                                </div>
+                                                <div class="text-success fw-bold mt-1">
+                                                    <field name="distance"/>
+                                                    KM
+                                                </div>
+                                            </div>
+                                        </t>
+                                    </templates>
+                                </kanban>
+                                <form string="Add Connectivity">
+                                    <sheet>
+                                        <group>
+                                            <field name="name" required="1"/>
+                                            <field name="description" required="1"/>
+                                            <field name="icon" widget="image" required="1"/>
+                                            <field name="distance" required="1"/>
+                                        </group>
+                                    </sheet>
+                                </form>
+                            </field>
+                        </page>
+                        <page string="Other Detail" name="project_other_detail">
+                            <group>
+                                <group>
+                                    <field name="project_manager_id" widget="many2one_avatar_user"/>
+                                    <field name="priority" widget="priority"/>
+                                    <field name="internal_ref"/>
+                                    <field name="origin"/>
+                                </group>
+                                <group>
+                                    <field name="tag_ids" widget="many2many_tags"/>
+                                </group>
+                            </group>
+                            <group>
+                                <field name="notes" placeholder="Add notes here..."/>
+                            </group>
+                        </page>
+
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="property_sub_project_search_view" model="ir.ui.view">
+        <field name="name">property.sub.project.search</field>
+        <field name="model">property.sub.project</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name" string="Property Name"/>
+                <field name="landlord_id" string="Landlord"/>
+                <field name="city" string="City"/>
+                <field name="tag_ids" string="Tags"/>
+                <field name="country_id" string="Country"/>
+                <field name="residential_type_id" string="Residential Type"/>
+                <field name="company_id" string="Company"/>
+                <filter string="For Sale" name="for_sale" domain="[('property_for','=','sale')]"/>
+                <filter string="For Rent" name="for_rent" domain="[('property_for','=','rent')]"/>
+                <filter string="Available" name="available" domain="[('state','=','available')]"/>
+                <filter string="On Rent" name="on_rent" domain="[('state','=','on_rent')]"/>
+                <group>
+                    <filter string="Project" name="group_project"
+                            context="{'group_by':'project_id'}"/>
+                    <separator/>
+                    <filter string="Property Type" name="group_property_type"
+                            context="{'group_by':'property_type'}"/>
+                    <filter string="Property For" name="group_property_for" context="{'group_by':'property_for'}"/>
+                    <filter string="Residential Type" name="group_residential_type"
+                            context="{'group_by':'residential_type_id'}"/>
+                    <separator/>
+                    <filter string="Landlord" name="group_landlord_id" context="{'group_by':'landlord_id'}"/>
+                    <separator/>
+                    <filter string="Company" name="group_company" context="{'group_by':'company_id'}"/>
+                    <filter string="Country" name="group_country" context="{'group_by':'country_id'}"/>
+                    <filter string="State" name="group_state" context="{'group_by':'state_id'}"/>
+                    <filter string="City" name="group_city" context="{'group_by':'city'}"/>
+                    <separator/>
+                    <filter string="Tags" name="group_tags" context="{'group_by':'tag_ids'}"/>
+                    <separator/>
+                    <filter string="Status" name="group_status" context="{'group_by':'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_property_sub_project" model="ir.actions.act_window">
+        <field name="name">Sub Projects</field>
+        <field name="res_model">property.sub.project</field>
+        <field name="view_mode">list,form,activity</field>
+    </record>
+
+    <menuitem id="property_sub_project_submenu" name="Sub Projects" parent="property_projects_menu" sequence="20"
+              action="action_property_sub_project"/>
+</odoo>

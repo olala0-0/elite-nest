@@ -7,12 +7,14 @@
                 <list>
                     <field name="name"/>
                     <field name="property_id"/>
-                    <field name="type" required="1"/>
+                    <field name="residential_type_id" string="Residential Type"/>
                     <field name="tenant_id"/>
                     <field name="landlord_id"/>
                     <field name="total_area"/>
                     <field name="rent"/>
                     <field name="duration"/>
+                    <field name="contract_days"/>
+                    <field name="remaining_days"/>
                     <field name="start_date"/>
                     <field name="end_date"/>
                     <field name="currency_id"/>
@@ -65,11 +67,14 @@
                                 <field name="end_date" required="1" readonly="state == 'running'"/>
                                 <field name="rent" required="1" readonly="state == 'running'"/>
                                 <field name="deposit" required="1" readonly="state == 'running'"/>
-                                <field name="invoice_start_date" required="1" readonly="state == 'running'"/>
+                                <field name="invoice_start_date" required="1"/>
                             </group>
                             <group>
                                 <field name="duration"/>
-                                <field name="payment_term" required="1" readonly="state == 'running'"/>
+                                <field name="contract_days"/>
+                                <field name="remaining_days"/>
+                                <field name="payment_term_id" required="1" readonly="state == 'running'"/>
+                                <field name="payment_count" readonly="1"/>
                                 <field name="contract_type" required="1" readonly="state == 'running'"/>
                             </group>
                         </group>
@@ -86,7 +91,7 @@
                         <group string="Property Information">
                             <group>
                                 <field name="property_id" required="1" domain="[('property_for','=','rent')]"/>
-                                <field name="type" required="1"/>
+                                <field name="residential_type_id" string="Residential Type" readonly="1"/>
                                 <label for="street" string="Address"/>
                                 <div class="o_address_format">
                                     <field name="street" placeholder="Street..." class="o_address_street"/>
@@ -124,11 +129,6 @@
                             <field name="charge_type" readonly="state == 'running'"/>
                             <field name="total_maintenance"/>
                         </group>
-                        <group string="Installment / Deposit">
-                            <field name="installment_item_id" readonly="state == 'running'"/>
-                            <field name="deposit_item_id" readonly="state == 'running'"/>
-                        </group>
-
                         <group string="Taxes">
                             <field name="tax_rate" readonly="state == 'running'"/>
                             <field name="taxable_amount" readonly="1"/>
@@ -142,7 +142,7 @@
                                 <field name="email"/>
                             </group>
                             <group>
-                                <field name="broker_id" required="1" readonly="state == 'running'"/>
+                                <field name="broker_id" readonly="state == 'running'"/>
                                 <field name="broker_phone"/>
                                 <field name="broker_email"/>
                                 <field name="broker_commission" readonly="state == 'running'"/>
@@ -156,7 +156,6 @@
                             <field name="penalty_type" readonly="state == 'running'"/>
                             <field name="penalty_value" readonly="state == 'running'"/>
                             <field name="penalty_grace_days" readonly="state == 'running'"/>
-                            <field name="penalty_product_id" readonly="state == 'running'"/>
                         </group>
 
                         <notebook>
@@ -336,7 +335,7 @@
             <field name="arch" type="xml">
                 <pivot string="Contracts Analysis">
                     <field name="name" type="row"/>
-                    <field name="payment_term" type="col"/>
+                    <field name="payment_term_id" type="col"/>
                     <field name="rent" type="measure"/>
                     <field name="deposit" type="measure"/>
                 </pivot>
@@ -368,7 +367,7 @@
                         <filter string="Property Type" name="group_property_type"
                                 context="{'group_by':'property_type'}"/>
                         <filter string="Residential Type" name="group_residential_type"
-                                context="{'group_by':'residential_type'}"/>
+                                context="{'group_by':'residential_type_id'}"/>
                         <separator/>
                         <filter string="Tenant" name="group_by_tenant" context="{'group_by':'tenant_id'}"/>
                         <filter string="Landlord" name="group_by_landlord" context="{'group_by':'landlord_id'}"/>

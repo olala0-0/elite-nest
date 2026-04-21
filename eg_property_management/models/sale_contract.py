@@ -21,7 +21,14 @@ class SaleContract(models.Model):
     property_type = fields.Selection([("land", "Land"), ("residential", "Residential"), ("commercial", "Commercial"),
                                       ("industrial", "Industrial")], string="Property Type", default='land')
 
-    residential_type = fields.Char(string="Residential Type")
+    residential_type_id = fields.Many2one(
+        comodel_name="property.residential.type",
+        string="Residential Type",
+        related="property_id.residential_type_id",
+        store=True,
+        readonly=True,
+    )
+    residential_type = fields.Char(related="residential_type_id.name", string="Residential Type Text", store=True)
     property_for = fields.Selection([("sale", "Sale"), ("rent", "Rent")], string="Property For", default='sale')
 
     street = fields.Char(string="Street")
@@ -98,6 +105,7 @@ class SaleContract(models.Model):
                 'move_type': 'out_invoice',
                 'partner_id': rec.tenant_id.id,
                 'invoice_date': fields.Date.today(),
+                'invoice_date_due': fields.Date.today(),
                 'currency_id': rec.currency_id.id,
                 'property_id': rec.property_id.id,
                 'invoice_origin': rec.name,
@@ -120,9 +128,8 @@ class SaleContract(models.Model):
     @api.onchange('property_id')
     def _onchange_property_id(self):
         for rec in self:
-            if self.property_id:
+            if rec.property_id:
                 rec.property_type = rec.property_id.property_type or ''
-                rec.residential_type = rec.property_id.residential_type or ''
                 rec.property_for = rec.property_id.property_for or ''
 
                 rec.street = rec.property_id.street or ''
@@ -172,6 +179,7 @@ class SaleContract(models.Model):
             'partner_id': self.broker_id.id,
             'invoice_origin': self.name,
             'invoice_date': fields.Date.today(),
+            'invoice_date_due': fields.Date.today(),
             'currency_id': self.currency_id.id,
             'property_id': self.property_id.id,
             'sale_contract_id': self.id,

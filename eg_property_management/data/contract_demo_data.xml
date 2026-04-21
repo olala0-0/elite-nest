@@ -1,26 +1,16 @@
 <odoo>
-    <!--Property Product-->
-    <record id="product_product_installment_1" model="product.product">
-        <field name="name">Installment Property Payment</field>
-    </record>
-    <record id="product_product_deposit_2" model="product.product">
-        <field name="name">Property Deposit</field>
-    </record>
-    <record id="product_product_penalty_3" model="product.product">
-        <field name="name">Penalty</field>
-    </record>
-
     <!--    Property Rent Contract-->
     <record id="rent_contract_1" model="rent.contract">
         <field name="start_date" eval="(DateTime.today())"/>
         <field name="end_date" eval="(DateTime.today() + relativedelta(months=4))"/>
+        <field name="invoice_start_date" eval="(DateTime.today())"/>
+        <field name="payment_term_id" ref="eg_property_management.property_payment_term_monthly"/>
         <field name="rent">3500</field>
         <field name="deposit">200</field>
         <field name="total_area">700</field>
         <field name="usable_area">550</field>
         <field name="property_id" ref="eg_property_management.property_detail_1"/>
         <field name="property_type">residential</field>
-        <field name="type">Residential</field>
         <field name="street">Backbone Sunrise Residency -Backbone Residential</field>
         <field name="street2">East New York City</field>
         <field name="city">New York City</field>
@@ -48,13 +38,14 @@
     <record id="rent_contract_2" model="rent.contract">
         <field name="start_date" eval="(datetime.today() - timedelta(days=180)).date()"/>
         <field name="end_date" eval="(datetime.today() - timedelta(days=1)).date()"/>
+        <field name="invoice_start_date" eval="(datetime.today() - timedelta(days=180)).date()"/>
+        <field name="payment_term_id" ref="eg_property_management.property_payment_term_monthly"/>
         <field name="rent">5000</field>
         <field name="deposit">200</field>
         <field name="total_area">700</field>
         <field name="usable_area">550</field>
         <field name="property_id" ref="eg_property_management.property_detail_1"/>
         <field name="property_type">residential</field>
-        <field name="type">Residential</field>
         <field name="street">Backbone Sunrise Residency -Backbone Residential</field>
         <field name="street2">East New York City</field>
         <field name="city">New York City</field>
@@ -84,7 +75,6 @@
         <field name="create_date" eval="(DateTime.today())"/>
         <field name="property_id" ref="eg_property_management.property_detail_2"/>
         <field name="property_type">residential</field>
-        <field name="residential_type">Residential / Raw House</field>
         <field name="street">Backbone Sunrise Residency -Backbone Residential</field>
         <field name="street2">East New York City</field>
         <field name="city">New York City</field>

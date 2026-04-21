@@ -21,7 +21,7 @@ class RentContractFulkReport(models.TransientModel):
         total_format = workbook.add_format({'bold': True, 'bg_color': '#FFF2CC', 'border': 1, 'num_format': '#,##0.00'})
         total_label_format = workbook.add_format({'bold': True, 'bg_color': '#FFF2CC', 'border': 1})
 
-        headers = ['Reference', 'Property', 'Property Type', 'Customer', 'Landlord', 'Broker', 'Total Area',
+        headers = ['Reference', 'Property', 'Residential Type', 'Customer', 'Landlord', 'Broker', 'Total Area',
                    'Start Date', 'End Date', 'Payment Term', 'Rent', 'Security Deposit', 'Broker Commission',
                    'Total Amount', 'Paid Amount', 'Remaining Amount', 'Status']
         contract_groups_ids = {'All Contracts': self.rent_contract_ids,
@@ -43,7 +43,7 @@ class RentContractFulkReport(models.TransientModel):
             for contract in contracts_id:
                 data = [contract.name or '',
                         contract.property_id.name or '',
-                        contract.type or '',
+                        contract.residential_type_id.name or contract.type or '',
                         contract.tenant_id.name or '',
                         contract.landlord_id.name or '',
                         contract.broker_id.name or '',

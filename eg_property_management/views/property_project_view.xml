@@ -7,7 +7,7 @@
                 <field name="code" string="Code"/>
                 <field name="name" string="Name"/>
                 <field name="property_type" string="Type"/>
-                <field name="residential_type" string="SubType"/>
+                <field name="residential_type_id" string="SubType"/>
                 <field name="property_for"/>
                 <field name="state_id" string="Region"/>
                 <field name="company_id"/>
@@ -55,7 +55,7 @@
                     <field name="is_sub_project"/>
                     <group string="Project Details">
                         <field name="property_type" widget="radio" options="{'horizontal': true}" required="1"/>
-                        <field name="residential_type" required="1"/>
+                        <field name="residential_type_id" required="1"/>
                         <field name="property_for" widget="radio" options="{'horizontal': true}" required="1"/>
                         <field name="landlord_id" required="1"/>
                         <field name="company_id" required="1"/>
@@ -310,7 +310,7 @@
                 <field name="city" string="City"/>
                 <field name="tag_ids" string="Tags"/>
                 <field name="country_id" string="Country"/>
-                <field name="residential_type" string="Residential Type"/>
+                <field name="residential_type_id" string="Residential Type"/>
                 <field name="company_id" string="Company"/>
 
                 <filter string="For Sale" name="for_sale" domain="[('property_for','=','sale')]"/>
@@ -326,7 +326,7 @@
                             context="{'group_by':'property_type'}"/>
                     <filter string="Property For" name="group_property_for" context="{'group_by':'property_for'}"/>
                     <filter string="Residential Type" name="group_residential_type"
-                            context="{'group_by':'residential_type'}"/>
+                            context="{'group_by':'residential_type_id'}"/>
                     <separator/>
                     <filter string="Landlord" name="group_landlord_id" context="{'group_by':'landlord_id'}"/>
                     <separator/>

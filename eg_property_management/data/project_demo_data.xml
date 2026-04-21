@@ -58,7 +58,7 @@
         <field name="code">BA</field>
         <!--        <field name="image_1920" type="base64" file="eg_property_management/static/img/apartment.jpg"/>-->
         <field name="property_type">residential</field>
-        <field name="residential_type">Apartment</field>
+        <field name="residential_type_id" ref="eg_property_management.property_residential_type_apartment"/>
         <field name="is_sub_project">1</field>
         <field name="property_for">rent</field>
         <field name="landlord_id" ref="base.res_partner_address_13"/>
@@ -79,7 +79,7 @@
 
         <!--        <field name="image_1920" type="base64" file="eg_property_management/static/img/apartment.jpg"/>-->
         <field name="property_type">residential</field>
-        <field name="residential_type">Apartment</field>
+        <field name="residential_type_id" ref="eg_property_management.property_residential_type_apartment"/>
         <field name="property_for">rent</field>
         <field name="landlord_id" ref="base.res_partner_address_13"/>
         <field name="street">Backbone Residential</field>

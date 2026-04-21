@@ -15,7 +15,8 @@ class PropertySubProject(models.Model):
     property_type = fields.Selection(
         [("land", "Land"), ("residential", "Residential"), ("commercial", "Commercial"), ("industrial", "Industrial")],
         string="Property Type", default='land')
-    residential_type = fields.Char(string="Residential Type")
+    residential_type_id = fields.Many2one(comodel_name="property.residential.type", string="Residential Type")
+    residential_type = fields.Char(related="residential_type_id.name", string="Residential Type Text", store=True)
     property_for = fields.Selection([("sale", "Sale"), ("rent", "Rent")], string="Property For", default="sale")
 
     landlord_id = fields.Many2one("res.partner", string="Landlord")

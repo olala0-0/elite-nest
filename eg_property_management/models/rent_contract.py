@@ -1,7 +1,10 @@
-from odoo import models, fields, api
+import math
+
+from odoo import api, fields, models
 from datetime import date, timedelta
 from dateutil.relativedelta import relativedelta
-from odoo.exceptions import UserError
+from odoo.exceptions import UserError, ValidationError
+from odoo.tools import float_round
 
 
 class RentContract(models.Model):
@@ -14,14 +17,29 @@ class RentContract(models.Model):
     start_date = fields.Date(string="Start Date", default=fields.Date.today)
     end_date = fields.Date(string="End Date")
     duration = fields.Integer(string="Duration (Months)", compute="_compute_duration", store=True)
-    payment_term = fields.Selection([('monthly', 'Monthly'), ('quarterly', 'Quarterly'), ('yearly', 'Yearly')],
-                                    string="Payment Term", default='monthly')
+    contract_days = fields.Integer(string="Contract Days", compute="_compute_contract_days", store=True)
+    remaining_days = fields.Integer(string="Remaining Days", compute="_compute_remaining_days")
+    payment_term_id = fields.Many2one(
+        comodel_name="property.payment.term",
+        string="Payment Term",
+        required=True,
+        default=lambda self: self.env.ref("eg_property_management.property_payment_term_monthly", raise_if_not_found=False),
+    )
+    payment_term = fields.Char(related="payment_term_id.name", string="Payment Term Name", store=True)
+    payment_count = fields.Integer(string="Number of Payments", compute="_compute_payment_count", store=True)
 
-    contract_type = fields.Selection([('manual', 'Manual Installment'), ('auto', 'Auto Installment')], string="Type",
-                                     default="manual")
+    contract_type = fields.Selection(
+        [('manual', 'Manual Installment'), ('auto', 'Auto Installment')],
+        string="Installment Type",
+        default="manual",
+    )
     invoice_start_date = fields.Date(string="Invoice Start From", default=fields.Date.today)
 
-    rent = fields.Monetary(string="Rent", currency_field="currency_id")
+    rent = fields.Monetary(
+        string="Rent Amount",
+        currency_field="currency_id",
+        help="Total rent for the full contract period. Invoices are split by the number of payments.",
+    )
     deposit = fields.Monetary(string="Security Deposit", currency_field="currency_id")
     currency_id = fields.Many2one(comodel_name="res.currency", string="Currency",
                                   default=lambda self: self.env.company.currency_id)
@@ -33,9 +51,16 @@ class RentContract(models.Model):
     property_type = fields.Selection(
         [("land", "Land"), ("residential", "Residential"), ("commercial", "Commercial"), ("industrial", "Industrial")],
         string="Property Type", default='land')
-    residential_type = fields.Char(string="Residential Type")
+    residential_type_id = fields.Many2one(
+        comodel_name="property.residential.type",
+        string="Residential Type",
+        related="property_id.residential_type_id",
+        store=True,
+        readonly=True,
+    )
+    residential_type = fields.Char(related="residential_type_id.name", string="Residential Type Text", store=True)
 
-    type = fields.Char(string='Type')
+    type = fields.Char(related="residential_type_id.name", string="Residential Type Snapshot", store=True)
     street = fields.Char(string="Street")
     street2 = fields.Char(string="Street2")
     city = fields.Char(string="City")
@@ -130,16 +155,214 @@ class RentContract(models.Model):
         for val in vals:
             name = self.env['ir.sequence'].next_by_code('rent.contract') or 'New'
             val['name'] = name
+            if not val.get('invoice_start_date'):
+                val['invoice_start_date'] = val.get('start_date') or fields.Date.today()
         return super(RentContract, self).create(vals)
 
     @api.depends('start_date', 'end_date')
     def _compute_duration(self):
         for rec in self:
             if rec.start_date and rec.end_date:
-                days = (rec.end_date - rec.start_date).days
-                rec.duration = days // 30
+                delta = relativedelta(rec.end_date, rec.start_date)
+                total_months = (delta.years * 12) + delta.months + (delta.days / 30.0)
+                rec.duration = math.ceil(total_months) if total_months > 0 else 0
             else:
                 rec.duration = 0
+
+    @api.depends('start_date', 'end_date')
+    def _compute_contract_days(self):
+        for rec in self:
+            if rec.start_date and rec.end_date and rec.end_date >= rec.start_date:
+                rec.contract_days = (rec.end_date - rec.start_date).days + 1
+            else:
+                rec.contract_days = 0
+
+    @api.depends('end_date')
+    def _compute_remaining_days(self):
+        today = fields.Date.today()
+        for rec in self:
+            if rec.end_date and rec.end_date >= today:
+                rec.remaining_days = (rec.end_date - today).days
+            else:
+                rec.remaining_days = 0
+
+    @api.depends('start_date', 'end_date', 'invoice_start_date', 'payment_term_id.interval_number', 'payment_term_id.interval_unit')
+    def _compute_payment_count(self):
+        for rec in self:
+            rec.payment_count = 0
+            if rec.start_date and rec.end_date and rec.payment_term_id:
+                current_date = rec.invoice_start_date or rec.start_date
+                if current_date > rec.end_date:
+                    continue
+
+                delta = rec.payment_term_id._get_relativedelta()
+                count = 0
+                while current_date < rec.end_date:
+                    count += 1
+                    current_date = current_date + delta
+
+                if not count and current_date == rec.end_date:
+                    count = 1
+                rec.payment_count = count
+
+    @api.constrains('start_date', 'end_date')
+    def _check_contract_dates(self):
+        for rec in self:
+            if rec.start_date and rec.end_date and rec.end_date < rec.start_date:
+                raise ValidationError("Contract end date must be after the start date.")
+
+    @api.constrains('start_date', 'end_date', 'invoice_start_date')
+    def _check_first_invoice_date(self):
+        for rec in self:
+            if not rec.invoice_start_date or not rec.start_date or not rec.end_date:
+                continue
+            if rec.invoice_start_date < rec.start_date or rec.invoice_start_date > rec.end_date:
+                raise ValidationError("First invoice date must be between the contract start and end dates.")
+
+    @api.constrains('property_id', 'state')
+    def _check_running_contract_per_unit(self):
+        for rec in self:
+            if rec.state != 'running' or not rec.property_id:
+                continue
+            existing_contract = self.search([
+                ('id', '!=', rec.id),
+                ('property_id', '=', rec.property_id.id),
+                ('state', '=', 'running'),
+            ], limit=1)
+            if existing_contract:
+                raise UserError(
+                    f"Unit '{rec.property_id.display_name}' already has an active running contract "
+                    f"('{existing_contract.name}'). Please close, cancel, or expire it before starting a new one."
+                )
+
+    def _get_invoice_settings(self):
+        self.ensure_one()
+        param_obj = self.env['ir.config_parameter'].sudo()
+        product_obj = self.env['product.product'].sudo()
+
+        def _get_product(key, fallback=False):
+            product_id = param_obj.get_param(key)
+            if product_id and str(product_id).isdigit():
+                product = product_obj.browse(int(product_id)).exists()
+                if product:
+                    return product
+            return fallback
+
+        return {
+            'rent_product': _get_product(
+                'eg_property_management.rent_invoice_product_id',
+                self.installment_item_id,
+            ),
+            'rent_description': param_obj.get_param(
+                'eg_property_management.rent_invoice_description',
+                'Rent Installment',
+            ),
+            'deposit_product': _get_product(
+                'eg_property_management.deposit_invoice_product_id',
+                self.deposit_item_id,
+            ),
+            'deposit_description': param_obj.get_param(
+                'eg_property_management.deposit_invoice_description',
+                'Security Deposit',
+            ),
+            'maintenance_product': _get_product('eg_property_management.maintenance_invoice_product_id'),
+            'maintenance_description': param_obj.get_param(
+                'eg_property_management.maintenance_invoice_description',
+                'Maintenance Charge',
+            ),
+            'penalty_product': _get_product(
+                'eg_property_management.penalty_invoice_product_id',
+                self.penalty_product_id,
+            ),
+            'penalty_description': param_obj.get_param(
+                'eg_property_management.penalty_invoice_description',
+                'Penalty',
+            ),
+        }
+
+    def _get_next_rent_invoice_date(self):
+        self.ensure_one()
+        rent_installments = self.rent_installment_ids.filtered(lambda inst: inst.payment_type == 'rent')
+        last_installment = rent_installments.sorted('invoice_date')[-1:] if rent_installments else self.env['rent.installment']
+        next_due_date = self.invoice_start_date or self.start_date
+        if last_installment:
+            next_due_date = last_installment.invoice_date + self.payment_term_id._get_relativedelta()
+        return next_due_date, last_installment
+
+    def _get_total_contract_rent(self):
+        self.ensure_one()
+        precision = self.currency_id.rounding or 0.01
+        return float_round(self.rent or 0.0, precision_rounding=precision)
+
+    def _get_rent_schedule_dates(self):
+        self.ensure_one()
+        if not self.start_date or not self.end_date or not self.payment_term_id:
+            return []
+
+        due_dates = []
+        current_date = self.invoice_start_date or self.start_date
+        delta = self.payment_term_id._get_relativedelta()
+        while current_date and current_date < self.end_date:
+            due_dates.append(current_date)
+            current_date = current_date + delta
+
+        if not due_dates and current_date == self.end_date:
+            due_dates.append(current_date)
+        return due_dates
+
+    def _get_pending_rent_due_dates(self):
+        self.ensure_one()
+        existing_due_dates = set(
+            self.rent_installment_ids.filtered(lambda inst: inst.payment_type == 'rent').mapped('invoice_date')
+        )
+        return [due_date for due_date in self._get_rent_schedule_dates() if due_date not in existing_due_dates]
+
+    def _get_pending_rent_amount_map(self, pending_due_dates=None):
+        self.ensure_one()
+        pending_due_dates = pending_due_dates or self._get_pending_rent_due_dates()
+        if not pending_due_dates:
+            return {}
+
+        existing_rent_installments = self.rent_installment_ids.filtered(lambda inst: inst.payment_type == 'rent')
+        remaining_amount = self._get_total_contract_rent() - sum(existing_rent_installments.mapped('amount'))
+        precision = self.currency_id.rounding or 0.01
+        remaining_count = len(pending_due_dates)
+        amount_map = {}
+
+        for due_date in pending_due_dates:
+            if remaining_count == 1:
+                installment_amount = float_round(remaining_amount, precision_rounding=precision)
+            else:
+                installment_amount = float_round(remaining_amount / remaining_count, precision_rounding=precision)
+            amount_map[due_date] = installment_amount
+            remaining_amount -= installment_amount
+            remaining_count -= 1
+        return amount_map
+
+    def _get_maintenance_charge_amount(self):
+        self.ensure_one()
+        maint_amount = self.total_maintenance
+        if self.charge_type == 'area_wise':
+            maint_amount *= (self.total_area or 0.0)
+        return maint_amount
+
+    @staticmethod
+    def _prepare_invoice_line(product, description, amount, account_id):
+        return (0, 0, {
+            'product_id': product.id if product else False,
+            'name': description,
+            'quantity': 1,
+            'price_unit': amount,
+            'account_id': account_id.id,
+        })
+
+    def _get_next_rent_amount(self):
+        self.ensure_one()
+        pending_due_dates = self._get_pending_rent_due_dates()
+        if not pending_due_dates:
+            return 0.0
+        amount_map = self._get_pending_rent_amount_map(pending_due_dates)
+        return amount_map.get(pending_due_dates[0], 0.0)
 
     def action_state_draft(self):
         for rec in self:
@@ -171,175 +394,202 @@ class RentContract(models.Model):
             raise UserError("Please set a Tenant/Customer on the contract before creating an invoice.")
         if not self.start_date or not self.end_date:
             raise UserError("Please set contract Start Date and End Date.")
+        if not self.payment_term_id:
+            raise UserError("Please set a payment term on the contract.")
         income_account_id = self.env['account.account'].search([('account_type', '=', 'income')], limit=1)
         if not income_account_id:
             raise UserError("No income account found. Please configure at least one income account in Accounting.")
 
-        invoice_lines = []
-        installments = []
+        invoice_settings = self._get_invoice_settings()
+        existing_installments = self.rent_installment_ids
+        pending_due_dates = self._get_pending_rent_due_dates()
+        if not pending_due_dates:
+            raise UserError("All invoices based on the payment count have already been created for this contract.")
 
-        term_map = {'monthly': 1, 'quarterly': 3, 'yearly': 12}
-        months = term_map.get(self.payment_term, 1)
-        last_installment_id = self.env['rent.installment'].search(
-            [('rent_contract_id', '=', self.id), ('payment_type', '=', 'rent')], order="invoice_date desc", limit=1)
-        next_due_date = self.invoice_start_date or self.start_date
-        if last_installment_id:
-            next_due_date = last_installment_id.invoice_date + relativedelta(months=months)
+        due_dates_to_invoice = pending_due_dates if self.contract_type == 'auto' else pending_due_dates[:1]
+        rent_amount_map = self._get_pending_rent_amount_map(pending_due_dates)
+        first_batch_due_date = due_dates_to_invoice[0] if due_dates_to_invoice else False
+        invoice_ids = self.env['account.move']
 
-        if fields.Date.today() < next_due_date:
-            raise UserError(f"Next rent invoice can only be created on or after {next_due_date}. "
-                            f"Last invoice was generated for {last_installment_id.invoice_date if last_installment_id else 'N/A'}.")
+        for due_date in due_dates_to_invoice:
+            invoice_lines = []
+            installments = []
+            deposit_added = False
 
-        if next_due_date <= self.end_date:
-            rent_amount = self.rent * months
-            invoice_lines.append((0, 0, {
-                'product_id': self.installment_item_id.id if self.installment_item_id else False,
-                'name': f"Rent for {next_due_date}",
-                'quantity': 1,
-                'price_unit': rent_amount,
-                'account_id': income_account_id.id,
-            }))
-            installments.append({
-                'rent_contract_id': self.id,
-                'invoice_date': next_due_date,
-                'payment_type': 'rent',
-                'description': f"Rent Installment for {next_due_date}",
-                'amount': rent_amount,
+            rent_amount = rent_amount_map.get(due_date, 0.0)
+            if due_date <= self.end_date and rent_amount:
+                invoice_lines.append(
+                    self._prepare_invoice_line(
+                        invoice_settings['rent_product'],
+                        invoice_settings['rent_description'],
+                        rent_amount,
+                        income_account_id,
+                    )
+                )
+                installments.append({
+                    'rent_contract_id': self.id,
+                    'invoice_date': due_date,
+                    'payment_type': 'rent',
+                    'description': invoice_settings['rent_description'],
+                    'amount': rent_amount,
+                    'currency_id': self.currency_id.id,
+                })
+
+            if due_date == first_batch_due_date and self.deposit and self.deposit > 0 and not self.deposit_invoice_id:
+                invoice_lines.append(
+                    self._prepare_invoice_line(
+                        invoice_settings['deposit_product'],
+                        invoice_settings['deposit_description'],
+                        self.deposit,
+                        income_account_id,
+                    )
+                )
+                installments.append({
+                    'rent_contract_id': self.id,
+                    'invoice_date': self.start_date,
+                    'payment_type': 'deposit',
+                    'description': invoice_settings['deposit_description'],
+                    'amount': self.deposit,
+                    'currency_id': self.currency_id.id,
+                })
+                deposit_added = True
+
+            maint_amount = self._get_maintenance_charge_amount()
+            if maint_amount > 0:
+                if self.maintenance_type == 'once':
+                    already_exists_id = existing_installments.filtered(
+                        lambda inst: inst.payment_type == 'maintenance'
+                        and inst.description == invoice_settings['maintenance_description']
+                    )[:1]
+                    if due_date == first_batch_due_date and not already_exists_id:
+                        invoice_lines.append(
+                            self._prepare_invoice_line(
+                                invoice_settings['maintenance_product'],
+                                invoice_settings['maintenance_description'],
+                                maint_amount,
+                                income_account_id,
+                            )
+                        )
+                        installments.append({
+                            'rent_contract_id': self.id,
+                            'invoice_date': self.start_date,
+                            'payment_type': 'maintenance',
+                            'description': invoice_settings['maintenance_description'],
+                            'amount': maint_amount,
+                            'currency_id': self.currency_id.id,
+                        })
+                elif self.maintenance_type == 'recurring':
+                    already_exists_id = existing_installments.filtered(
+                        lambda inst: inst.payment_type == 'maintenance'
+                        and inst.invoice_date == due_date
+                        and inst.description == invoice_settings['maintenance_description']
+                    )[:1]
+                    if not already_exists_id:
+                        invoice_lines.append(
+                            self._prepare_invoice_line(
+                                invoice_settings['maintenance_product'],
+                                invoice_settings['maintenance_description'],
+                                maint_amount,
+                                income_account_id,
+                            )
+                        )
+                        installments.append({
+                            'rent_contract_id': self.id,
+                            'invoice_date': due_date,
+                            'payment_type': 'maintenance',
+                            'description': invoice_settings['maintenance_description'],
+                            'amount': maint_amount,
+                            'currency_id': self.currency_id.id,
+                        })
+
+            for service_id in self.utility_service_ids:
+                if service_id.service_type == 'once':
+                    utility_description = f"{service_id.service_id.name} (One-time)"
+                    already_exists_id = existing_installments.filtered(
+                        lambda inst: inst.payment_type == 'utility' and inst.description == utility_description
+                    )[:1]
+                    if due_date == first_batch_due_date and not already_exists_id:
+                        invoice_lines.append(
+                            self._prepare_invoice_line(
+                                service_id.service_id,
+                                utility_description,
+                                service_id.cost,
+                                income_account_id,
+                            )
+                        )
+                        installments.append({
+                            'rent_contract_id': self.id,
+                            'invoice_date': self.start_date,
+                            'payment_type': 'utility',
+                            'description': utility_description,
+                            'amount': service_id.cost,
+                            'currency_id': self.currency_id.id,
+                        })
+                elif service_id.service_type == 'recurring':
+                    utility_description = f"{service_id.service_id.name} for {due_date}"
+                    already_exists_id = existing_installments.filtered(
+                        lambda inst: inst.payment_type == 'utility'
+                        and inst.invoice_date == due_date
+                        and inst.description == utility_description
+                    )[:1]
+                    if not already_exists_id:
+                        invoice_lines.append(
+                            self._prepare_invoice_line(
+                                service_id.service_id,
+                                utility_description,
+                                service_id.cost,
+                                income_account_id,
+                            )
+                        )
+                        installments.append({
+                            'rent_contract_id': self.id,
+                            'invoice_date': due_date,
+                            'payment_type': 'utility',
+                            'description': utility_description,
+                            'amount': service_id.cost,
+                            'currency_id': self.currency_id.id,
+                        })
+
+            if not invoice_lines:
+                continue
+
+            invoice_id = self.env['account.move'].create({
+                'move_type': 'out_invoice',
+                'partner_id': self.tenant_id.id,
+                'invoice_origin': self.name,
+                'invoice_date': due_date,
+                'invoice_date_due': due_date,
                 'currency_id': self.currency_id.id,
+                'property_id': self.property_id.id,
+                'invoice_line_ids': invoice_lines,
             })
 
-        if self.deposit and self.deposit > 0 and not self.deposit_invoice_id:
-            invoice_lines.append((0, 0, {
-                'product_id': self.deposit_item_id.id if self.deposit_item_id else False,
-                'name': f"Security Deposit - {self.name}",
-                'quantity': 1,
-                'price_unit': self.deposit,
-                'account_id': income_account_id.id,
-            }))
-            installments.append({
-                'rent_contract_id': self.id,
-                'invoice_date': self.start_date,
-                'payment_type': 'deposit',
-                'description': f"Security Deposit - {self.name}",
-                'amount': self.deposit,
-                'currency_id': self.currency_id.id,
-            })
+            for inst in installments:
+                inst['invoice_id'] = invoice_id.id
+                self.env['rent.installment'].create(inst)
 
-        if self.total_maintenance and self.total_maintenance > 0:
-            maint_amount = self.total_maintenance
-            if self.charge_type == 'area_wise':
-                maint_amount *= (self.total_area or 0.0)
+            if deposit_added and not self.deposit_invoice_id:
+                self.deposit_invoice_id = invoice_id.id
+            invoice_ids |= invoice_id
 
-            if self.maintenance_type == 'once':
-                already_exists_id = self.env['rent.installment'].search(
-                    [('rent_contract_id', '=', self.id), ('payment_type', '=', 'maintenance'),
-                     ('description', '=', f"Maintenance Charge - {self.name}")], limit=1)
-                if not already_exists_id:
-                    invoice_lines.append((0, 0, {
-                        'name': f"Maintenance Charge - {self.name}",
-                        'quantity': 1,
-                        'price_unit': maint_amount,
-                        'account_id': income_account_id.id,
-                    }))
-                    installments.append({
-                        'rent_contract_id': self.id,
-                        'invoice_date': self.start_date,
-                        'payment_type': 'maintenance',
-                        'description': f"Maintenance Charge - {self.name}",
-                        'amount': maint_amount,
-                        'currency_id': self.currency_id.id,
-                    })
-
-            elif self.maintenance_type == 'recurring':
-                already_exists_id = self.env['rent.installment'].search(
-                    [('rent_contract_id', '=', self.id), ('payment_type', '=', 'maintenance'),
-                     ('invoice_date', '=', next_due_date)], limit=1)
-                if not already_exists_id:
-                    invoice_lines.append((0, 0, {
-                        'name': f"Maintenance for {next_due_date}",
-                        'quantity': 1,
-                        'price_unit': maint_amount,
-                        'account_id': income_account_id.id,
-                    }))
-                    installments.append({
-                        'rent_contract_id': self.id,
-                        'invoice_date': next_due_date,
-                        'payment_type': 'maintenance',
-                        'description': f"Maintenance for {next_due_date}",
-                        'amount': maint_amount,
-                        'currency_id': self.currency_id.id,
-                    })
-        for service_id in self.utility_service_ids:
-            if service_id.service_type == 'once':
-                already_exists_id = self.env['rent.installment'].search(
-                    [('rent_contract_id', '=', self.id), ('payment_type', '=', 'utility'),
-                     ('description', '=', f"{service_id.service_id.name} (One-time)")], limit=1)
-                if not already_exists_id:
-                    invoice_lines.append((0, 0, {
-                        'product_id': service_id.service_id.id if service_id.service_id else False,
-                        'name': f"{service_id.service_id.name} (One-time)",
-                        'quantity': 1,
-                        'price_unit': service_id.cost,
-                        'account_id': income_account_id.id,
-                    }))
-                    installments.append({
-                        'rent_contract_id': self.id,
-                        'invoice_date': self.start_date,
-                        'payment_type': 'utility',
-                        'description': f"{service_id.service_id.name} (One-time)",
-                        'amount': service_id.cost,
-                        'currency_id': self.currency_id.id,
-                    })
-
-            elif service_id.service_type == 'recurring':
-                already_exists_id = self.env['rent.installment'].search(
-                    [('rent_contract_id', '=', self.id), ('payment_type', '=', 'utility'),
-                     ('invoice_date', '=', next_due_date),
-                     ('description', '=', f"{service_id.service_id.name} for {next_due_date}")], limit=1)
-                if not already_exists_id:
-                    invoice_lines.append((0, 0, {
-                        'product_id': service_id.service_id.id if service_id.service_id else False,
-                        'name': f"{service_id.service_id.name} for {next_due_date}",
-                        'quantity': 1,
-                        'price_unit': service_id.cost,
-                        'account_id': income_account_id.id,
-                    }))
-                    installments.append({
-                        'rent_contract_id': self.id,
-                        'invoice_date': next_due_date,
-                        'payment_type': 'utility',
-                        'description': f"{service_id.service_id.name} for {next_due_date}",
-                        'amount': service_id.cost,
-                        'currency_id': self.currency_id.id,
-                    })
-
-        if not invoice_lines:
+        if not invoice_ids:
             raise UserError("Nothing to invoice for this period.")
 
-        invoice_vals = {
-            'move_type': 'out_invoice',
-            'partner_id': self.tenant_id.id,
-            'invoice_origin': self.name,
-            'invoice_date': next_due_date,
-            'currency_id': self.currency_id.id,
-            'property_id': self.property_id.id,
-            'invoice_line_ids': invoice_lines,
-        }
-        invoice_id = self.env['account.move'].create(invoice_vals)
-
-        for inst in installments:
-            inst['invoice_id'] = invoice_id.id
-            self.env['rent.installment'].create(inst)
-
-        if self.deposit and self.deposit > 0 and not self.deposit_invoice_id:
-            self.deposit_invoice_id = invoice_id.id
+        if len(invoice_ids) == 1:
+            return {
+                'name': 'Invoice',
+                'type': 'ir.actions.act_window',
+                'res_model': 'account.move',
+                'res_id': invoice_ids.id,
+                'view_mode': 'form',
+            }
 
         return {
-            'name': 'Invoice',
+            'name': 'Invoices',
             'type': 'ir.actions.act_window',
             'res_model': 'account.move',
-            'res_id': invoice_id.id,
-            'view_mode': 'form',
+            'view_mode': 'list,form',
+            'domain': [('id', 'in', invoice_ids.ids)],
         }
 
     @api.depends('rent_installment_ids.amount', 'rent_installment_ids.payment_type',
@@ -401,7 +651,6 @@ class RentContract(models.Model):
         for rec in self:
             if rec.property_id:
                 rec.property_type = rec.property_id.property_type or ''
-                rec.residential_type = rec.property_id.residential_type or ''
                 rec.street = rec.property_id.street or ''
                 rec.street2 = rec.property_id.street2 or ''
                 rec.city = rec.property_id.city or ''
@@ -429,6 +678,12 @@ class RentContract(models.Model):
                     }))
                 rec.utility_service_ids = service_lines
 
+    @api.onchange('start_date')
+    def _onchange_start_date(self):
+        for rec in self:
+            if rec.start_date and (not rec.invoice_start_date or rec.invoice_start_date < rec.start_date):
+                rec.invoice_start_date = rec.start_date
+
     def action_create_broker_bill(self):
         self.ensure_one()
         if not self.broker_id or not self.broker_commission:
@@ -450,6 +705,7 @@ class RentContract(models.Model):
             'partner_id': self.broker_id.id,
             'invoice_origin': self.name,
             'invoice_date': fields.Date.today(),
+            'invoice_date_due': fields.Date.today(),
             'currency_id': self.currency_id.id,
             'property_id': self.property_id.id,
             'rent_contract_id': self.id,
@@ -531,15 +787,17 @@ class RentContract(models.Model):
             if not income_account_id:
                 continue
 
+            invoice_settings = contract_id._get_invoice_settings()
             move_vals = {
                 'move_type': 'out_invoice',
                 'partner_id': contract_id.tenant_id.id,
                 'invoice_date': fields.Date.today(),
+                'invoice_date_due': fields.Date.today(),
                 'currency_id': contract_id.currency_id.id,
                 'invoice_origin': contract_id.name,
                 'invoice_line_ids': [(0, 0, {
-                    'product_id': contract_id.penalty_product_id.id if contract_id.penalty_product_id else False,
-                    'name': f"Late Fee for overdue rent invoice {installments_id.invoice_id.name}",
+                    'product_id': invoice_settings['penalty_product'].id if invoice_settings['penalty_product'] else False,
+                    'name': invoice_settings['penalty_description'],
                     'quantity': 1,
                     'price_unit': penalty_amount,
                     'account_id': income_account_id.id,
@@ -551,7 +809,7 @@ class RentContract(models.Model):
                 'rent_contract_id': contract_id.id,
                 'invoice_date': fields.Date.today(),
                 'payment_type': 'penalty',
-                'description': f"Penalty for invoice {installments_id.invoice_id.name}",
+                'description': invoice_settings['penalty_description'],
                 'amount': penalty_amount,
                 'invoice_id': invoice_id.id,
                 'currency_id': contract_id.currency_id.id, })
@@ -600,15 +858,7 @@ class RentContract(models.Model):
              ('end_date', '>=', today), ])
 
         for contract_id in contract_ids:
-            term_map = {'monthly': 1, 'quarterly': 3, 'yearly': 12}
-            months = term_map.get(contract_id.payment_term, 1)
-
-            last_installment_id = self.env['rent.installment'].search(
-                [('rent_contract_id', '=', contract_id.id), ('payment_type', '=', 'rent')],
-                order="invoice_date desc", limit=1)
-            next_due_date = contract_id.invoice_start_date or contract_id.start_date
-            if last_installment_id:
-                next_due_date = last_installment_id.invoice_date + relativedelta(months=months)
+            next_due_date, _last_installment_id = contract_id._get_next_rent_invoice_date()
 
             if today < next_due_date:
                 continue

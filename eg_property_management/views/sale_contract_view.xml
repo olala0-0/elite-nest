@@ -79,7 +79,7 @@
                             <group>
                                 <field name="property_type" widget="radio" options="{'horizontal': true}"
                                        default='land' required="1"/>
-                                <field name="residential_type" required="1"/>
+                                <field name="residential_type_id" required="1"/>
                             </group>
                         </group>
                         <group string="Financial Information">
@@ -113,7 +113,7 @@
                             </group>
 
                             <group string="Broker Information">
-                                <field name="broker_id" required="1"/>
+                                <field name="broker_id"/>
                                 <field name="broker_phone"/>
                                 <field name="broker_email"/>
                                 <field name="broker_commission"/>
@@ -135,7 +135,7 @@
                     <field name="property_id" string="Property"/>
                     <field name="state" string="State"/>
                     <field name="property_type" string="Property Type"/>
-                    <field name="residential_type" string="Residential Type"/>
+                    <field name="residential_type_id" string="Residential Type"/>
                     <filter string="Draft Contracts" name="filter_draft" domain="[('state', '=', 'draft')]"/>
                     <filter string="Booked Contracts" name="filter_booked" domain="[('state', '=', 'booked')]"/>
                     <filter string="Sold Contracts" name="filter_sold" domain="[('state', '=', 'sold')]"/>

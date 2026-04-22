@@ -19,4 +19,7 @@ from . import property_broker_history
 from . import property_section
 from . import property_area_measurement
 from . import account_move
+from . import property_payment_term
+from . import property_residential_type
+from . import res_config_settings
 # from . import

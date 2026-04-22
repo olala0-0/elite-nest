@@ -2,7 +2,6 @@ from odoo import models, fields, api
 from datetime import date
 from odoo.exceptions import UserError
 
-
 class SaleContract(models.Model):
     _name = "sale.contract"
     _description = "Sale Contract"
@@ -21,7 +20,16 @@ class SaleContract(models.Model):
     property_type = fields.Selection([("land", "Land"), ("residential", "Residential"), ("commercial", "Commercial"),
                                       ("industrial", "Industrial")], string="Property Type", default='land')
 
-    residential_type = fields.Char(string="Residential Type")
+    # Structured Residential Type (from main)
+    residential_type_id = fields.Many2one(
+        comodel_name="property.residential.type",
+        string="Residential Type",
+        related="property_id.residential_type_id",
+        store=True,
+        readonly=True,
+    )
+    residential_type = fields.Char(related="residential_type_id.name", string="Residential Type Text", store=True)
+    
     property_for = fields.Selection([("sale", "Sale"), ("rent", "Rent")], string="Property For", default='sale')
 
     street = fields.Char(string="Street")
@@ -34,7 +42,7 @@ class SaleContract(models.Model):
     total_area = fields.Float(string="Total Area (ft²)")
     sell_amount = fields.Monetary(string="Sell Amount", currency_field="currency_id")
     total_amount = fields.Monetary(string="Total Amount", currency_field="currency_id",
-                                   compute="_compute_total_amount", readonly=False)
+                                   compute="_compute_total_amount", readonly=False, store=True)
 
     lead_id = fields.Many2one(comodel_name='crm.lead', string="Source Lead")
 
@@ -69,7 +77,7 @@ class SaleContract(models.Model):
             val['name'] = self.env['ir.sequence'].next_by_code('sale.contract') or 'New'
         return super(SaleContract, self).create(vals_list)
 
-    @api.onchange('sell_amount', 'total_area')
+    @api.depends('sell_amount', 'total_area')
     def _compute_total_amount(self):
         for record in self:
             record.total_amount = record.sell_amount * record.total_area if record.sell_amount and record.total_area else 0
@@ -78,10 +86,6 @@ class SaleContract(models.Model):
         for rec in self:
             rec.state = 'draft'
             rec.property_id.state = 'on_sale'
-
-    def action_state_booked(self):
-        for rec in self:
-            rec.state = 'booked'
 
     def action_state_sold(self):
         for rec in self:
@@ -98,6 +102,7 @@ class SaleContract(models.Model):
                 'move_type': 'out_invoice',
                 'partner_id': rec.tenant_id.id,
                 'invoice_date': fields.Date.today(),
+                'invoice_date_due': fields.Date.today(),
                 'currency_id': rec.currency_id.id,
                 'property_id': rec.property_id.id,
                 'invoice_origin': rec.name,
@@ -108,70 +113,42 @@ class SaleContract(models.Model):
                     'tax_ids': [],
                 })],
             }
-
             invoice_id = self.env['account.move'].create(invoice_vals)
             rec.invoice_id = invoice_id.id
-
-    def action_state_refund(self):
-        for rec in self:
-            rec.state = 'refund'
-            rec.property_id.state = 'on_sale'
 
     @api.onchange('property_id')
     def _onchange_property_id(self):
         for rec in self:
-            if self.property_id:
+            if rec.property_id:
                 rec.property_type = rec.property_id.property_type or ''
-                rec.residential_type = rec.property_id.residential_type or ''
                 rec.property_for = rec.property_id.property_for or ''
-
                 rec.street = rec.property_id.street or ''
                 rec.street2 = rec.property_id.street2 or ''
                 rec.city = rec.property_id.city or ''
                 rec.zip = rec.property_id.zip or ''
-
                 rec.state_id = rec.property_id.state_id or False
                 rec.country_id = rec.property_id.country_id or False
-
                 rec.total_area = rec.property_id.total_area or 0.0
                 rec.total_amount = rec.property_id.total_pricing or 0.0
-
                 rec.landlord_id = rec.property_id.landlord_id or False
-
-    def action_view_invoices(self):
-        return {
-            'name': 'Invoices',
-            'type': 'ir.actions.act_window',
-            'res_model': 'account.move',
-            'view_mode': 'list,form',
-            'domain': [('invoice_origin', '=', self.name), ('move_type', '=', 'out_invoice')],
-            'context': {'default_invoice_origin': self.name,
-                        'default_move_type': 'out_invoice',
-                        'default_partner_id': self.tenant_id.id},
-        }
-
-    @api.depends('broker_bill_id')
-    def _compute_has_broker_bill(self):
-        for rec in self:
-            rec.has_broker_bill = bool(rec.broker_bill_id)
 
     def action_create_broker_bill(self):
         self.ensure_one()
-
         if not self.broker_id or not self.broker_commission:
             raise UserError("Please set a Broker and Commission before creating a bill.")
         if self.broker_bill_id:
-            raise UserError(f"A broker bill already exists for this contract "
-                            f"(Invoice: {self.broker_bill_id.name or 'N/A'}).")
+            raise UserError(f"A broker bill already exists for this contract (Invoice: {self.broker_bill_id.name or 'N/A'}).")
 
         expense_account_id = self.env['account.account'].search([('account_type', '=', 'expense')], limit=1)
         if not expense_account_id:
             raise UserError("Please configure at least one expense account.")
+            
         bill_vals = {
             'move_type': 'in_invoice',
             'partner_id': self.broker_id.id,
             'invoice_origin': self.name,
             'invoice_date': fields.Date.today(),
+            'invoice_date_due': fields.Date.today(),
             'currency_id': self.currency_id.id,
             'property_id': self.property_id.id,
             'sale_contract_id': self.id,
@@ -179,7 +156,9 @@ class SaleContract(models.Model):
                 'name': f"Broker Commission for {self.name}",
                 'quantity': 1,
                 'price_unit': self.broker_commission,
-                'account_id': expense_account_id.id, })], }
+                'account_id': expense_account_id.id, 
+            })], 
+        }
 
         bill_id = self.env['account.move'].create(bill_vals)
         self.broker_bill_id = bill_id.id
@@ -190,19 +169,4 @@ class SaleContract(models.Model):
             'res_model': 'account.move',
             'res_id': bill_id.id,
             'view_mode': 'form',
-        }
-
-    def action_view_broker_bills(self):
-        self.ensure_one()
-        bill_ids = self.env['account.move'].search([
-            ('property_id', '=', self.property_id.id), ('sale_contract_id', '=', self.id),
-            ('move_type', '=', 'in_invoice'), ])
-        return {
-            'name': 'Broker Bills',
-            'type': 'ir.actions.act_window',
-            'res_model': 'account.move',
-            'view_mode': 'list,form',
-            'domain': [('id', 'in', bill_ids.ids)],
-            'context': {'default_property_id': self.property_id.id,
-                        'default_sale_contract_id': self.id, },
         }

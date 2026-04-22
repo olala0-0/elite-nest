@@ -92,4 +92,4 @@ class RentContract(models.Model):
     lead_id = fields.Many2one(comodel_name='crm.lead', string="Source Lead")
 
     # Penalties & Tax
-    penalty_type = fields.Selection([('fixed', 'Fixed'), ('percent', 'Percent')], string="Penalty Type", default='
+    penalty_type = fields.Selection([('fixed', 'Fixed'), ('percent', 'Percent')], string="Penalty Type", default='fixed')

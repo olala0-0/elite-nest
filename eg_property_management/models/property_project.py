@@ -17,6 +17,8 @@ class PropertyProject(models.Model):
         string="Property Type", default='land')
     residential_type_id = fields.Many2one(comodel_name="property.residential.type", string="Residential Type")
     residential_type = fields.Char(related="residential_type_id.name", string="Residential Type Text", store=True)
+
+    residential_type = fields.Char(string="Residential Type")
     company_id = fields.Many2one(comodel_name="res.company", string="Company", default=lambda self: self.env.company)
 
     property_for = fields.Selection([("sale", "Sale"), ("rent", "Rent")], string="Property For", default='sale')

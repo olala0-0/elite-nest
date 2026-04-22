@@ -1,0 +1,100 @@
+<odoo>
+    <!--Property Product-->
+    <record id="product_product_installment_1" model="product.product">
+        <field name="name">Installment Property Payment</field>
+    </record>
+    <record id="product_product_deposit_2" model="product.product">
+        <field name="name">Property Deposit</field>
+    </record>
+    <record id="product_product_penalty_3" model="product.product">
+        <field name="name">Penalty</field>
+    </record>
+
+    <!--    Property Rent Contract-->
+    <record id="rent_contract_1" model="rent.contract">
+        <field name="start_date" eval="(DateTime.today())"/>
+        <field name="end_date" eval="(DateTime.today() + relativedelta(months=4))"/>
+        <field name="rent">3500</field>
+        <field name="deposit">200</field>
+        <field name="total_area">700</field>
+        <field name="usable_area">550</field>
+        <field name="property_id" ref="eg_property_management.property_detail_1"/>
+        <field name="property_type">residential</field>
+        <field name="type">Residential</field>
+        <field name="street">Backbone Sunrise Residency -Backbone Residential</field>
+        <field name="street2">East New York City</field>
+        <field name="city">New York City</field>
+        <field name="state_id" ref="base.state_us_5"/>
+        <field name="region_id" ref="base.state_us_5"/>
+        <field name="zip">100125</field>
+        <field name="country_id" ref="base.us"/>
+        <field name="tenant_id" ref="base.res_partner_address_15"/>
+        <field name="landlord_id" ref="base.res_partner_address_13"/>
+        <field name="maintenance_type">once</field>
+        <field name="charge_type">fixed</field>
+        <field name="total_maintenance">450</field>
+        <field name="installment_item_id" ref="eg_property_management.product_product_installment_1"/>
+        <field name="deposit_item_id" ref="eg_property_management.product_product_deposit_2"/>
+        <field name="broker_id" ref="base.res_partner_address_31"/>
+        <field name="broker_commission">450</field>
+        <field name="penalty_type">fixed</field>
+        <field name="penalty_value">50</field>
+        <field name="penalty_grace_days">3</field>
+        <field name="penalty_product_id" ref="eg_property_management.product_product_penalty_3"/>
+        <field name="utility_service_ids"
+               eval="[(6, 0, [ref('eg_property_management.property_utility_service_1'), ref('eg_property_management.property_utility_service_2')])]"/>
+    </record>
+
+    <record id="rent_contract_2" model="rent.contract">
+        <field name="start_date" eval="(datetime.today() - timedelta(days=180)).date()"/>
+        <field name="end_date" eval="(datetime.today() - timedelta(days=1)).date()"/>
+        <field name="rent">5000</field>
+        <field name="deposit">200</field>
+        <field name="total_area">700</field>
+        <field name="usable_area">550</field>
+        <field name="property_id" ref="eg_property_management.property_detail_1"/>
+        <field name="property_type">residential</field>
+        <field name="type">Residential</field>
+        <field name="street">Backbone Sunrise Residency -Backbone Residential</field>
+        <field name="street2">East New York City</field>
+        <field name="city">New York City</field>
+        <field name="state_id" ref="base.state_us_5"/>
+        <field name="region_id" ref="base.state_us_5"/>
+        <field name="zip">100125</field>
+        <field name="country_id" ref="base.us"/>
+        <field name="tenant_id" ref="base.res_partner_address_5"/>
+        <field name="landlord_id" ref="base.res_partner_address_13"/>
+        <field name="maintenance_type">once</field>
+        <field name="charge_type">fixed</field>
+        <field name="total_maintenance">450</field>
+        <field name="installment_item_id" ref="eg_property_management.product_product_installment_1"/>
+        <field name="deposit_item_id" ref="eg_property_management.product_product_deposit_2"/>
+        <field name="broker_id" ref="base.res_partner_address_4"/>
+        <field name="broker_commission">450</field>
+        <field name="penalty_type">fixed</field>
+        <field name="penalty_value">100</field>
+        <field name="penalty_grace_days">3</field>
+        <field name="penalty_product_id" ref="eg_property_management.product_product_penalty_3"/>
+        <field name="utility_service_ids"
+               eval="[(6, 0, [ref('eg_property_management.property_utility_service_1'), ref('eg_property_management.property_utility_service_2')])]"/>
+    </record>
+
+    <!--    Property Sale Contract-->
+    <record id="sale_contract_1" model="sale.contract">
+        <field name="create_date" eval="(DateTime.today())"/>
+        <field name="property_id" ref="eg_property_management.property_detail_2"/>
+        <field name="property_type">residential</field>
+        <field name="residential_type">Residential / Raw House</field>
+        <field name="street">Backbone Sunrise Residency -Backbone Residential</field>
+        <field name="street2">East New York City</field>
+        <field name="city">New York City</field>
+        <field name="state_id" ref="base.state_us_5"/>
+        <field name="zip">100125</field>
+        <field name="country_id" ref="base.us"/>
+        <field name="total_area">800</field>
+        <field name="sell_amount">800</field>
+        <field name="tenant_id" ref="base.res_partner_address_10"/>
+        <field name="landlord_id" ref="base.res_partner_address_13"/>
+        <field name="broker_id" ref="base.res_partner_address_3"/>
+    </record>
+</odoo>

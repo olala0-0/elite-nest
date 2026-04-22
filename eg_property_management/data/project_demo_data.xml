@@ -1,0 +1,93 @@
+<odoo>
+    <!--Property Tags-->
+    <record id="property_tags_1" model="property.tag">
+        <field name="name">New</field>
+        <field name="color">4</field>
+    </record>
+    <record id="property_tags_2" model="property.tag">
+        <field name="name">Luxury</field>
+        <field name="color">1</field>
+    </record>
+    <record id="property_tags_3" model="property.tag">
+        <field name="name">Premium</field>
+        <field name="color">5</field>
+    </record>
+    <record id="property_tags_4" model="property.tag">
+        <field name="name">Exclusive</field>
+        <field name="color">7</field>
+    </record>
+    <record id="property_tags_5" model="property.tag">
+        <field name="name">Affordable</field>
+        <field name="color">3</field>
+    </record>
+    <record id="property_tags_6" model="property.tag">
+        <field name="name">Furnished</field>
+        <field name="color">6</field>
+    </record>
+
+    <!--Property Service-->
+    <record id="property_service_1" model="property.service">
+        <field name="name">Gas</field>
+        <field name="code">01</field>
+    </record>
+    <record id="property_service_2" model="property.service">
+        <field name="name">Internet</field>
+        <field name="code">02</field>
+    </record>
+
+    <!--Property Section-->
+    <record id="property_section_1" model="property.section">
+        <field name="name">Bedroom</field>
+    </record>
+    <record id="property_section_2" model="property.section">
+        <field name="name">Kitchen</field>
+    </record>
+    <record id="property_section_3" model="property.section">
+        <field name="name">Hall Room</field>
+    </record>
+    <record id="property_section_3" model="property.section">
+        <field name="name">Prayer Room</field>
+    </record>
+    <record id="property_section_4" model="property.section">
+        <field name="name">Parking</field>
+    </record>
+
+    <!--Property Project-->
+    <record id="property_project_1" model="property.project">
+        <field name="name">Backbone Apartment</field>
+        <field name="code">BA</field>
+        <!--        <field name="image_1920" type="base64" file="eg_property_management/static/img/apartment.jpg"/>-->
+        <field name="property_type">residential</field>
+        <field name="residential_type_id" ref="eg_property_management.property_residential_type_apartment"/>
+        <field name="is_sub_project">1</field>
+        <field name="property_for">rent</field>
+        <field name="landlord_id" ref="base.res_partner_address_13"/>
+        <field name="street">Backbone</field>
+        <field name="street2">East New York City</field>
+        <field name="city">New York City</field>
+        <field name="state_id" ref="base.state_us_5"/>
+        <field name="zip">100125</field>
+        <field name="country_id" ref="base.us"/>
+        <field name="date_of_project" eval="(DateTime.today())"/>
+    </record>
+
+    <!--Property Sub Project-->
+    <record id="property_sub_project_1" model="property.sub.project">
+        <field name="name">Backbone Building -011</field>
+        <field name="code">BB11</field>
+        <field name="project_id" ref="eg_property_management.property_project_1"/>
+
+        <!--        <field name="image_1920" type="base64" file="eg_property_management/static/img/apartment.jpg"/>-->
+        <field name="property_type">residential</field>
+        <field name="residential_type_id" ref="eg_property_management.property_residential_type_apartment"/>
+        <field name="property_for">rent</field>
+        <field name="landlord_id" ref="base.res_partner_address_13"/>
+        <field name="street">Backbone Residential</field>
+        <field name="street2">East New York City</field>
+        <field name="city">New York City</field>
+        <field name="state_id" ref="base.state_us_5"/>
+        <field name="zip">100125</field>
+        <field name="country_id" ref="base.us"/>
+        <field name="date_of_project" eval="(DateTime.today())"/>
+    </record>
+</odoo>

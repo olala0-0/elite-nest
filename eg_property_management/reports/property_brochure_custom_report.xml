@@ -1,0 +1,436 @@
+<odoo>
+    <template id="report_property_brochure">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="doc">
+                <t t-call="web.internal_layout">
+                    <t t-set="company" t-value="user.company_id"/>
+
+                    <div style="width:100%; margin-bottom:20px;">
+                        <div style="float:left; width:20%;">
+                            <img t-if="company.logo" t-att-src="image_data_uri(company.logo)"
+                                 style="max-height:70px;"/>
+                        </div>
+
+                        <div style="float:right; width:75%; text-align:right;">
+                            <h2 style="margin:0; font-size:20px; font-weight:bold;">
+                                <t t-out="company.name"/>
+                            </h2>
+                            <p style="margin:0; font-size:12px; line-height:1.4;">
+                                <t t-out="company.street"/>
+                                <t t-if="company.street2">,
+                                    <t t-out="company.street2"/>
+                                </t>
+                                <br/>
+                                <t t-if="company.city"><t t-out="company.city"/>,
+                                </t>
+                                <t t-if="company.state_id">
+                                    <t t-out="company.state_id.name"/>
+                                </t>
+                                <t t-if="company.zip">-
+                                    <t t-out="company.zip"/>
+                                </t>
+                                <br/>
+                                <t t-if="company.country_id">
+                                    <t t-out="company.country_id.name"/>
+                                </t>
+                                <br/>
+                                <t t-if="company.phone">📞
+                                    <t t-out="company.phone"/>
+                                </t>
+                                <t t-if="company.email">| ✉️
+                                    <t t-out="company.email"/>
+                                </t>
+                            </p>
+                        </div>
+                        <div style="clear:both;"></div>
+                        <hr style="border:1px solid #444;"/>
+                    </div>
+
+
+                    <div class="text-center" style="margin-top:10px; margin-bottom:20px;">
+                        <h2 style="font-size:26px; font-weight:bold; color:#333;">Property Brochure</h2>
+                    </div>
+
+                    <div class="text-center" style="margin-bottom:15px;">
+                        <img t-if="doc.image_1920"
+                             t-att-src="'data:image/png;base64,%s' % doc.image_1920.decode()"
+                             style="max-height:500px; width:100%; object-fit:cover; border-radius:5px;"/>
+                        <h3 style="margin-top:10px; font-size:22px; color:#444;">
+                            <span t-out="doc.name"/>
+                        </h3>
+                    </div>
+
+                    <h4 style="background:#dcdcdc; padding:6px 8px; border-radius:3px; font-size:20px;">
+                        <b>Property Details</b>
+                    </h4>
+                    <table class="table table-borderless table-sm"
+                           style="width:100%; font-size:18px; border-collapse:collapse;">
+                        <tbody>
+                            <tr style="border-bottom:1px solid #ddd;">
+                                <th style="width:20%; text-align:left; padding:5px;">Type</th>
+                                <td style="width:30%; padding:5px;">
+                                    <span t-out="doc.property_type"/>
+                                </td>
+                                <th style="width:20%; text-align:left; padding:5px;">Address</th>
+                                <td style="width:30%; padding:5px;">
+                                    <span t-out="doc.street"/>
+                                    <span t-out="doc.street2"/>
+                                    <br/>
+                                    <span t-out="doc.city"/>
+                                    <t t-if="doc.state_id">,
+                                        <t t-out="doc.state_id.name"/>
+                                    </t>
+                                    <br/>
+                                    <span t-out="doc.zip"/>
+                                    <t t-if="doc.country_id">-
+                                        <t t-out="doc.country_id.name"/>
+                                    </t>
+                                </td>
+                            </tr>
+                            <tr style="border-bottom:1px solid #ddd;">
+                                <th style="padding:5px;">Property For</th>
+                                <td style="padding:5px;">
+                                    <span t-out="doc.property_for"/>
+                                </td>
+                                <th style="padding:5px;">Code</th>
+                                <td style="padding:5px;">
+                                    <span t-out="doc.code"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th style="padding:5px;">Rent</th>
+                                <td colspan="3" style="padding:5px; font-weight:bold; color:#444;">
+                                    <span t-out="doc.rent_amount"/>
+                                    / Month
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <br/>
+                    <hr style="margin:20px 0; border:0; border-top:1px dashed #aaa;"/>
+                    <div style="page-break-before:always;"></div>
+                    <h4 style="background:#dcdcdc; padding:6px 8px; border-radius:3px; font-size:20px;">
+                        <b>Owner Details</b>
+                    </h4>
+                    <table class="table table-borderless table-sm"
+                           style="width:100%; font-size:18px; border-collapse:collapse;">
+                        <tr style="border-bottom:1px solid #ddd;">
+                            <th style="padding:5px;">Landlord</th>
+                            <td style="padding:5px;">
+                                <span t-out="doc.landlord_id.name"/>
+                            </td>
+                        </tr>
+                        <tr style="border-bottom:1px solid #ddd;">
+                            <th style="padding:5px;">Email</th>
+                            <td style="padding:5px;">
+                                <span t-out="doc.landlord_id.email"/>
+                            </td>
+                        </tr>
+                        <tr style="border-bottom:1px solid #ddd;">
+                            <th style="padding:5px;">Phone</th>
+                            <td style="padding:5px;">
+                                <span t-out="doc.landlord_id.phone"/>
+                            </td>
+                        </tr>
+                    </table>
+                    <br/>
+                    <h4 style="background:#dcdcdc; padding:6px 8px; border-radius:3px; font-size:20px;">
+                        <b>Area Measurements</b>
+                    </h4>
+                    <table class="table table-borderless table-sm"
+                           style="width:100%; font-size:18px; border-collapse:collapse;">
+                        <tr style="border-bottom:1px solid #ddd;">
+                            <th style="padding:5px;">Total Area</th>
+                            <td style="padding:5px;">
+                                <span t-out="doc.total_area"/>
+                            </td>
+                            <th style="padding:5px;">Usable Area</th>
+                            <td style="padding:5px;">
+                                <span t-out="doc.usable_area"/>
+                            </td>
+                        </tr>
+                    </table>
+                    <br/>
+                    <table class="table table-borderless table-sm"
+                           style="width:100%; font-size:18px; border-collapse:collapse; margin-top:10px;">
+                        <thead style="background:#f0f0f0;">
+                            <tr>
+                                <th style="padding:5px;">Section</th>
+                                <th style="padding:5px;">No. of Units</th>
+                                <th style="padding:5px;">Length</th>
+                                <th style="padding:5px;">Width</th>
+                                <th style="padding:5px;">Total Area</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-foreach="doc.area_measurement_ids" t-as="line">
+                                <tr style="border-bottom:1px solid #ddd;">
+                                    <td style="padding:5px;">
+                                        <span t-out="line.section_id.name"/>
+                                    </td>
+                                    <td style="padding:5px;">
+                                        <span t-out="line.no_of_unit"/>
+                                    </td>
+                                    <td style="padding:5px;">
+                                        <span t-out="line.length"/>
+                                    </td>
+                                    <td style="padding:5px;">
+                                        <span t-out="line.width"/>
+                                    </td>
+                                    <td style="padding:5px;">
+                                        <span t-out="line.total_area"/>
+                                    </td>
+                                </tr>
+                            </t>
+                        </tbody>
+                    </table>
+                    <br/>
+                    <h4 style="background:#dcdcdc; padding:6px 8px; border-radius:3px; font-size:20px;">
+                        <b>Residential Details</b>
+                    </h4>
+
+                    <table class="table table-borderless table-sm"
+                           style="width:100%; font-size:18px; border-collapse:collapse;">
+                        <tbody>
+                            <tr style="border-bottom:1px solid #ddd;">
+                                <th style="padding:5px;">No. of Floors</th>
+                                <td style="padding:5px;">
+                                    <span t-out="doc.no_of_floors"/>
+                                </td>
+                                <th style="padding:5px;">Floor</th>
+                                <td style="padding:5px;">
+                                    <span t-out="doc.floor"/>
+                                </td>
+                            </tr>
+                            <tr style="border-bottom:1px solid #ddd;">
+                                <th style="padding:5px;">BHK</th>
+                                <td style="padding:5px;">
+                                    <span t-out="doc.no_of_bhk"/>
+                                </td>
+                                <th style="padding:5px;">Bedrooms</th>
+                                <td style="padding:5px;">
+                                    <span t-out="doc.bedrooms"/>
+                                </td>
+                            </tr>
+                            <tr style="border-bottom:1px solid #ddd;">
+                                <th style="padding:5px;">Bathrooms</th>
+                                <td style="padding:5px;">
+                                    <span t-out="doc.bathrooms"/>
+                                </td>
+                                <th style="padding:5px;">Parking</th>
+                                <td style="padding:5px;">
+                                    <span t-out="doc.parking"/>
+                                </td>
+                            </tr>
+                            <tr style="border-bottom:1px solid #ddd;">
+                                <th style="padding:5px;">Facing</th>
+                                <td style="padding:5px;">
+                                    <span t-out="doc.facing"/>
+                                </td>
+                                <th style="padding:5px;">Furnishing</th>
+                                <td style="padding:5px;">
+                                    <span t-out="doc.furnishing"/>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div style="page-break-before:always;"></div>
+
+                    <h4 style="background:#dcdcdc; padding:6px 8px; border-radius:3px; font-size:20px;">
+                        <b>Pricing Details</b>
+                    </h4>
+                    <table class="table table-borderless table-sm"
+                           style="width:100%; font-size:18px; border-collapse:collapse;">
+                        <tr style="border-bottom:1px solid #ddd;">
+                            <th style="padding:5px;">Pricing Type</th>
+                            <td style="padding:5px;">
+                                <span t-out="doc.pricing_type"/>
+                            </td>
+                        </tr>
+                        <tr style="border-bottom:1px solid #ddd;">
+                            <th style="padding:5px;">Rent</th>
+                            <td style="padding:5px;">
+                                <span t-out="doc.rent_amount"/>
+                            </td>
+                        </tr>
+                        <tr style="border-bottom:1px solid #ddd;">
+                            <th style="padding:5px;">Price/Area</th>
+                            <td style="padding:5px;">
+                                <span t-out="doc.price_per_area"/>
+                            </td>
+                        </tr>
+                    </table>
+                    <br/>
+                    <h4 style="background:#dcdcdc; padding:6px 8px; border-radius:3px; font-size:20px;">
+                        <b>Utility Service</b>
+                    </h4>
+                    <br/>
+                    <table class="table table-borderless table-sm"
+                           style="width:100%; font-size:18px; border-collapse:collapse; margin-top:10px;">
+                        <thead style="border-bottom:2px solid #181818;border-top:2px solid #181818;">
+                            <tr>
+                                <th style="padding:5px;">
+                                    <b>Service</b>
+                                </th>
+                                <th style="padding:5px;">
+                                    <b>Type</b>
+                                </th>
+                                <th style="padding:5px;">
+                                    <b>Cost</b>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-foreach="doc.utility_service_ids" t-as="line">
+                                <tr style="border-bottom:1px solid #ddd;">
+                                    <td style="padding:5px;">
+                                        <span t-out="line.service_id.name"/>
+                                    </td>
+                                    <td style="padding:5px;">
+                                        <span t-out="line.service_type"/>
+                                    </td>
+                                    <td style="padding:5px;">
+                                        <span t-out="line.cost"/>
+                                    </td>
+                                </tr>
+                            </t>
+                        </tbody>
+                    </table>
+                    <div style="page-break-before:always;"></div>
+                    <h4 style="background:#dcdcdc; padding:6px 8px; border-radius:3px; font-size:20px;">
+                        <b>Images</b>
+                    </h4>
+                    <table style="width:100%; font-size:18px; border-collapse:collapse;"
+                           class="table table-borderless">
+                        <t t-foreach="doc.image_ids" t-as="image">
+                            <tr style="border-bottom:1px solid #ddd;">
+                                <td colspan="2" style="padding:5px;">
+                                    <span style="font-weight:bold;" t-out="image.name"/>
+                                    <span style="float:right; background:#28a745; color:#fff; padding:2px 6px; border-radius:3px; font-size:12px;">
+                                        <t t-out="image.file_size"/>
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td colspan="2" style="padding:10px; text-align:center;">
+                                    <img t-if="image.image"
+                                         t-att-src="'data:image/png;base64,%s' % image.image.decode()"
+                                         style="max-height:500px;max-width:900px; border:1px solid #ccc; border-radius:10px;"/>
+                                </td>
+                            </tr>
+                        </t>
+                    </table>
+                    <div style="page-break-before:always;"></div>
+                    <h4 style="background:#dcdcdc; padding:6px 8px; border-radius:3px; font-size:20px;">
+                        <b>Floor Plan</b>
+                    </h4>
+                    <table style="width:100%; font-size:18px; border-collapse:collapse;"
+                           class="table table-borderless">
+                        <t t-foreach="doc.floorplan_ids" t-as="floor">
+                            <tr style="border-bottom:1px solid #ddd;">
+                                <td colspan="2" style="padding:5px;">
+                                    <span style="font-weight:bold;" t-out="floor.name"/>
+                                    <span style="float:right; background:#28a745; color:#fff; padding:2px 6px; border-radius:3px; font-size:12px;">
+                                        <t t-out="floor.file_size"/>
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td colspan="2" style="padding:10px; text-align:center;">
+                                    <img t-if="floor.image"
+                                         t-att-src="'data:floor/png;base64,%s' % floor.image.decode()"
+                                         style="max-height:500px;max-width:900px; border:1px solid #ccc; border-radius:10px;"/>
+                                </td>
+                            </tr>
+                        </t>
+                    </table>
+
+                    <div style="page-break-before:always;"></div>
+
+                    <h4 style="background:#dcdcdc; padding:6px 8px; border-radius:3px; font-size:20px;">
+                        <b>Amenities</b>
+                    </h4>
+                    <table style="width:100%; font-size:18px; border-collapse:collapse;"
+                           class="table table-borderless">
+                        <t t-foreach="doc.amenity_ids" t-as="amen">
+                            <tr style="border-bottom:1px solid #ddd; margin:15px;">
+                                <td style="width:10%; padding:5px;">
+                                    <img t-if="amen.icon"
+                                         t-att-src="'data:image/png;base64,%s' % amen.icon.decode()"
+                                         style="max-height:150px;"/>
+                                </td>
+                                <td style="padding:15px;">
+                                    <b>
+                                        <span t-out="amen.name"/>
+                                    </b>
+                                    <hr style="margin:5px 0; border:0; border-top:2px dashed #ababab;"/>
+                                </td>
+                            </tr>
+                        </t>
+                    </table>
+                    <div style="page-break-before:always;"></div>
+
+                    <h4 style="background:#dcdcdc; padding:6px 8px; border-radius:3px; font-size:20px;">
+                        <b>Specifications</b>
+                    </h4>
+                    <table style="width:100%; font-size:18px; border-collapse:collapse;"
+                           class="table table-borderless">
+                        <t t-foreach="doc.specification_ids" t-as="spec">
+                            <tr style="border-bottom:1px solid #ddd; margin:15px;">
+                                <td style="width:10%; padding:5px;">
+                                    <img t-if="spec.image"
+                                         t-att-src="'data:image/png;base64,%s' % spec.image.decode()"
+                                         style="max-height:150px;max-height:100px;"/>
+                                </td>
+                                <td style="padding:15px;">
+                                    <b>
+                                        <span t-out="spec.name"/>
+                                    </b>
+                                    <hr style="margin:5px 0; border:0; border-top:2px dashed #ababab;"/>
+                                    <span t-out="spec.description"/>
+                                </td>
+                            </tr>
+                        </t>
+                    </table>
+
+                    <div style="page-break-before:always;"></div>
+
+                    <h4 style="background:#dcdcdc; padding:6px 8px; border-radius:3px; font-size:20px;">
+                        <b>Nearby Connectivity</b>
+                    </h4>
+
+                    <table style="width:100%; font-size:18px; border-collapse:collapse;"
+                           class="table table-borderless">
+                        <t t-foreach="doc.connectivity_ids" t-as="conn">
+                            <tr style="margin:15px;border-bottom:1px solid #ddd;border-top:1px solid #ddd; ">
+                                <td style="width:12%; padding:10px; text-align:center;margin-top:5px;">
+                                    <img t-if="conn.icon"
+                                         t-att-src="'data:image/png;base64,%s' % conn.icon.decode()"
+                                         style="max-height:100px; max-width:100px; border-radius:8px; border:1px solid #ccc;"/>
+                                </td>
+
+                                <!-- Info -->
+                                <td style="padding:12px;">
+                                    <b style="font-size:16px; color:#333;">
+                                        <span t-out="conn.name"/>
+                                    </b>
+                                    <br/>
+                                    <span style="font-size:14px; color:#666;">
+                                        <t t-out="conn.description"/>
+                                    </span>
+                                    <br/>
+                                    <span style="font-size:14px; font-weight:bold; color:#28a745;">
+                                        Distance:
+                                        <t t-out="conn.distance"/>
+                                        KM
+                                    </span>
+                                </td>
+                            </tr>
+                        </t>
+                    </table>
+                </t>
+            </t>
+        </t>
+    </template>
+</odoo>

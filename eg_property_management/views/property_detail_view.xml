@@ -1,185 +1,29 @@
-<odoo>
-    <data>
-        <record id="property_detail_list_view" model="ir.ui.view">
-            <field name="name">property.detail.list</field>
-            <field name="model">property.detail</field>
-            <field name="arch" type="xml">
-                <list>
-                    <field name="name"/>
-                    <field name="property_type"/>
-                    <field name="residential_type_id"/>
-                    <field name="landlord_id"/>
-                    <field name="property_for" widget="badge"/>
-                    <field name="final_price" optional="show"/>
-                    <field name="company_id"/>
-                    <field name="city"/>
-                    <field name="country_id"/>
-                    <field name="activity_ids" widget="list_activity"/>
-                    <field name="state" widget="badge"/>
-                </list>
-            </field>
-        </record>
-
-        <record id="view_property_kanban_vertical" model="ir.ui.view">
-            <field name="name">property.detail.kanban.vertical</field>
-            <field name="model">property.detail</field>
-            <field name="arch" type="xml">
-                <kanban class="o_kanban_view o_kanban_small_column">
-                    <field name="image_1920"/>
-                    <field name="property_type"/>
-                    <field name="residential_type_id"/>
-                    <field name="name"/>
-                    <field name="property_for"/>
-                    <field name="rent_amount"/>
-                    <field name="final_price"/>
-                    <field name="currency_id"/>
-                    <field name="landlord_id"/>
-                    <field name="street"/>
-                    <field name="city"/>
-                    <field name="state_id"/>
-                    <field name="country_id"/>
-                    <field name="tag_ids"/>
-
-                    <templates>
-                        <t t-name="card">
-                            <t t-name="kanban-box" class="oe_kanban_global_click">
-                                <div class="card-body p-2 d-flex flex-column">
-                                    <div class="d-flex justify-content-between align-items-center text-uppercase fw-bold text-primary mb-2 small">
-                                        <span class="text-truncate">
-                                            <t t-esc="record.property_type.raw_value"/>
-                                        </span>
-                                        <span class="badge bg-light text-dark">
-                                            <t t-esc="record.residential_type_id.value"/>
-                                        </span>
-                                    </div>
-                                    <div class="ratio ratio-16x9 mb-2 rounded overflow-hidden">
-                                        <t t-if="record.image_1920.raw_value">
-                                            <img t-att-src="'/web/image/property.detail/' + record.id.value + '/image_1920'"
-                                                 class="w-100 h-100 object-fit-cover"/>
-                                        </t>
-                                        <t t-else="">
-                                            <div class="d-flex justify-content-center align-items-center bg-light w-100 h-100">
-                                                <i class="fa fa-image fa-2x text-muted"/>
-                                            </div>
-                                        </t>
-                                    </div>
-                                    <div class="d-flex justify-content-between align-items-center mb-1">
-                                        <span class="fw-semibold text-truncate">
-                                            <t t-esc="record.name.raw_value"/>
-                                        </span>
-                                        <span class="badge bg-info text-dark text-capitalize">
-                                            <t t-esc="record.property_for.raw_value"/>
-                                        </span>
-                                    </div>
-                                    <div class="small mb-1">
-                                        <t t-if="record.property_for.raw_value == 'rent'">
-                                            <span class="fw-semibold">Rent:</span>
-                                            <t t-esc="record.rent_amount.value"/>
-                                            <t t-esc="record.currency_id.name"/>
-                                        </t>
-                                        <t t-if="record.property_for.raw_value == 'sale'">
-                                            <span class="fw-semibold">Price:</span>
-                                            <t t-esc="record.final_price.value"/>
-                                            <t t-esc="record.currency_id.name"/>
-                                        </t>
-                                    </div>
-                                    <div class="small mb-1 text-truncate">
-                                        <span class="fw-semibold">Landlord:</span>
-                                        <t t-esc="record.landlord_id.value"/>
-                                    </div>
-                                    <div class="small text-muted d-flex align-items-start mb-2">
-                                        <i class="fa fa-map-marker text-danger me-1 mt-1"></i>
-                                        <div class="text-truncate">
-                                            <t t-if="record.street.raw_value"><t t-esc="record.street.raw_value"/>, </t>
-                                            <t t-if="record.city.raw_value"><t t-esc="record.city.raw_value"/>, </t>
-                                            <t t-if="record.state_id.value"><t t-esc="record.state_id.value"/>, </t>
-                                            <t t-if="record.country_id.value"><t t-esc="record.country_id.value"/></t>
-                                        </div>
-                                    </div>
-                                    <div class="mb-2">
-                                        <field name="tag_ids" widget="many2many_tags"/>
-                                    </div>
-                                    <div class="mt-auto d-flex justify-content-between pt-2 border-top">
-                                        <a type="open" class="text-success"><i class="fa fa-eye"/></a>
-                                        <a type="edit" class="text-primary"><i class="fa fa-pencil"/></a>
-                                        <a type="object" name="action_send_property_brochure_mail" class="text-warning"><i class="fa fa-share-alt"/></a>
-                                        <a type="object" name="action_set_available" class="text-info"><i class="fa fa-save"/></a>
-                                    </div>
-                                </div>
-                            </t>
-                        </t>
-                    </templates>
-                </kanban>
-            </field>
-        </record>
-
-        <record id="property_detail_form_view" model="ir.ui.view">
-            <field name="name">property.detail.form</field>
-            <field name="model">property.detail</field>
-            <field name="arch" type="xml">
-                <form>
-                    <header>
-                        <field name="state" widget="statusbar" statusbar_visible="draft,available,on_rent" invisible="property_for != 'rent'"/>
-                        <field name="state" widget="statusbar" statusbar_visible="draft,available,on_sale" invisible="property_for != 'sale'"/>
-                        <button name="action_set_draft" string="Draft" type="object" class="btn-secondary" invisible="state in ['draft']"/>
-                        <button name="action_set_available" string="Available" type="object" class="btn-primary" invisible="state in ['available','on_rent','on_sale','rent','sold']"/>
-                        <button name="action_send_property_brochure_mail" string="Send Mail" type="object" class="btn-primary"/>
-                    </header>
-                    <sheet>
-                        <div class="oe_button_box" name="button_box">
-                            <button type="object" class="oe_stat_button" name="action_open_map" icon="fa-map-marker" string="Map Location"/>
-                            <button type="object" class="oe_stat_button" icon="fa-wrench" name="action_view_maintenance_request">
-                                <field name="maintenance_count" widget="statinfo" string="Maintenance"/>
-                            </button>
-                        </div>
-                        <field name="image_1920" widget="image" class="oe_avatar"/>
-                        <h1><field name="name" placeholder="Property Name" required="1"/></h1>
-                        <group>
-                            <field name="property_type" widget="radio" options="{'horizontal': true}" required="1"/>
-                            <field name="residential_type_id" required="1"/>
-                            <field name="property_for" widget="radio" options="{'horizontal': true}" required="1"/>
-                            <field name="company_id" required="1"/>
-                        </group>
-                        <notebook>
-                            <page string="Area &amp; Project">
-                                <group>
-                                    <group string="Address">
-                                        <field name="street"/><field name="city"/><field name="country_id"/>
-                                    </group>
-                                    <group string="Owner">
-                                        <field name="landlord_id" required="1"/><field name="phone"/><field name="email"/>
-                                    </group>
-                                </group>
-                            </page>
-                        </notebook>
-                    </sheet>
-                    <chatter/>
-                </form>
-            </field>
-        </record>
-
-        <record id="view_property_search" model="ir.ui.view">
+<record id="view_property_search" model="ir.ui.view">
             <field name="name">property.detail.search</field>
             <field name="model">property.detail</field>
             <field name="arch" type="xml">
                 <search>
                     <field name="name" string="Property Name"/>
+                    <field name="landlord_id" string="Landlord"/>
+                    <field name="city" string="City"/>
+                    <field name="tag_ids" string="Tags"/>
+                    <field name="country_id" string="Country"/>
                     <field name="residential_type_id" string="Residential Type"/>
+                    <field name="company_id" string="Company"/>
+                    
+                    <filter string="For Sale" name="for_sale" domain="[('property_for','=','sale')]"/>
+                    <filter string="For Rent" name="for_rent" domain="[('property_for','=','rent')]"/>
                     <filter string="Available" name="available" domain="[('state','=','available')]"/>
-                    <group expand="0" string="Group By">
+                    
+                    <group string="Group By">
+                        <filter string="Project" name="group_project" context="{'group_by':'project_id'}"/>
+                        <filter string="Property Type" name="group_property_type" context="{'group_by':'property_type'}"/>
+                        <filter string="Property For" name="group_property_for" context="{'group_by':'property_for'}"/>
                         <filter string="Residential Type" name="group_residential_type" context="{'group_by':'residential_type_id'}"/>
+                        <filter string="Landlord" name="group_landlord_id" context="{'group_by':'landlord_id'}"/>
+                        <filter string="City" name="group_city" context="{'group_by':'city'}"/>
+                        <filter string="Status" name="group_status" context="{'group_by':'state'}"/>
                     </group>
                 </search>
             </field>
         </record>
-
-        <record id="action_property_detail" model="ir.actions.act_window">
-            <field name="name">Properties</field>
-            <field name="res_model">property.detail</field>
-            <field name="view_mode">list,kanban,form,pivot,activity</field>
-        </record>
-
-        <menuitem id="property_management_menu" name="Properties"/>
-        <menuitem id="property_detail_menu" name="Properties" parent="property_management_menu" action="action_property_detail" sequence="30"/>
-    </data>
-</odoo>

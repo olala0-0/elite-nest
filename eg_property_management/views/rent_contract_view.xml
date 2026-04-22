@@ -1,0 +1,484 @@
+<odoo>
+    <data>
+        <record id="rent_contract_list_view" model="ir.ui.view">
+            <field name="name">rent.contract.list</field>
+            <field name="model">rent.contract</field>
+            <field name="arch" type="xml">
+                <list>
+                    <field name="name"/>
+                    <field name="property_id"/>
+                    <field name="residential_type_id" string="Residential Type"/>
+                    <field name="tenant_id"/>
+                    <field name="landlord_id"/>
+                    <field name="total_area"/>
+                    <field name="rent"/>
+                    <field name="duration"/>
+                    <field name="contract_days"/>
+                    <field name="remaining_days"/>
+                    <field name="start_date"/>
+                    <field name="end_date"/>
+                    <field name="currency_id"/>
+                    <field name="user_id"/>
+                    <field name="activity_ids" widget="list_activity"/>
+                    <field name="state" widget="badge"/>
+                </list>
+            </field>
+        </record>
+
+        <record id="rent_contract_form_view" model="ir.ui.view">
+            <field name="name">rent.contract.form</field>
+            <field name="model">rent.contract</field>
+            <field name="arch" type="xml">
+                <form>
+                    <header>
+                        <field name="state" widget="statusbar" statusbar_visible="draft,running,cancel,close,expire"/>
+                        <button name="action_state_draft" string="Reset to Draft" type="object" class="btn-secondary"
+                                invisible="state in ['draft','running','cancel','expire']"/>
+                        <button name="action_state_running" string="Running" type="object" class="btn-primary"
+                                invisible="state in ['running','cancel','close','expire']"/>
+                        <button name="action_create_invoice" string="Create Invoice" type="object" class="btn-primary"
+                                invisible="state in ['draft','cancel','close','expire']"/>
+                        <button name="action_state_close" string="Close Contract" type="object" class="btn-secondary"
+                                invisible="state in ['draft','cancel','close','expire']"/>
+                        <button name="action_state_cancel" string="Cancel" type="object" class="btn-secondary"
+                                invisible="state in ['draft','cancel','close','expire']"/>
+                        <button name="action_create_broker_bill" string="Create Broker Bill" type="object"
+                                class="btn-primary"
+                                invisible="not broker_id or not broker_commission or state != 'running' or has_broker_bill == True"/>
+                        <button name="%(action_rent_contract_extend_wizard)d" string="Extend Contract" type="action"
+                                class="btn-primary" invisible="state in ['draft','running','cancel','close']"/>
+                    </header>
+                    <sheet>
+                        <div class="oe_button_box" name="button_box">
+                            <button type="object" class="oe_stat_button" icon="fa-files-o"
+                                    name="action_view_invoices">
+                                <field name="invoice_count" widget="statinfo" string="Invoices"/>
+                            </button>
+                            <button type="object" class="oe_stat_button" icon="fa-list-alt"
+                                    name="action_view_broker_bills" string="Brokers">
+                            </button>
+                        </div>
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                        <group string="Contract Details">
+                            <group>
+                                <field name="start_date" required="1" readonly="state == 'running'"/>
+                                <field name="end_date" required="1" readonly="state == 'running'"/>
+                                <field name="rent" required="1" readonly="state == 'running'"/>
+                                <field name="deposit" required="1" readonly="state == 'running'"/>
+                                <field name="invoice_start_date" required="1"/>
+                            </group>
+                            <group>
+                                <field name="duration"/>
+                                <field name="contract_days"/>
+                                <field name="remaining_days"/>
+                                <field name="payment_term_id" required="1" readonly="state == 'running'"/>
+                                <field name="payment_count" readonly="1"/>
+                                <field name="contract_type" required="1" readonly="state == 'running'"/>
+                            </group>
+                        </group>
+                        <hr style="border: 1px solid #000;"/>
+                        <group>
+                            <group>
+                                <field name="total_area" required="1"/>
+                            </group>
+                            <group>
+                                <field name="usable_area" required="1"/>
+                            </group>
+                        </group>
+                        <hr style="border: 1px solid #000;"/>
+                        <group string="Property Information">
+                            <group>
+                                <field name="property_id" required="1" domain="[('property_for','=','rent')]"/>
+                                <field name="residential_type_id" string="Residential Type" readonly="1"/>
+                                <label for="street" string="Address"/>
+                                <div class="o_address_format">
+                                    <field name="street" placeholder="Street..." class="o_address_street"/>
+                                    <field name="street2" placeholder="Street 2..." class="o_address_street"/>
+                                    <field name="city" placeholder="City" class="o_address_city"/>
+
+                                    <field name="state_id" class="o_address_state" placeholder="State" can_write="True"
+                                           options="{'no_open': True, 'no_quick_create': True}" can_create="True"
+                                           context="{'country_id': country_id, 'default_country_id': country_id, 'zip': zip}"/>
+                                    <field name="zip" placeholder="ZIP" class="o_address_zip"/>
+                                    <field name="country_id" placeholder="Country" can_create="True" can_write="True"
+                                           options="{'no_open': True, 'no_create': True}" class="o_address_country"/>
+                                </div>
+                            </group>
+                            <group>
+                                <field name="company_id" required="1"/>
+                                <field name="region_id"/>
+                            </group>
+                        </group>
+
+                        <group string="Tenant / Customer">
+                            <group>
+                                <field name="tenant_id" required="1"/>
+                                <field name="tenant_phone"/>
+                                <field name="tenant_email"/>
+                            </group>
+                            <group>
+                                <field name="landlord_id" required="1"/>
+                                <field name="landlord_phone"/>
+                                <field name="landlord_email"/>
+                            </group>
+                        </group>
+                        <group string="Maintenance Details">
+                            <field name="maintenance_type" readonly="state == 'running'"/>
+                            <field name="charge_type" readonly="state == 'running'"/>
+                            <field name="total_maintenance"/>
+                        </group>
+                        <group string="Taxes">
+                            <field name="tax_rate" readonly="state == 'running'"/>
+                            <field name="taxable_amount" readonly="1"/>
+                            <field name="tax_amount" readonly="1"/>
+                        </group>
+
+                        <group string="Broker / Responsible">
+                            <group>
+                                <field name="user_id" required="1" readonly="state == 'running'"/>
+                                <field name="phone"/>
+                                <field name="email"/>
+                            </group>
+                            <group>
+                                <field name="broker_id" readonly="state == 'running'"/>
+                                <field name="broker_phone"/>
+                                <field name="broker_email"/>
+                                <field name="broker_commission" readonly="state == 'running'"/>
+                            </group>
+                        </group>
+                        <group string="CRM">
+                            <field name="lead_id" domain="[('property_id', '=', property_id)]"
+                                   options="{'no_open': True, 'no_quick_create': True}" readonly="state == 'running'"/>
+                        </group>
+                        <group string="Penalty">
+                            <field name="penalty_type" readonly="state == 'running'"/>
+                            <field name="penalty_value" readonly="state == 'running'"/>
+                            <field name="penalty_grace_days" readonly="state == 'running'"/>
+                        </group>
+
+                        <notebook>
+                            <page string="Rent Installments">
+                                <field name="rent_installment_ids">
+                                    <list editable="bottom">
+                                        <field name="invoice_date" required="1"/>
+                                        <field name="payment_type" required="1"/>
+                                        <field name="description"/>
+                                        <field name="amount" required="1"/>
+                                        <field name="invoice_id" required="1"/>
+                                    </list>
+                                </field>
+                            </page>
+                            <page string="Utility Service">
+                                <field name="utility_service_ids">
+                                    <list editable="bottom">
+                                        <field name="service_id" required="1"/>
+                                        <field name="service_type" required="1"/>
+                                        <field name="cost" required="1"/>
+                                    </list>
+                                </field>
+                            </page>
+
+                            <page string="Contract Agreement" name="contract_document">
+                                <field name="agreement" placeholder="Contract Agreement..."/>
+                                <field name="document_ids" mode="kanban" context="{'default_property_id': id}">
+                                    <kanban>
+                                        <field name="name"/>
+                                        <field name="document_filename"/>
+                                        <field name="document_date"/>
+                                        <field name="document_file"/>
+                                        <templates>
+                                            <t t-name="card">
+                                                <div t-att-data-id="record.id.raw_value"
+                                                     class="o_kanban_record text-center p-2 shadow-sm rounded-3 border">
+                                                    <div class="mb-2">
+                                                        <t t-set="filename"
+                                                           t-value="(record.document_filename.raw_value or '') + ''"/>
+
+                                                        <t t-if="filename.toLowerCase().endsWith('.pdf')">
+                                                            <i class="fa fa-file-pdf-o fa-3x text-danger"></i>
+                                                        </t>
+                                                        <t t-elif="filename.toLowerCase().endsWith('.doc') or filename.toLowerCase().endsWith('.docx')">
+                                                            <i class="fa fa-file-word-o fa-3x text-primary"></i>
+                                                        </t>
+                                                        <t t-elif="filename.toLowerCase().endsWith('.xls') or filename.toLowerCase().endsWith('.xlsx')">
+                                                            <i class="fa fa-file-excel-o fa-3x text-success"></i>
+                                                        </t>
+                                                        <t t-elif="filename.toLowerCase().endsWith('.jpg') or filename.toLowerCase().endsWith('.jpeg') or filename.toLowerCase().endsWith('.png')">
+                                                            <i class="fa fa-file-image-o fa-3x text-warning"></i>
+                                                        </t>
+                                                        <t t-else="">
+                                                            <i class="fa fa-file-o fa-3x text-secondary"></i>
+                                                        </t>
+                                                    </div>
+                                                    <div class="fw-bold mb-1">
+                                                        <field name="name"/>
+                                                    </div>
+                                                    <div class="mb-1">
+                                                        <a t-att-href="'/web/content/%s/document_file?download=true' % record.id.raw_value"
+                                                           target="_blank"
+                                                           class="text-primary fw-semibold">
+                                                            <field name="document_filename"/>
+                                                        </a>
+                                                    </div>
+
+                                                    <div>
+                                                        <span class="badge bg-info">
+                                                            <field name="document_date"/>
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </t>
+                                        </templates>
+                                    </kanban>
+                                    <form string="Add Document">
+                                        <sheet>
+                                            <group>
+                                                <field name="name" required="1"/>
+                                                <field name="document_file" filename="document_filename" required="1"/>
+                                                <field name="document_filename" required="1"/>
+                                                <field name="document_date" required="1"/>
+                                            </group>
+                                        </sheet>
+                                    </form>
+                                </field>
+                            </page>
+
+                            <page string="Term &amp; Condition">
+                                <field name="terms_conditions" placeholder="Term &amp; Condition"/>
+                            </page>
+
+                            <page string="P/L" class="o_form_sheet_bg">
+                                <group>
+                                    <separator string="Total Profit Amount" class="o_form_heading"/>
+                                    <table style="width: 100%; border: 1px solid #D1D5DB; border-radius: 0.9rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-collapse: collapse;">
+                                        <thead style="background-color: #F3F4F6;">
+                                            <tr>
+                                                <th style="padding: 0.75rem; text-align: left; font-weight: 600; border-bottom: 1px solid #D1D5DB;">
+                                                    #
+                                                </th>
+                                                <th style="padding: 0.75rem; text-align: left; font-weight: 600; border-bottom: 1px solid #D1D5DB;">
+                                                    Expected Amount
+                                                </th>
+                                                <th style="padding: 0.75rem; text-align: left; font-weight: 600; border-bottom: 1px solid #D1D5DB;">
+                                                    Paid Amount
+                                                </th>
+                                                <th style="padding: 0.75rem; text-align: left; font-weight: 600; border-bottom: 1px solid #D1D5DB;">
+                                                    Due Amount
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr style="border-bottom: 1px solid #D1D5DB;">
+                                                <td style="padding: 0.75rem; font-weight: 500;">Invoices</td>
+                                                <td style="padding: 0.75rem;">
+                                                    <field name="invoice_expected_amount" widget="monetary"
+                                                           options="{'currency_field': 'currency_id'}"/>
+                                                </td>
+                                                <td style="padding: 0.75rem; background-color: #D1FAE5; font-weight: 500;">
+                                                    <field name="invoice_paid_amount" widget="monetary"
+                                                           options="{'currency_field': 'currency_id'}"/>
+                                                </td>
+                                                <td style="padding: 0.75rem; background-color: #FEE2E2; font-weight: 500;">
+                                                    <field name="invoice_due_amount" widget="monetary"
+                                                           options="{'currency_field': 'currency_id'}"/>
+                                                </td>
+                                            </tr>
+
+                                            <tr style="border-bottom: 1px solid #D1D5DB;">
+                                                <td style="padding: 0.75rem; font-weight: 500;">Bills</td>
+                                                <td style="padding: 0.75rem;">
+                                                    <field name="bill_expected_amount" widget="monetary"
+                                                           options="{'currency_field': 'currency_id'}"/>
+                                                </td>
+                                                <td style="padding: 0.75rem; background-color: #D1FAE5; font-weight: 500;">
+                                                    <field name="bill_paid_amount" widget="monetary"
+                                                           options="{'currency_field': 'currency_id'}"/>
+                                                </td>
+                                                <td style="padding: 0.75rem; background-color: #FEE2E2; font-weight: 500;">
+                                                    <field name="bill_due_amount" widget="monetary"
+                                                           options="{'currency_field': 'currency_id'}"/>
+                                                </td>
+                                            </tr>
+
+                                            <tr style="font-weight: 600; background-color: #F9FAFB; border-top: 1px solid #D1D5DB;">
+                                                <td style="padding: 0.75rem; font-weight: 500;">
+                                                    <strong>Margin</strong>
+                                                </td>
+                                                <td style="padding: 0.75rem;">
+                                                    <field name="margin_expected" widget="monetary"
+                                                           options="{'currency_field': 'currency_id'}" readonly="1"/>
+                                                </td>
+                                                <td style="padding: 0.75rem; background-color: #D1FAE5; font-weight: 500;">
+                                                    <field name="margin_paid" widget="monetary"
+                                                           options="{'currency_field': 'currency_id'}" readonly="1"/>
+                                                </td>
+                                                <td style="padding: 0.75rem; background-color: #FEE2E2; font-weight: 500;">
+                                                    #
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </group>
+                            </page>
+                        </notebook>
+                    </sheet>
+                    <chatter/>
+                </form>
+            </field>
+        </record>
+
+        <record id="rent_contract_pivot_view" model="ir.ui.view">
+            <field name="name">rent.contract.pivot</field>
+            <field name="model">rent.contract</field>
+            <field name="arch" type="xml">
+                <pivot string="Contracts Analysis">
+                    <field name="name" type="row"/>
+                    <field name="payment_term_id" type="col"/>
+                    <field name="rent" type="measure"/>
+                    <field name="deposit" type="measure"/>
+                </pivot>
+            </field>
+        </record>
+
+        <record id="view_rent_contract_search" model="ir.ui.view">
+            <field name="name">rent.contract.search</field>
+            <field name="model">rent.contract</field>
+            <field name="arch" type="xml">
+                <search>
+                    <field name="name" string="Contract Number"/>
+                    <field name="tenant_id" string="Tenant"/>
+                    <field name="landlord_id" string="Landlord"/>
+                    <field name="property_id" string="Property"/>
+                    <field name="start_date" string="Start Date"/>
+                    <field name="end_date" string="End Date"/>
+                    <field name="state" string="Status"/>
+
+                    <filter string="Expired Contracts" name="expired_contracts" domain="[('state', '=', 'close')]"/>
+                    <filter string="Automatic Installment" name="auto_contract"
+                            domain="[('contract_type', '=', 'auto')]"/>
+                    <filter string="Manual Installment" name="manual_contract"
+                            domain="[('contract_type', '=', 'manual')]"/>
+
+                    <group>
+                        <filter string="Company" name="group_company" context="{'group_by':'company_id'}"/>
+                        <filter string="Property" name="group_by_property" context="{'group_by':'property_id'}"/>
+                        <filter string="Property Type" name="group_property_type"
+                                context="{'group_by':'property_type'}"/>
+                        <filter string="Residential Type" name="group_residential_type"
+                                context="{'group_by':'residential_type_id'}"/>
+                        <separator/>
+                        <filter string="Tenant" name="group_by_tenant" context="{'group_by':'tenant_id'}"/>
+                        <filter string="Landlord" name="group_by_landlord" context="{'group_by':'landlord_id'}"/>
+                        <separator/>
+                        <filter string="Broker" name="group_by_broker_id" context="{'group_by':'broker_id'}"/>
+                        <separator/>
+                        <filter string="Duration" name="group_by_duration" context="{'group_by':'duration'}"/>
+                        <separator/>
+                        <filter string="Contract Type" name="group_by_type" context="{'group_by':'contract_type'}"/>
+                        <separator/>
+                        <filter string="Contract Status" name="group_by_status" context="{'group_by':'state'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <record id="view_rent_contract_calendar" model="ir.ui.view">
+            <field name="name">rent.contract.calendar</field>
+            <field name="model">rent.contract</field>
+            <field name="arch" type="xml">
+                <calendar string="Rent Contracts Calendar" mode="month" date_start="start_date" date_stop="end_date"
+                          color="state">
+                    <field name="name"/>
+                    <field name="tenant_id"/>
+                    <field name="property_id"/>
+                    <field name="state"/>
+                </calendar>
+            </field>
+        </record>
+
+        <record id="view_rent_contract_kanban" model="ir.ui.view">
+            <field name="name">rent.contract.kanban</field>
+            <field name="model">rent.contract</field>
+            <field name="arch" type="xml">
+                <kanban>
+                    <field name="name"/>
+                    <field name="tenant_id"/>
+                    <field name="landlord_id"/>
+                    <field name="property_id"/>
+                    <field name="start_date"/>
+                    <field name="end_date"/>
+                    <field name="rent"/>
+                    <field name="state"/>
+                    <field name="currency_id"/>
+                    <field name="contract_type"/>
+                    <templates>
+                        <t t-name="card" class="oe_kanban_global_click">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div class="o_kanban_image">
+                                    <img t-att-src="'/web/image/res.partner/' + record.tenant_id.raw_value + '/image_128'"
+                                         class="img img-fluid rounded-circle" width="48" height="48" alt="Tenant"/>
+                                </div>
+                                <span class="text-muted">
+                                    <field name="tenant_id"/>
+                                </span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div class="fw-bold">
+                                    Property:
+                                    <field name="property_id"/>
+                                </div>
+                                <span class="badge text-bg-secondary"
+                                      t-attf-class="badge bg-#{record.state.raw_value}">
+                                    <field name="state"/>
+                                </span>
+                            </div>
+
+                            <div class="o_kanban_details d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    <strong>Landlord :</strong>
+                                    <field name="landlord_id"/>
+                                </div>
+                            </div>
+                            <div class="o_kanban_details d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    <strong>Contract Type :</strong>
+                                    <field name="contract_type"/>
+                                </div>
+                            </div>
+                            <div class="o_kanban_details d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    <strong>Responsible :</strong>
+                                    <field name="user_id"/>
+                                </div>
+                            </div>
+                            <div class="o_kanban_details text-muted small mb-2">
+                                <div>
+                                    Period:
+                                    <field name="start_date"/>
+                                    →
+                                    <field name="end_date"/>
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mt-2">
+                                <div>
+                                    <field name="currency_id"/>
+                                    <field name="rent" widget="monetary"/>
+                                </div>
+                            </div>
+                        </t>
+                    </templates>
+                </kanban>
+            </field>
+        </record>
+
+        <record id="action_rent_contracts" model="ir.actions.act_window">
+            <field name="name">Rent Contracts</field>
+            <field name="res_model">rent.contract</field>
+            <field name="view_mode">list,form,kanban,calendar,pivot,activity</field>
+        </record>
+        <menuitem id="property_rent_contract_menu" name="Rent Contracts" parent="property_management_menu" sequence="50"
+                  action="action_rent_contracts"/>
+    </data>
+</odoo>

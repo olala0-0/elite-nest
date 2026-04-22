@@ -1,0 +1,209 @@
+<odoo>
+    <!--Property Area Measurement-->
+    <record id="property_area_measurement_1" model="property.area.measurement">
+        <field name="section_id" ref="eg_property_management.property_section_1"/>
+        <field name="no_of_unit">2</field>
+        <field name="length">12</field>
+        <field name="width">12</field>
+        <field name="total_area">288</field>
+    </record>
+    <record id="property_area_measurement_2" model="property.area.measurement">
+        <field name="section_id" ref="eg_property_management.property_section_3"/>
+        <field name="no_of_unit">1</field>
+        <field name="length">16</field>
+        <field name="width">16</field>
+        <field name="total_area">256</field>
+    </record>
+
+    <record id="property_area_measurement_3" model="property.area.measurement">
+        <field name="section_id" ref="eg_property_management.property_section_2"/>
+        <field name="no_of_unit">1</field>
+        <field name="length">13</field>
+        <field name="width">12</field>
+        <field name="total_area">156</field>
+    </record>
+
+    <!--Property Utility Service-->
+    <record id="property_utility_service_1" model="property.utility.service">
+        <field name="service_id" ref="eg_property_management.property_service_1"/>
+        <field name="service_type">recurring</field>
+        <field name="cost">25</field>
+    </record>
+    <record id="property_utility_service_2" model="property.utility.service">
+        <field name="service_id" ref="eg_property_management.property_service_2"/>
+        <field name="service_type">recurring</field>
+        <field name="cost">25</field>
+    </record>
+
+    <!--Property Document-->
+    <record id="property_document_1" model="property.document">
+        <field name="name">Brochure</field>
+        <field name="document_file" type="base64" file="eg_property_management/static/img/brochuremw5.jpeg"/>
+        <field name="document_filename">brochuremw5.jpeg</field>
+    </record>
+    <record id="property_document_2" model="property.document">
+        <field name="name">Pricing details</field>
+        <field name="document_file" type="base64" file="eg_property_management/static/img/pricing_details.ods"/>
+        <field name="document_filename">pricing_details.ods</field>
+    </record>
+
+    <!--Property Document-->
+    <record id="property_floor_plan_1" model="property.floorplan">
+        <field name="name">01 - 2D Floor</field>
+        <field name="image" type="base64" file="eg_property_management/static/img/01-2d-floor.png"/>
+    </record>
+    <record id="property_floor_plan_2" model="property.floorplan">
+        <field name="name">02 - 3D Floor</field>
+        <field name="image" type="base64" file="eg_property_management/static/img/02-3d-floor.jpeg"/>
+    </record>
+
+    <!--Property Images-->
+    <record id="property_image_1" model="property.image">
+        <field name="name">01</field>
+        <field name="image" type="base64" file="eg_property_management/static/img/image01.jpeg"/>
+    </record>
+    <record id="property_image_2" model="property.image">
+        <field name="name">02</field>
+        <field name="image" type="base64" file="eg_property_management/static/img/image02.jpeg"/>
+    </record>
+    <record id="property_image_3" model="property.image">
+        <field name="name">03</field>
+        <field name="image" type="base64" file="eg_property_management/static/img/image03.jpeg"/>
+    </record>
+    <record id="property_image_4" model="property.image">
+        <field name="name">04</field>
+        <field name="image" type="base64" file="eg_property_management/static/img/image04.jpeg"/>
+    </record>
+    <record id="property_image_5" model="property.image">
+        <field name="name">05</field>
+        <field name="image" type="base64" file="eg_property_management/static/img/image05.webp"/>
+    </record>
+
+    <!--Property Amenity-->
+    <record id="property_amenity_1" model="property.amenity">
+        <field name="name">Cinema</field>
+        <field name="icon" type="base64" file="eg_property_management/static/img/amenity01.jpeg"/>
+    </record>
+    <record id="property_amenity_2" model="property.amenity">
+        <field name="name">Games</field>
+        <field name="icon" type="base64" file="eg_property_management/static/img/amenity02.jpg"/>
+    </record>
+
+    <!--Property Specification-->
+    <record id="property_specification_1" model="property.specification">
+        <field name="name">Interior Features</field>
+        <field name="description">All Interior Features Design.</field>
+        <field name="image" type="base64" file="eg_property_management/static/img/Specification.jpg"/>
+    </record>
+
+    <!--Property Near Connectivity-->
+    <record id="property_connectivity_1" model="property.connectivity">
+        <field name="name">Park</field>
+        <field name="description">General Park</field>
+        <field name="distance">2.0</field>
+        <field name="icon" type="base64" file="eg_property_management/static/img/park.png"/>
+    </record>
+    <record id="property_connectivity_2" model="property.connectivity">
+        <field name="name">Libraries</field>
+        <field name="description">General Libraries</field>
+        <field name="distance">4.0</field>
+        <field name="icon" type="base64" file="eg_property_management/static/img/library.png"/>
+    </record>
+    <record id="property_connectivity_3" model="property.connectivity">
+        <field name="name">Metro Station</field>
+        <field name="description">East New York Metro Station</field>
+        <field name="distance">1.0</field>
+        <field name="icon" type="base64" file="eg_property_management/static/img/metro-station.jpg"/>
+    </record>
+
+    <!--Property Detail-->
+    <record id="property_detail_1" model="property.detail">
+        <field name="name">Backbone Sunrise Residency</field>
+        <field name="code">BSR</field>
+        <field name="image_1920" type="base64" file="eg_property_management/static/img/apartment.jpg"/>
+        <field name="property_type">residential</field>
+        <field name="residential_type_id" ref="eg_property_management.property_residential_type_apartment"/>
+        <field name="property_for">rent</field>
+        <field name="landlord_id" ref="base.res_partner_address_13"/>
+        <field name="street">Backbone Sunrise Residency - Backbone Residency</field>
+        <field name="street2">East New York City</field>
+        <field name="city">New York City</field>
+        <field name="state_id" ref="base.state_us_5"/>
+        <field name="zip">100125</field>
+        <field name="country_id" ref="base.us"/>
+        <field name="tag_ids"
+               eval="[(6, 0, [ref('eg_property_management.property_tags_1'), ref('eg_property_management.property_tags_2'), ref('eg_property_management.property_tags_4'), ref('eg_property_management.property_tags_6')])]"/>
+        <field name="project_id" ref="eg_property_management.property_project_1"/>
+        <field name="sub_project_id" ref="eg_property_management.property_sub_project_1"/>
+        <field name="total_area">700</field>
+        <field name="usable_area">550</field>
+        <field name="area_measurement_ids"
+               eval="[(6, 0, [ref('eg_property_management.property_area_measurement_1'), ref('eg_property_management.property_area_measurement_2'), ref('eg_property_management.property_area_measurement_3')])]"/>
+        <field name="no_of_bhk">2</field>
+        <field name="bedrooms">2</field>
+        <field name="bathrooms">2</field>
+        <field name="furnishing">fully_furnished</field>
+        <field name="no_of_floors">20</field>
+        <field name="floor">4</field>
+        <field name="parking">1</field>
+        <field name="facing">north</field>
+        <field name="pricing_type">area_wise</field>
+        <field name="price_per_area">4</field>
+        <field name="rent_amount">3500</field>
+        <field name="is_any_maintenance">1</field>
+        <field name="maintenance_type">once</field>
+        <field name="charge_type">fixed</field>
+        <field name="maintenance">450</field>
+        <field name="is_utility_services">1</field>
+        <field name="utility_service_ids" eval="[(6, 0, [ref('eg_property_management.property_utility_service_1'),
+        ref('eg_property_management.property_utility_service_2')])]"/>
+        <field name="document_ids" eval="[(6, 0, [ref('eg_property_management.property_document_1'),
+        ref('eg_property_management.property_document_2')])]"/>
+        <field name="floorplan_ids" eval="[(6, 0, [ref('eg_property_management.property_floor_plan_1'),
+        ref('eg_property_management.property_floor_plan_2')])]"/>
+        <field name="image_ids" eval="[(6, 0, [ref('eg_property_management.property_image_1'),
+        ref('eg_property_management.property_image_2'),ref('eg_property_management.property_image_3'),
+        ref('eg_property_management.property_image_4'),ref('eg_property_management.property_image_5')])]"/>
+        <field name="amenity_ids" eval="[(6, 0, [ref('eg_property_management.property_amenity_1'),
+        ref('eg_property_management.property_amenity_2')])]"/>
+        <field name="specification_ids" eval="[(6, 0, [ref('eg_property_management.property_specification_1')])]"/>
+        <field name="connectivity_ids" eval="[(6, 0, [ref('eg_property_management.property_connectivity_1'),
+        ref('eg_property_management.property_connectivity_2'),ref('eg_property_management.property_connectivity_3')])]"/>
+    </record>
+
+    <record id="property_detail_2" model="property.detail">
+        <field name="name">Backbone Skyline Residency</field>
+        <field name="code">BSR</field>
+        <field name="image_1920" type="base64" file="eg_property_management/static/img/raw_house.jpg"/>
+        <field name="property_type">residential</field>
+        <field name="residential_type_id" ref="eg_property_management.property_residential_type_raw_house"/>
+        <field name="property_for">sale</field>
+        <field name="landlord_id" ref="base.res_partner_address_13"/>
+        <field name="street">Backbone Skyline Residency -Backbone Residential</field>
+        <field name="street2">East New York City</field>
+        <field name="city">New York City</field>
+        <field name="state_id" ref="base.state_us_5"/>
+        <field name="zip">100125</field>
+        <field name="country_id" ref="base.us"/>
+        <field name="tag_ids"
+               eval="[(6, 0, [ref('eg_property_management.property_tags_1'), ref('eg_property_management.property_tags_2'), ref('eg_property_management.property_tags_4'), ref('eg_property_management.property_tags_6'), ref('eg_property_management.property_tags_5')])]"/>
+        <field name="project_id" ref="eg_property_management.property_project_1"/>
+        <field name="sub_project_id" ref="eg_property_management.property_sub_project_1"/>
+        <field name="total_area">800</field>
+        <field name="usable_area">700</field>
+        <field name="area_measurement_ids"
+               eval="[(6, 0, [ref('eg_property_management.property_area_measurement_1'), ref('eg_property_management.property_area_measurement_2'), ref('eg_property_management.property_area_measurement_3')])]"/>
+        <field name="no_of_bhk">2</field>
+        <field name="bedrooms">2</field>
+        <field name="bathrooms">2</field>
+        <field name="furnishing">fully_furnished</field>
+        <field name="no_of_floors">20</field>
+        <field name="floor">4</field>
+        <field name="parking">1</field>
+        <field name="facing">north</field>
+        <field name="pricing_type">area_wise</field>
+        <field name="price_per_area">800</field>
+        <!--        <field name="document_ids" eval="[(6, 0, [ref('eg_property_management.property_document_1'),-->
+        <!--        ref('eg_property_management.property_document_2')])]"/>-->
+    </record>
+</odoo>

@@ -9,8 +9,8 @@ msgstr ""
 "POT-Creation-Date: 2026-05-03 12:00+0000\n"
 "PO-Revision-Date: 2026-05-03 12:00+0000\n"
 "Last-Translator: ERP Heritage <info@erpheritage.com.au>\n"
-"Language-Team: vi_VN\n"
-"Language: vi_VN\n"
+"Language-Team: Brazilian Portuguese\n"
+"Language: pt_BR\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -35,7 +35,7 @@ msgstr "AP Total Amount Regex"
 #. module: eh_account_base
 #: model:ir.model.fields,field_description:eh_account_base.field_eh_account_report_wizard__account_ids
 msgid "Account"
-msgstr "Account"
+msgstr "Conta"
 #. module: eh_account_base
 #: model:ir.model,name:eh_account_base.model_eh_account_report_execution
 msgid "Accounting report execution audit log"
@@ -48,7 +48,7 @@ msgstr "Active"
 #. odoo-python
 #: code:addons/eh_account_base/models/report_handler_sectioned.py:0
 msgid "Amount"
-msgstr "Amount"
+msgstr "Valor"
 #. module: eh_account_base
 #: model:ir.model.fields,field_description:eh_account_base.field_res_company__eh_approval_material_change_pct
 msgid "Approval Material Change %"
@@ -96,7 +96,7 @@ msgstr "CORE (consumer)"
 #. module: eh_account_base
 #: model_terms:ir.ui.view,arch_db:eh_account_base.view_eh_account_report_wizard_form
 msgid "Cancel"
-msgstr "Cancel"
+msgstr "Cancelar"
 #. module: eh_account_base
 #: model:ir.ui.menu,name:eh_account_base.menu_eh_config_pdc
 msgid "Cheques (PDC)"
@@ -115,7 +115,7 @@ msgstr "Collections Grace Days"
 #. module: eh_account_base
 #: model:ir.model,name:eh_account_base.model_res_company
 msgid "Companies"
-msgstr "Companies"
+msgstr "Empresas"
 #. module: eh_account_base
 #: model:ir.model.fields,field_description:eh_account_base.field_eh_account_report_execution__company_ids
 #: model:ir.model.fields,field_description:eh_account_base.field_eh_account_report_saved_view__company_id
@@ -154,7 +154,7 @@ msgstr "Created on"
 #. odoo-python
 #: code:addons/eh_account_base/models/report_handler_sectioned.py:0
 msgid "Current"
-msgstr "Current"
+msgstr "Atual"
 #. module: eh_account_base
 #: model:ir.model.fields,field_description:eh_account_base.field_res_company__eh_dashboard_lookback_days
 #: model:ir.model.fields,field_description:eh_account_base.field_res_config_settings__eh_dashboard_lookback_days
@@ -252,7 +252,7 @@ msgstr "Defaults for new fixed-asset and IFRS 16 lease contracts."
 #: model:ir.model.fields,field_description:eh_account_base.field_eh_account_dynamic_report__description
 #: model_terms:ir.ui.view,arch_db:eh_account_base.view_eh_account_dynamic_report_form
 msgid "Description"
-msgstr "Description"
+msgstr "Descrição"
 #. module: eh_account_base
 #: model:ir.model.fields,field_description:eh_account_base.field_account_move__display_name
 #: model:ir.model.fields,field_description:eh_account_base.field_eh_account_dynamic_report__display_name
@@ -269,7 +269,7 @@ msgstr "Display Name"
 #: model:ir.model.fields.selection,name:eh_account_base.selection__eh_account_report_execution__state__done
 #: model_terms:ir.ui.view,arch_db:eh_account_base.view_eh_account_report_execution_search
 msgid "Done"
-msgstr "Done"
+msgstr "Concluído"
 #. module: eh_account_base
 #: model:ir.model.fields,field_description:eh_account_base.field_eh_account_report_execution__duration_ms
 msgid "Duration Ms"
@@ -277,12 +277,12 @@ msgstr "Duration Ms"
 #. module: eh_account_base
 #: model_terms:ir.ui.view,arch_db:eh_account_base.view_eh_account_dynamic_report_form
 msgid "Dynamic Report"
-msgstr "Dynamic Report"
+msgstr "Relatório dinâmico"
 #. module: eh_account_base
 #: model:ir.actions.act_window,name:eh_account_base.action_eh_account_dynamic_report
 #: model_terms:ir.ui.view,arch_db:eh_account_base.view_eh_account_dynamic_report_tree
 msgid "Dynamic Reports"
-msgstr "Dynamic Reports"
+msgstr "Relatórios dinâmicos"
 #. module: eh_account_base
 #: model:ir.ui.menu,name:eh_account_base.menu_eh_account_dynamic_report
 msgid "Dynamic Reports Registry"
@@ -348,7 +348,7 @@ msgstr "Each row points at a Python handler that knows how to compute one report
 #: model_terms:ir.ui.view,arch_db:eh_account_base.view_eh_account_report_execution_form
 #: model_terms:ir.ui.view,arch_db:eh_account_base.view_eh_account_report_execution_search
 msgid "Error"
-msgstr "Error"
+msgstr "Erro"
 #. module: eh_account_base
 #: model:ir.model.fields,field_description:eh_account_base.field_eh_account_report_execution__error_message
 msgid "Error Message"
@@ -364,7 +364,7 @@ msgstr "Executed By"
 #. module: eh_account_base
 #: model_terms:ir.ui.view,arch_db:eh_account_base.view_eh_account_report_wizard_form
 msgid "Export to Excel"
-msgstr "Export to Excel"
+msgstr "Exportar para Excel"
 #. module: eh_account_base
 #: model:ir.model.fields,field_description:eh_account_base.field_res_company__eh_gl_row_limit
 #: model:ir.model.fields,field_description:eh_account_base.field_res_config_settings__eh_gl_row_limit
@@ -459,20 +459,20 @@ msgstr "JSON-encoded options dict as captured from the OWL viewer."
 #. module: eh_account_base
 #: model:ir.model.fields,field_description:eh_account_base.field_eh_account_report_wizard__journal_ids
 msgid "Journal"
-msgstr "Journal"
+msgstr "Diário"
 #. module: eh_account_base
 #: model:ir.model,name:eh_account_base.model_account_move
 msgid "Journal Entry"
-msgstr "Journal Entry"
+msgstr "Lançamento contábil"
 #. module: eh_account_base
 #. odoo-python
 #: code:addons/eh_account_base/models/report_handler_base.py:0
 msgid "Journal Items"
-msgstr "Journal Items"
+msgstr "Itens do lançamento"
 #. module: eh_account_base
 #: model_terms:ir.ui.view,arch_db:eh_account_base.view_eh_account_report_execution_search
 msgid "Last 7 Days"
-msgstr "Last 7 Days"
+msgstr "Últimos 7 dias"
 #. module: eh_account_base
 #: model:ir.model.fields,field_description:eh_account_base.field_eh_account_dynamic_report__write_uid
 #: model:ir.model.fields,field_description:eh_account_base.field_eh_account_report_execution__write_uid
@@ -566,7 +566,7 @@ msgstr "Only the owner can delete a saved view (%s)."
 #. module: eh_account_base
 #: model:ir.ui.menu,name:eh_account_base.menu_eh_config_operations
 msgid "Operations"
-msgstr "Operations"
+msgstr "Operações"
 #. module: eh_account_base
 #: model_terms:ir.ui.view,arch_db:eh_account_base.res_config_settings_view_form_eh
 msgid "Operations defaults for collections, AP intake, and SEPA."
@@ -597,7 +597,7 @@ msgstr "PDF"
 #. module: eh_account_base
 #: model:ir.model.fields,field_description:eh_account_base.field_eh_account_report_wizard__partner_ids
 msgid "Partner"
-msgstr "Partner"
+msgstr "Parceiro"
 #. module: eh_account_base
 #: model_terms:ir.ui.view,arch_db:eh_account_base.res_config_settings_view_form_eh
 msgid "Pattern used to extract the invoice number from raw email or text."
@@ -624,12 +624,12 @@ msgstr "Posted Only"
 #. odoo-python
 #: code:addons/eh_account_base/models/report_handler_sectioned.py:0
 msgid "Previous period"
-msgstr "Previous period"
+msgstr "Período anterior"
 #. module: eh_account_base
 #. odoo-python
 #: code:addons/eh_account_base/models/report_handler_sectioned.py:0
 msgid "Prior"
-msgstr "Prior"
+msgstr "Anterior"
 #. module: eh_account_base
 #: model:res.groups,comment:eh_account_base.group_eh_user
 msgid ""
@@ -646,7 +646,7 @@ msgstr "Read-only auditor: visibility on every ERP Heritage audit log without wr
 #: model:ir.model.fields,field_description:eh_account_base.field_eh_account_report_wizard__report_id
 #: model_terms:ir.ui.view,arch_db:eh_account_base.view_eh_account_report_execution_search
 msgid "Report"
-msgstr "Report"
+msgstr "Relatório"
 #. module: eh_account_base
 #: model:ir.actions.act_window,name:eh_account_base.action_eh_account_report_execution
 #: model:ir.ui.menu,name:eh_account_base.menu_eh_account_report_execution
@@ -660,7 +660,7 @@ msgstr "Report Code"
 #. module: eh_account_base
 #: model_terms:ir.ui.view,arch_db:eh_account_base.view_eh_account_report_execution_form
 msgid "Report Execution"
-msgstr "Report Execution"
+msgstr "Execução do relatório"
 #. module: eh_account_base
 #: model:ir.ui.menu,name:eh_account_base.menu_eh_audit_report_execution
 msgid "Report Execution Audit"
@@ -668,11 +668,11 @@ msgstr "Report Execution Audit"
 #. module: eh_account_base
 #: model_terms:ir.ui.view,arch_db:eh_account_base.view_eh_account_report_execution_tree
 msgid "Report Executions"
-msgstr "Report Executions"
+msgstr "Execuções do relatório"
 #. module: eh_account_base
 #: model_terms:ir.ui.view,arch_db:eh_account_base.view_eh_account_dynamic_report_form
 msgid "Report Name"
-msgstr "Report Name"
+msgstr "Nome do relatório"
 #. module: eh_account_base
 #: model:ir.model.constraint,message:eh_account_base.constraint_eh_account_dynamic_report_unique_code
 msgid "Report code must be unique."
@@ -692,7 +692,7 @@ msgstr "Report execution audit rows cannot be deleted. Reason: durable complianc
 #. module: eh_account_base
 #: model:ir.ui.menu,name:eh_account_base.menu_eh_config_reports
 msgid "Reports"
-msgstr "Reports"
+msgstr "Relatórios"
 #. module: eh_account_base
 #: model:ir.model.fields,field_description:eh_account_base.field_eh_account_report_execution__result_format
 msgid "Result Format"
@@ -712,12 +712,12 @@ msgstr "Row Count"
 #. module: eh_account_base
 #: model_terms:ir.ui.view,arch_db:eh_account_base.view_eh_account_report_wizard_form
 msgid "Run Report"
-msgstr "Run Report"
+msgstr "Executar relatório"
 #. module: eh_account_base
 #: model:ir.model.fields.selection,name:eh_account_base.selection__eh_account_report_execution__state__running
 #: model_terms:ir.ui.view,arch_db:eh_account_base.view_eh_account_report_execution_search
 msgid "Running"
-msgstr "Running"
+msgstr "Em execução"
 #. module: eh_account_base
 #: model:ir.model.fields,help:eh_account_base.field_eh_account_report_execution__options_hash
 msgid "SHA-256 of the canonicalised options dict."
@@ -730,7 +730,7 @@ msgstr "SHA-256 of the rendered output for xlsx and pdf formats."
 #. odoo-python
 #: code:addons/eh_account_base/models/report_handler_sectioned.py:0
 msgid "Same period last year"
-msgstr "Same period last year"
+msgstr "Mesmo período no ano anterior"
 #. module: eh_account_base
 #: model:ir.model,name:eh_account_base.model_eh_account_report_saved_view
 msgid "Saved filter view for a dynamic report"
@@ -787,7 +787,7 @@ msgstr "This log records every accounting report rendered through the ERP Herita
 #. module: eh_account_base
 #: model_terms:ir.ui.view,arch_db:eh_account_base.view_eh_account_report_execution_search
 msgid "Today"
-msgstr "Today"
+msgstr "Hoje"
 #. module: eh_account_base
 #: model:ir.model.fields,field_description:eh_account_base.field_res_config_settings__eh_ap_total_regex
 #: model_terms:ir.ui.view,arch_db:eh_account_base.res_config_settings_view_form_eh
@@ -817,17 +817,17 @@ msgstr "Unknown report code: %s"
 #: model:ir.model.fields,field_description:eh_account_base.field_eh_account_report_saved_view__user_id
 #: model_terms:ir.ui.view,arch_db:eh_account_base.view_eh_account_report_execution_search
 msgid "User"
-msgstr "User"
+msgstr "Usuário"
 #. module: eh_account_base
 #. odoo-python
 #: code:addons/eh_account_base/models/report_handler_sectioned.py:0
 msgid "Var %"
-msgstr "Var %"
+msgstr "Var. %"
 #. module: eh_account_base
 #. odoo-python
 #: code:addons/eh_account_base/models/report_handler_sectioned.py:0
 msgid "Variance"
-msgstr "Variance"
+msgstr "Variação"
 #. module: eh_account_base
 #: model:ir.model.fields,help:eh_account_base.field_eh_account_report_saved_view__shared
 msgid ""

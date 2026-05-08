@@ -186,25 +186,50 @@ class RentContract(models.Model):
             else:
                 rec.remaining_days = 0
 
+    # @api.depends('start_date', 'end_date', 'invoice_start_date', 'payment_term_id.interval_number', 'payment_term_id.interval_unit')
+    # def _compute_payment_count(self):
+    #     for rec in self:
+    #         rec.payment_count = 0
+    #         if rec.start_date and rec.end_date and rec.payment_term_id:
+    #             current_date = rec.invoice_start_date or rec.start_date
+    #             if current_date > rec.end_date:
+    #                 continue
+
+    #             delta = rec.payment_term_id._get_relativedelta()
+    #             count = 0
+    #             while current_date < rec.end_date:
+    #                 count += 1
+    #                 current_date = current_date + delta
+
+    #             if not count and current_date == rec.end_date:
+    #                 count = 1
+    #             rec.payment_count = count
     @api.depends('start_date', 'end_date', 'invoice_start_date', 'payment_term_id.interval_number', 'payment_term_id.interval_unit')
     def _compute_payment_count(self):
         for rec in self:
             rec.payment_count = 0
             if rec.start_date and rec.end_date and rec.payment_term_id:
+                # Use invoice_start_date or fallback to start_date
                 current_date = rec.invoice_start_date or rec.start_date
+                
                 if current_date > rec.end_date:
+                    rec.payment_count = 0
                     continue
 
                 delta = rec.payment_term_id._get_relativedelta()
                 count = 0
-                while current_date < rec.end_date:
+                
+                # Use <= to include the final installment if it falls on the end date
+                # Or if the first payment is the only payment
+                while current_date <= rec.end_date:
                     count += 1
                     current_date = current_date + delta
-
-                if not count and current_date == rec.end_date:
-                    count = 1
+                    
+                    # Safety break to prevent infinite loops if delta is 0
+                    if not delta:
+                        break
+                
                 rec.payment_count = count
-
     @api.constrains('start_date', 'end_date')
     def _check_contract_dates(self):
         for rec in self:

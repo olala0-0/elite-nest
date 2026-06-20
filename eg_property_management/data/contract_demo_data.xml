@@ -1,14 +1,5 @@
 <odoo>
-    <record id="product_product_installment_1" model="product.product">
-        <field name="name">Installment Property Payment</field>
-    </record>
-    <record id="product_product_deposit_2" model="product.product">
-        <field name="name">Property Deposit</field>
-    </record>
-    <record id="product_product_penalty_3" model="product.product">
-        <field name="name">Penalty</field>
-    </record>
-
+    <!--    Property Rent Contract-->
     <record id="rent_contract_1" model="rent.contract">
         <field name="start_date" eval="(DateTime.today())"/>
         <field name="end_date" eval="(DateTime.today() + relativedelta(months=4))"/>
@@ -79,6 +70,7 @@
                eval="[(6, 0, [ref('eg_property_management.property_utility_service_1'), ref('eg_property_management.property_utility_service_2')])]"/>
     </record>
 
+    <!--    Property Sale Contract-->
     <record id="sale_contract_1" model="sale.contract">
         <field name="create_date" eval="(DateTime.today())"/>
         <field name="property_id" ref="eg_property_management.property_detail_2"/>

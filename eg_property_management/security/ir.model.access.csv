@@ -1,4 +1,5 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+
 access_property_detail,access.property.detail,model_property_detail,,1,1,1,1
 access_property_tag,access.property.tag,model_property_tag,,1,1,1,1
 access_property_payment_term,access.property.payment.term,model_property_payment_term,,1,1,1,1
@@ -22,3 +23,16 @@ access_rent_contract_extend_wizard,access.rent.contract.extend.wizard,model_rent
 access_property_broker_history,access.property.broker.history,model_property_broker_history,,1,1,1,1
 access_property_section,access.property.section,model_property_section,,1,1,1,1
 access_property_area_measurement,access.property.area.measurement,model_property_area_measurement,,1,1,1,1
+
+
+
+
+
+
+
+
+
+
+
+
+

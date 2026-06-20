@@ -3,6 +3,7 @@ import base64
 from odoo import models, fields
 import xlsxwriter
 
+
 class RentContractFulkReport(models.TransientModel):
     _name = "rent.contract.full.report"
     _description = "Rent Contract Full XLS Report"
@@ -20,17 +21,13 @@ class RentContractFulkReport(models.TransientModel):
         total_format = workbook.add_format({'bold': True, 'bg_color': '#FFF2CC', 'border': 1, 'num_format': '#,##0.00'})
         total_label_format = workbook.add_format({'bold': True, 'bg_color': '#FFF2CC', 'border': 1})
 
-        # Kept 'Residential Type' header from main
         headers = ['Reference', 'Property', 'Residential Type', 'Customer', 'Landlord', 'Broker', 'Total Area',
                    'Start Date', 'End Date', 'Payment Term', 'Rent', 'Security Deposit', 'Broker Commission',
                    'Total Amount', 'Paid Amount', 'Remaining Amount', 'Status']
-        
-        contract_groups_ids = {
-            'All Contracts': self.rent_contract_ids,
-            'Running Contracts': self.rent_contract_ids.filtered(lambda c: c.state == 'running'),
-            'Closed Contracts': self.rent_contract_ids.filtered(lambda c: c.state == 'close'),
-            'Expired Contracts': self.rent_contract_ids.filtered(lambda c: c.state == 'expire'), 
-        }
+        contract_groups_ids = {'All Contracts': self.rent_contract_ids,
+                               'Running Contracts': self.rent_contract_ids.filtered(lambda c: c.state == 'running'),
+                               'Closed Contracts': self.rent_contract_ids.filtered(lambda c: c.state == 'close'),
+                               'Expired Contracts': self.rent_contract_ids.filtered(lambda c: c.state == 'expire'), }
 
         for sheet_name, contracts_id in contract_groups_ids.items():
             if not contracts_id:
@@ -44,7 +41,6 @@ class RentContractFulkReport(models.TransientModel):
 
             row = 2
             for contract in contracts_id:
-                # Merged the data logic to use residential_type_id with a fallback
                 data = [contract.name or '',
                         contract.property_id.name or '',
                         contract.residential_type_id.name or contract.type or '',
@@ -72,10 +68,10 @@ class RentContractFulkReport(models.TransientModel):
 
             paid_total = sum(float(c.invoice_paid_amount or 0.0) for c in contracts_id)
             due_total = sum(float(c.invoice_due_amount or 0.0) for c in contracts_id)
-            total_amount_sum = paid_total + due_total
+            total_amount = paid_total + due_total
 
             worksheet.write(row, 12, "Totals", total_label_format)
-            worksheet.write(row, 13, total_amount_sum, total_format)
+            worksheet.write(row, 13, total_amount, total_format)
             worksheet.write(row, 14, paid_total, total_format)
             worksheet.write(row, 15, due_total, total_format)
 

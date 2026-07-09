@@ -12,7 +12,7 @@
         "account",
         "maintenance",
         "website",
-        "calendar"
+        "calendar",
         "helpdesk",
     ],
     "data": [

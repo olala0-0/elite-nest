@@ -36,7 +36,7 @@
         "views/sale_contract_view.xml",
         "views/rent_contract_view.xml",
         "views/property_section_view.xml",
-        "views/crm_lead_view.xml"
+        "views/crm_lead_view.xml",
         "views/helpdesk_ticket_view.xml",
     ],
     "demo": [

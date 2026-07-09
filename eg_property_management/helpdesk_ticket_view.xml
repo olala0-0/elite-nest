@@ -1,0 +1,26 @@
+<odoo>
+    <record id="helpdesk_ticket_property_form_view" model="ir.ui.view">
+        <field name="name">helpdesk.ticket.form.property</field>
+        <field name="model">helpdesk.ticket</field>
+        <field name="inherit_id" ref="helpdesk.helpdesk_ticket_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button type="object" class="oe_stat_button" icon="fa-wrench"
+                        name="action_view_maintenance_requests"
+                        invisible="not property_id">
+                    <field name="maintenance_count" widget="statinfo" string="Maintenance"/>
+                </button>
+            </xpath>
+
+            <xpath expr="//field[@name='partner_id']" position="after">
+                <field name="property_id" options="{'no_create_edit': True, 'no_create': True}"/>
+            </xpath>
+
+            <xpath expr="//div[hasclass('oe_button_box')]/.." position="before">
+                <button name="action_create_maintenance_request" string="Create Maintenance Request"
+                        type="object" class="btn-primary"
+                        invisible="not property_id or maintenance_request_id"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

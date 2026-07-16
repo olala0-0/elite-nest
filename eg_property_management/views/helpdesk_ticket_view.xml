@@ -33,11 +33,3 @@
         </field>
     </record>
 </odoo>
-```
-eof
-
-### Next Steps to Apply the Fix:
-
-1. **Replace the file** in your repository at the path `views/helpdesk_ticket_view.xml` with the content above.
-2. **Commit and push** the changes to your branch.
-3. **Trigger the module upgrade** in your database by visiting:

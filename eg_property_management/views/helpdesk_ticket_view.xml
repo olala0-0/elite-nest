@@ -7,10 +7,10 @@
         <field name="priority">100</field>
         <field name="arch" type="xml">
             <!-- 
-                Using //sheet//field[@name='partner_id'] targets the visible field on the sheet 
-                instead of any hidden mobile or background occurrences.
+                Using position="before" places the 'property_id' field directly ABOVE the 
+                'partner_id' (Customer) field, matching the exact layout in image_d71548.png.
             -->
-            <xpath expr="//sheet//field[@name='partner_id']" position="after">
+            <xpath expr="//sheet//field[@name='partner_id']" position="before">
                 <field name="property_id" options="{'no_create_edit': True, 'no_create': True}"/>
                 <field name="maintenance_request_id" invisible="1"/>
             </xpath>
@@ -24,11 +24,16 @@
                 </button>
             </xpath>
 
-            <!-- Action Button in Header -->
+            <!-- 
+                Action Button in Header:
+                We make it visible even if property_id is not set yet, so the user can see 
+                and click it. If clicked without a property, python logic will trigger 
+                a clean UserError telling them to select a Property/Unit first.
+            -->
             <xpath expr="//header" position="inside">
                 <button name="action_create_maintenance_request" string="Create Maintenance Request"
                         type="object" class="btn-primary"
-                        invisible="not property_id or maintenance_request_id"/>
+                        invisible="maintenance_request_id"/>
             </xpath>
         </field>
     </record>

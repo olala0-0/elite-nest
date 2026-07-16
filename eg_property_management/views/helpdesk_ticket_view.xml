@@ -3,9 +3,14 @@
         <field name="name">helpdesk.ticket.form.property</field>
         <field name="model">helpdesk.ticket</field>
         <field name="inherit_id" ref="helpdesk.helpdesk_ticket_view_form"/>
+        <!-- Priority 100 ensures this inheritance is evaluated last, overriding other views -->
+        <field name="priority">100</field>
         <field name="arch" type="xml">
-            <!-- Ensure both property_id and the invisible condition dependency fields exist on the form -->
-            <xpath expr="//field[@name='partner_id']" position="after">
+            <!-- 
+                Using //sheet//field[@name='partner_id'] targets the visible field on the sheet 
+                instead of any hidden mobile or background occurrences.
+            -->
+            <xpath expr="//sheet//field[@name='partner_id']" position="after">
                 <field name="property_id" options="{'no_create_edit': True, 'no_create': True}"/>
                 <field name="maintenance_request_id" invisible="1"/>
             </xpath>
@@ -28,3 +33,11 @@
         </field>
     </record>
 </odoo>
+```
+eof
+
+### Next Steps to Apply the Fix:
+
+1. **Replace the file** in your repository at the path `views/helpdesk_ticket_view.xml` with the content above.
+2. **Commit and push** the changes to your branch.
+3. **Trigger the module upgrade** in your database by visiting:

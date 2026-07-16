@@ -4,10 +4,13 @@
         <field name="model">helpdesk.ticket</field>
         <field name="inherit_id" ref="helpdesk.helpdesk_ticket_view_form"/>
         <field name="arch" type="xml">
+            <!-- Ensure both property_id and the invisible condition dependency fields exist on the form -->
             <xpath expr="//field[@name='partner_id']" position="after">
                 <field name="property_id" options="{'no_create_edit': True, 'no_create': True}"/>
+                <field name="maintenance_request_id" invisible="1"/>
             </xpath>
 
+            <!-- Stat Button in the upper right corner of the ticket -->
             <xpath expr="//div[@name='button_box']" position="inside">
                 <button type="object" class="oe_stat_button" icon="fa-wrench"
                         name="action_view_maintenance_requests"
@@ -16,6 +19,7 @@
                 </button>
             </xpath>
 
+            <!-- Action Button in Header -->
             <xpath expr="//header" position="inside">
                 <button name="action_create_maintenance_request" string="Create Maintenance Request"
                         type="object" class="btn-primary"

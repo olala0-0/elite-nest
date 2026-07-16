@@ -11,6 +11,11 @@
                 <field name="property_id" options="{'no_create_edit': True, 'no_create': True}"/>
             </xpath>
 
+            <xpath expr="//header" position="inside">
+                <button name="action_create_rent_contract" string="Create Rent Contract" type="object"
+                        class="btn-primary"
+                        invisible="not property_id or not partner_id"/>
+            </xpath>
         </field>
     </record>
 </odoo>

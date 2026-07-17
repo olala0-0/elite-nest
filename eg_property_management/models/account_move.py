@@ -52,7 +52,60 @@ class AccountMove(models.Model):
                         if not vals.get('property_id') and contract.property_id:
                             vals['property_id'] = contract.property_id.id
 
-        return super(AccountMove, self).create(vals_list)
+        moves = super(AccountMove, self).create(vals_list)
+        # Synchronize rent installments for newly created manual customer invoices
+        moves._sync_rent_installments()
+        return moves
+
+    def write(self, vals):
+        """ Trigger installment synchronization whenever crucial invoice metrics are edited. """
+        res = super(AccountMove, self).write(vals)
+        if any(field in vals for field in ['rent_contract_id', 'invoice_line_ids', 'invoice_date', 'currency_id', 'state', 'partner_id']):
+            self._sync_rent_installments()
+        return res
+
+    def _sync_rent_installments(self):
+        """ Automatically creates, edits, or deletes 'rent.installment' lines in the background
+        to ensure manual Accounting invoices reflect flawlessly inside Rent Contract master sheets. """
+        # Skip automatic synchronization if we are already in the context of the Rent Contract's action_create_invoice wizard
+        if self.env.context.get('active_model') == 'rent.contract':
+            return
+        
+        for move in self:
+            if move.move_type == 'out_invoice' and move.rent_contract_id:
+                # Sum the price subtotal from lines to bypass uncomputed draft totals
+                amount = sum(move.invoice_line_ids.mapped('price_subtotal'))
+                
+                existing_installments = self.env['rent.installment'].sudo().search([
+                    ('invoice_id', '=', move.id)
+                ])
+                
+                if existing_installments:
+                    # Update the existing installment entry with the modified invoice details
+                    if len(existing_installments) == 1:
+                        existing_installments.sudo().write({
+                            'amount': amount,
+                            'invoice_date': move.invoice_date or fields.Date.today(),
+                            'currency_id': move.currency_id.id,
+                        })
+                else:
+                    # Automatically generate a new installment ledger line for this manual invoice
+                    self.env['rent.installment'].sudo().create({
+                        'rent_contract_id': move.rent_contract_id.id,
+                        'invoice_date': move.invoice_date or fields.Date.today(),
+                        'payment_type': 'rent',
+                        'description': move.invoice_line_ids[0].name if move.invoice_line_ids else f"Rent payment for {move.property_id.name or 'Unit'}",
+                        'amount': amount,
+                        'currency_id': move.currency_id.id,
+                        'invoice_id': move.id,
+                    })
+            else:
+                # If the invoice is deleted, draft canceled, or contract unlinked, clean up the ledger entry
+                installments = self.env['rent.installment'].sudo().search([
+                    ('invoice_id', '=', move.id)
+                ])
+                if installments:
+                    installments.sudo().unlink()
 
     @api.onchange('partner_id')
     def _onchange_partner_id_set_contract_property(self):

@@ -36,12 +36,11 @@ class AccountMove(models.Model):
             for vals in vals_list:
                 partner_id = vals.get('partner_id')
                 if partner_id and not vals.get('rent_contract_id'):
-                    # Using tenant_id instead of partner_id to match your rent.contract schema
+                    # Search for an active running contract first using tenant_id
                     contract = self.env['rent.contract'].sudo().search([
                         ('tenant_id', '=', partner_id),
                         ('state', '=', 'running')
                     ], limit=1)
-                    
                     # Fallback to any contract for this tenant if none is currently 'running'
                     if not contract:
                         contract = self.env['rent.contract'].sudo().search([
@@ -60,7 +59,7 @@ class AccountMove(models.Model):
         """ Auto-populate Rent Contract and Property on the screen when 
         manually selecting or editing a Customer on an invoice form. """
         if self.partner_id:
-            # Using tenant_id instead of partner_id to match your rent.contract schema
+            # Search active running contracts matching selected customer
             contract = self.env['rent.contract'].search([
                 ('tenant_id', '=', self.partner_id.id),
                 ('state', '=', 'running')

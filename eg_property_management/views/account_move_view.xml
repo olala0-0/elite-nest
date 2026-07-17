@@ -6,14 +6,16 @@
         <field name="priority">50</field>
         <field name="arch" type="xml">
             <!-- 
-                This positions the Property and Rent Contract fields directly 
-                after the Customer (partner_id) field on the invoice sheet.
+                Positions the Property / Unit and Rent Contract fields in the header 
+                directly after the Customer (partner_id) field.
+                By removing 'invisible="not rent_contract_id"', the Rent Contract field 
+                is always visible and selectable.
             -->
             <xpath expr="//field[@name='partner_id']" position="after">
                 <field name="property_id" options="{'no_create': True, 'no_create_edit': True}" 
                        placeholder="Select Linked Property..."/>
                 <field name="rent_contract_id" options="{'no_create': True, 'no_create_edit': True}" 
-                       invisible="not rent_contract_id"/>
+                       placeholder="Select Rent Contract..."/>
             </xpath>
         </field>
     </record>

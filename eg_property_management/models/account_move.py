@@ -4,7 +4,6 @@ from odoo import models, fields, api
 class AccountMove(models.Model):
     _inherit = "account.move"
 
-    # Define the custom fields to link to your property management system
     property_id = fields.Many2one(
         comodel_name="property.detail", 
         string="Property / Unit"
@@ -22,7 +21,7 @@ class AccountMove(models.Model):
         active_model = self.env.context.get('active_model')
         active_id = self.env.context.get('active_id')
 
-        # Scenario A: Invoice created directly from a Rent Contract screen
+        # Scenario A: Created directly from a Rent Contract screen / button action
         if active_model == 'rent.contract' and active_id:
             contract = self.env['rent.contract'].browse(active_id)
             if contract.exists():
@@ -32,20 +31,21 @@ class AccountMove(models.Model):
                     if not vals.get('property_id') and contract.property_id:
                         vals['property_id'] = contract.property_id.id
 
-        # Scenario B: Invoices imported (CSV) or uploaded (PDF/OCR)
+        # Scenario B: Uploaded, imported, or created via OCR/API/CSV (without active contract screen context)
         else:
             for vals in vals_list:
                 partner_id = vals.get('partner_id')
                 if partner_id and not vals.get('rent_contract_id'):
-                    # Search for an active running contract first
+                    # Using tenant_id instead of partner_id to match your rent.contract schema
                     contract = self.env['rent.contract'].sudo().search([
-                        ('partner_id', '=', partner_id),
+                        ('tenant_id', '=', partner_id),
                         ('state', '=', 'running')
                     ], limit=1)
-                    # Fallback to any available contract for this tenant if none is currently 'running'
+                    
+                    # Fallback to any contract for this tenant if none is currently 'running'
                     if not contract:
                         contract = self.env['rent.contract'].sudo().search([
-                            ('partner_id', '=', partner_id)
+                            ('tenant_id', '=', partner_id)
                         ], limit=1)
                     
                     if contract:
@@ -60,13 +60,14 @@ class AccountMove(models.Model):
         """ Auto-populate Rent Contract and Property on the screen when 
         manually selecting or editing a Customer on an invoice form. """
         if self.partner_id:
+            # Using tenant_id instead of partner_id to match your rent.contract schema
             contract = self.env['rent.contract'].search([
-                ('partner_id', '=', self.partner_id.id),
+                ('tenant_id', '=', self.partner_id.id),
                 ('state', '=', 'running')
             ], limit=1)
             if not contract:
                 contract = self.env['rent.contract'].search([
-                    ('partner_id', '=', self.partner_id.id)
+                    ('tenant_id', '=', self.partner_id.id)
                 ], limit=1)
             
             if contract:

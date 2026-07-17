@@ -175,7 +175,7 @@ class RentContract(models.Model):
             if not val.get('invoice_start_date'):
                 val['invoice_start_date'] = val.get('start_date') or fields.Date.today()
 
-        return super(RentContract, self).create(val)
+        return super(RentContract, self).create(vals)
 
     @api.depends('start_date', 'end_date')
     def _compute_duration(self):
@@ -575,7 +575,8 @@ class RentContract(models.Model):
                 continue
 
             # CRITICAL FIX: We now explicitly write both property_id and rent_contract_id directly!
-            invoice_id = self.env['account.move'].create({
+            # We use .with_context(skip_sync_installment=True) to prevent duplicate ledger creation.
+            invoice_id = self.env['account.move'].with_context(skip_sync_installment=True).create({
                 'move_type': 'out_invoice',
                 'partner_id': self.tenant_id.id,
                 'invoice_origin': self.name,
@@ -654,20 +655,27 @@ class RentContract(models.Model):
 
     def action_view_invoices(self):
         self.ensure_one()
-        invoices_id = self.rent_installment_ids.mapped('invoice_id').filtered(
-            lambda inv: inv.move_type == 'out_invoice')
         return {
             'name': 'Customer Invoices',
             'type': 'ir.actions.act_window',
             'res_model': 'account.move',
             'view_mode': 'list,form',
-            'domain': [('invoice_origin', '=', self.name), ('move_type', 'in', ['out_invoice', 'out_refund']), ],
+            'domain': [
+                ('move_type', 'in', ['out_invoice', 'out_refund']),
+                '|',
+                ('rent_contract_id', '=', self.id),
+                ('invoice_origin', '=', self.name)
+            ],
         }
 
     def _compute_invoice_count(self):
         for rec in self:
-            rec.invoice_count = self.env['account.move'].search_count(
-                [('invoice_origin', '=', rec.name), ('move_type', 'in', ['out_invoice', 'out_refund'])])
+            rec.invoice_count = self.env['account.move'].search_count([
+                ('move_type', 'in', ['out_invoice', 'out_refund']),
+                '|',
+                ('rent_contract_id', '=', rec.id),
+                ('invoice_origin', '=', rec.name)
+            ])
 
     @api.onchange('property_id')
     def _onchange_property_id(self):
@@ -829,7 +837,8 @@ class RentContract(models.Model):
                     'account_id': income_account_id.id,
                 })],
             }
-            invoice_id = self.env['account.move'].create(move_vals)
+            # We use .with_context(skip_sync_installment=True) to prevent duplicate ledger creation.
+            invoice_id = self.env['account.move'].with_context(skip_sync_installment=True).create(move_vals)
 
             self.env['rent.installment'].create({
                 'rent_contract_id': contract_id.id,

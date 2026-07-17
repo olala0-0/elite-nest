@@ -175,7 +175,7 @@ class RentContract(models.Model):
             if not val.get('invoice_start_date'):
                 val['invoice_start_date'] = val.get('start_date') or fields.Date.today()
 
-        return super(RentContract, self).create(vals)
+        return super(RentContract, self).create(val)
 
     @api.depends('start_date', 'end_date')
     def _compute_duration(self):
@@ -574,6 +574,7 @@ class RentContract(models.Model):
             if not invoice_lines:
                 continue
 
+            # CRITICAL FIX: We now explicitly write both property_id and rent_contract_id directly!
             invoice_id = self.env['account.move'].create({
                 'move_type': 'out_invoice',
                 'partner_id': self.tenant_id.id,
@@ -582,6 +583,7 @@ class RentContract(models.Model):
                 'invoice_date_due': due_date,
                 'currency_id': self.currency_id.id,
                 'property_id': self.property_id.id,
+                'rent_contract_id': self.id,
                 'invoice_line_ids': invoice_lines,
             })
 
@@ -816,6 +818,9 @@ class RentContract(models.Model):
                 'invoice_date_due': fields.Date.today(),
                 'currency_id': contract_id.currency_id.id,
                 'invoice_origin': contract_id.name,
+                # CRITICAL PENALTY FIX: Automatically link the Property and Rent Contract here as well!
+                'property_id': contract_id.property_id.id,
+                'rent_contract_id': contract_id.id,
                 'invoice_line_ids': [(0, 0, {
                     'product_id': invoice_settings['penalty_product'].id if invoice_settings['penalty_product'] else False,
                     'name': invoice_settings['penalty_description'],

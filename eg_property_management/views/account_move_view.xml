@@ -3,15 +3,17 @@
         <field name="name">account.move.form.inherit.property</field>
         <field name="model">account.move</field>
         <field name="inherit_id" ref="account.view_move_form"/>
-        <field name="priority">50</field>
+        <!-- 
+            We set the priority to 999. This guarantees Odoo loads our view last, 
+            overriding any background layout rules or views from other modules.
+        -->
+        <field name="priority">999</field>
         <field name="arch" type="xml">
             <!-- 
-                Positions the Property / Unit and Rent Contract fields in the header 
-                directly after the Customer (partner_id) field.
-                By removing 'invisible="not rent_contract_id"', the Rent Contract field 
-                is always visible and selectable.
+                Using sheet/group/field ensures we target the main visible Customer field 
+                on the invoice sheet, making both fields permanently visible.
             -->
-            <xpath expr="//field[@name='partner_id']" position="after">
+            <xpath expr="//sheet//field[@name='partner_id']" position="after">
                 <field name="property_id" options="{'no_create': True, 'no_create_edit': True}" 
                        placeholder="Select Linked Property..."/>
                 <field name="rent_contract_id" options="{'no_create': True, 'no_create_edit': True}" 

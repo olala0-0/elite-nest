@@ -1,4 +1,4 @@
-from odoo import models, fields
+from odoo import models, fields, api
 from odoo.exceptions import UserError
 
 
@@ -6,9 +6,23 @@ class HelpdeskTicket(models.Model):
     _inherit = "helpdesk.ticket"
 
     property_id = fields.Many2one(comodel_name="property.detail", string="Property / Unit")
-    maintenance_request_id = fields.Many2one(comodel_name="maintenance.request", string="Maintenance Request",
-                                             readonly=True, copy=False)
-    maintenance_count = fields.Integer(string="Maintenance Requests", compute="_compute_maintenance_count")
+    maintenance_request_id = fields.Many2one(
+        comodel_name="maintenance.request", 
+        string="Maintenance Request",
+        readonly=True, 
+        copy=False
+    )
+    maintenance_count = fields.Integer(
+        string="Maintenance Requests", 
+        compute="_compute_maintenance_count"
+    )
+
+    @api.depends("property_id")
+    def _compute_maintenance_count(self):
+        for rec in self:
+            rec.maintenance_count = self.env["maintenance.request"].search_count([
+                ("property_id", "=", rec.property_id.id)
+            ]) if rec.property_id else 0
 
     def action_create_maintenance_request(self):
         self.ensure_one()
@@ -32,11 +46,6 @@ class HelpdeskTicket(models.Model):
             "view_mode": "form",
             "target": "current",
         }
-
-    def _compute_maintenance_count(self):
-        for rec in self:
-            rec.maintenance_count = self.env["maintenance.request"].search_count(
-                [("property_id", "=", rec.property_id.id)]) if rec.property_id else 0
 
     def action_view_maintenance_requests(self):
         self.ensure_one()

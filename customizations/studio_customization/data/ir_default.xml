@@ -1,0 +1,43 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<odoo>
+  <record id="new_integer_rent_con_f1cfd474-5079-4d83-84df-9fe70a1ba485" model="ir.default" context="{'studio': True}">
+    <field name="field_id" ref="new_integer_rent_con_231bc3b4-4f47-4bf0-9ac9-9ad8a6830040"/>
+    <field name="json_value">"0"</field>
+  </record>
+  <record id="active_asset_categor_f1b03265-8f6f-4064-a15a-bfdd57120305" model="ir.default" context="{'studio': True}">
+    <field name="field_id" ref="active_asset_categor_62a8bd0b-c95d-4212-8272-dbaea055c4dd"/>
+    <field name="json_value">true</field>
+  </record>
+  <record id="sequence_asset_categ_4b638c37-0d6b-4517-9584-e44a727d1603" model="ir.default" context="{'studio': True}">
+    <field name="field_id" ref="sequence_asset_categ_4f05ae84-b8ba-4a95-98f7-00283c17b398"/>
+    <field name="json_value">10</field>
+  </record>
+  <record id="active_room_area_1ea70938-31a5-4b22-95bb-afbeec7617e5" model="ir.default" context="{'studio': True}">
+    <field name="field_id" ref="active_room_area_c02e5c19-58ae-42aa-b749-c9b08ec9d386"/>
+    <field name="json_value">true</field>
+  </record>
+  <record id="sequence_room_area_2c88ad62-482d-4c51-bd1d-6def0500c0e8" model="ir.default" context="{'studio': True}">
+    <field name="field_id" ref="sequence_room_area_4f928e6e-222b-4e1d-9266-5a1f818e89b2"/>
+    <field name="json_value">10</field>
+  </record>
+  <record id="active_level_53db2638-a70d-4c3a-9758-0c7f7d6f5da8" model="ir.default" context="{'studio': True}">
+    <field name="field_id" ref="active_level_8d328769-bffe-4b3f-8fd6-165bb896f4c6"/>
+    <field name="json_value">true</field>
+  </record>
+  <record id="sequence_level_4fe60e2c-5a6a-4adb-af30-ba3a6c5f55b3" model="ir.default" context="{'studio': True}">
+    <field name="field_id" ref="sequence_level_8adc1a57-ae3a-474e-a5c1-863f6523d867"/>
+    <field name="json_value">10</field>
+  </record>
+  <record id="active_block_96e89793-227b-4b20-aa68-339683026d89" model="ir.default" context="{'studio': True}">
+    <field name="field_id" ref="active_block_3efd47f2-a8a6-427b-89ea-fa9141601627"/>
+    <field name="json_value">true</field>
+  </record>
+  <record id="sequence_block_5bbd9717-503d-40c0-84e5-85e6654ee9f5" model="ir.default" context="{'studio': True}">
+    <field name="field_id" ref="sequence_block_b7d39644-0b42-49ed-98ca-1bd9e6fd52bd"/>
+    <field name="json_value">10</field>
+  </record>
+  <record id="priority_helpdesk_ti_81905c85-6a84-4438-a34f-350ee0039c87" model="ir.default" context="{'studio': True}">
+    <field name="field_id" ref="helpdesk.field_helpdesk_ticket__priority"/>
+    <field name="json_value">"0"</field>
+  </record>
+</odoo>

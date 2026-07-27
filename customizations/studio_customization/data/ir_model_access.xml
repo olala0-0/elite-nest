@@ -1,0 +1,88 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<odoo>
+  <record id="asset_category_group_7158f655-039a-48f0-93ca-4d3b04b5fb1a" model="ir.model.access" context="{'studio': True}">
+    <field name="group_id" ref="base.group_system"/>
+    <field name="model_id" ref="asset_category_dfcae6db-b1f3-492d-9e6e-74e2e4e1d802"/>
+    <field name="name">ASSET CATEGORY group_system</field>
+    <field name="perm_create" eval="True"/>
+    <field name="perm_read" eval="True"/>
+    <field name="perm_unlink" eval="True"/>
+    <field name="perm_write" eval="True"/>
+  </record>
+  <record id="asset_category_group_ec14bff2-c6f7-4e35-9778-87c0edd605e9" model="ir.model.access" context="{'studio': True}">
+    <field name="group_id" ref="base.group_user"/>
+    <field name="model_id" ref="asset_category_dfcae6db-b1f3-492d-9e6e-74e2e4e1d802"/>
+    <field name="name">ASSET CATEGORY group_user</field>
+    <field name="perm_create" eval="True"/>
+    <field name="perm_read" eval="True"/>
+    <field name="perm_write" eval="True"/>
+  </record>
+  <record id="room_area_group_syst_6343eb37-a30e-4c1e-b2c6-41cfc700f7f2" model="ir.model.access" context="{'studio': True}">
+    <field name="group_id" ref="base.group_system"/>
+    <field name="model_id" ref="room_area_0e04ca0c-41b9-45a9-b169-33f2eae9340b"/>
+    <field name="name">ROOM / AREA group_system</field>
+    <field name="perm_create" eval="True"/>
+    <field name="perm_read" eval="True"/>
+    <field name="perm_unlink" eval="True"/>
+    <field name="perm_write" eval="True"/>
+  </record>
+  <record id="room_area_group_user_f9ec45dc-d56b-495f-b8a2-9550f3d96e96" model="ir.model.access" context="{'studio': True}">
+    <field name="group_id" ref="base.group_user"/>
+    <field name="model_id" ref="room_area_0e04ca0c-41b9-45a9-b169-33f2eae9340b"/>
+    <field name="name">ROOM / AREA group_user</field>
+    <field name="perm_create" eval="True"/>
+    <field name="perm_read" eval="True"/>
+    <field name="perm_write" eval="True"/>
+  </record>
+  <record id="room_area_line_group_6beac0bb-eb64-4400-ab59-4776f300fb57" model="ir.model.access" context="{'studio': True}">
+    <field name="group_id" ref="base.group_system"/>
+    <field name="model_id" ref="room_area_line_b7f36621-497a-4355-8f99-7332af72ce61"/>
+    <field name="name">room_area_line group_system</field>
+    <field name="perm_create" eval="True"/>
+    <field name="perm_read" eval="True"/>
+    <field name="perm_unlink" eval="True"/>
+    <field name="perm_write" eval="True"/>
+  </record>
+  <record id="room_area_line_group_add192b3-bf80-4295-b82d-3b0ad4f8e102" model="ir.model.access" context="{'studio': True}">
+    <field name="group_id" ref="base.group_user"/>
+    <field name="model_id" ref="room_area_line_b7f36621-497a-4355-8f99-7332af72ce61"/>
+    <field name="name">room_area_line group_user</field>
+    <field name="perm_create" eval="True"/>
+    <field name="perm_read" eval="True"/>
+    <field name="perm_write" eval="True"/>
+  </record>
+  <record id="level_group_system_2e59ab27-b4dd-41c5-a541-2632a368cc0c" model="ir.model.access" context="{'studio': True}">
+    <field name="group_id" ref="base.group_system"/>
+    <field name="model_id" ref="level_0b895bb2-a293-4823-b608-9d5694c430cb"/>
+    <field name="name">Level group_system</field>
+    <field name="perm_create" eval="True"/>
+    <field name="perm_read" eval="True"/>
+    <field name="perm_unlink" eval="True"/>
+    <field name="perm_write" eval="True"/>
+  </record>
+  <record id="level_group_user_472c0f1e-95f5-475f-a6c2-363d45685ea4" model="ir.model.access" context="{'studio': True}">
+    <field name="group_id" ref="base.group_user"/>
+    <field name="model_id" ref="level_0b895bb2-a293-4823-b608-9d5694c430cb"/>
+    <field name="name">Level group_user</field>
+    <field name="perm_create" eval="True"/>
+    <field name="perm_read" eval="True"/>
+    <field name="perm_write" eval="True"/>
+  </record>
+  <record id="block_group_system_ce4e3c74-3782-4b29-bf30-d8fbf0be16e3" model="ir.model.access" context="{'studio': True}">
+    <field name="group_id" ref="base.group_system"/>
+    <field name="model_id" ref="block_45fe7c77-0f59-452d-95db-9a8a2e02113a"/>
+    <field name="name">Block group_system</field>
+    <field name="perm_create" eval="True"/>
+    <field name="perm_read" eval="True"/>
+    <field name="perm_unlink" eval="True"/>
+    <field name="perm_write" eval="True"/>
+  </record>
+  <record id="block_group_user_294f8d52-d2d3-43da-a3a0-6795c072596a" model="ir.model.access" context="{'studio': True}">
+    <field name="group_id" ref="base.group_user"/>
+    <field name="model_id" ref="block_45fe7c77-0f59-452d-95db-9a8a2e02113a"/>
+    <field name="name">Block group_user</field>
+    <field name="perm_create" eval="True"/>
+    <field name="perm_read" eval="True"/>
+    <field name="perm_write" eval="True"/>
+  </record>
+</odoo>

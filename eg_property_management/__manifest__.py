@@ -38,7 +38,9 @@
         "views/property_section_view.xml",
         "views/crm_lead_view.xml",
         "views/helpdesk_ticket_view.xml",
-        "views/account_move_view.xml"
+        "views/account_move_view.xml",
+        "reports/tenant_financial_statement_report.xml",
+        "reports/tenant_financial_statement_template.xml"
     ],
     "demo": [
         "data/project_demo_data.xml",

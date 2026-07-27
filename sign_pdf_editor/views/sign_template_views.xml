@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="sign_template_form_inherit_pdf_editor" model="ir.ui.view">
+        <field name="name">sign.template.form.pdf.editor</field>
+        <field name="model">sign.template</field>
+        <field name="inherit_id" ref="sign.sign_template_view_form"/>
+        <field name="arch" type="xml">
+            <!-- NOTE: verify this xpath against your actual Odoo 19 sign.template
+                 form view (Settings > Technical > Views > search "sign.template").
+                 The exact button/field names in Odoo's native view can shift
+                 between minor releases. If this xpath doesn't match, replace
+                 the expr below with any element you can see in that view,
+                 e.g. expr="//sheet" position="inside" (safe fallback, always
+                 matches - just appends the button at the end of the form). -->
+            <xpath expr="//sheet" position="inside">
+                <div class="oe_button_box" style="float:right;">
+                    <button name="action_open_pdf_editor" type="object"
+                            string="Edit PDF" class="btn-secondary"
+                            icon="fa-pencil"/>
+                </div>
+            </xpath>
+        </field>
+    </record>
+</odoo>

@@ -1,1 +1,12 @@
-
+<odoo>
+    <record id="action_report_tenant_financial_statement" model="ir.actions.report">
+        <field name="name">Tenant Financial Statement</field>
+        <field name="model">rent.contract</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">eg_property_management.report_tenant_financial_statement_template</field>
+        <field name="report_file">eg_property_management.report_tenant_financial_statement_template</field>
+        <field name="print_report_name">'Tenant Financial Statement - %s' % (object.name)</field>
+        <field name="binding_model_id" ref="model_rent_contract"/>
+        <field name="binding_type">report</field>
+    </record>
+</odoo>

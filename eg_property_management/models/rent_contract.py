@@ -151,13 +151,8 @@ class RentContract(models.Model):
 
     @api.model_create_multi
     def create(self, vals):
-        """ Overridden to dynamically swap the 'RC/' sequence prefix 
-        with the actual name of the Property/Unit (e.g., 'LPB-103/11027'). """
         for val in vals:
-            # Generate the next number from sequence (returns e.g., 'RC/11027')
             seq = self.env['ir.sequence'].next_by_code('rent.contract') or '/'
-            
-            # Retrieve the selected property/unit prefix
             property_id = val.get('property_id')
             if property_id:
                 property_rec = self.env['property.detail'].browse(property_id)
@@ -165,17 +160,102 @@ class RentContract(models.Model):
             else:
                 prefix = 'RC'
             
-            # Swap out 'RC/' with the unit name
             if seq.startswith('RC/'):
                 val['name'] = seq.replace('RC/', f"{prefix}/")
             else:
                 val['name'] = f"{prefix}/{seq}"
 
-            # Set default invoice start date
             if not val.get('invoice_start_date'):
                 val['invoice_start_date'] = val.get('start_date') or fields.Date.today()
 
         return super(RentContract, self).create(vals)
+
+    def get_tenant_financial_statement(self):
+        """ Computes chronological Statement of Account data including opening balance,
+        invoices, payments, running balances, totals, and security deposit details. """
+        self.ensure_one()
+        
+        # Search posted customer invoices and credit notes linked to this contract
+        invoices = self.env['account.move'].search([
+            '|',
+            ('rent_contract_id', '=', self.id),
+            ('invoice_origin', '=', self.name),
+            ('state', '=', 'posted'),
+            ('move_type', 'in', ['out_invoice', 'out_refund'])
+        ], order='invoice_date asc, id asc')
+
+        raw_lines = []
+
+        # 1. Opening Balance entry
+        raw_lines.append({
+            'date': self.start_date or fields.Date.today(),
+            'description': 'Opening Balance',
+            'ref': '-',
+            'debit': 0.0,
+            'credit': 0.0,
+        })
+
+        seen_payments = set()
+
+        for inv in invoices:
+            # Invoice Line Charge (Debit / Credit)
+            if inv.move_type == 'out_invoice':
+                debit_val = inv.amount_total
+                credit_val = 0.0
+                desc = inv.invoice_line_ids[0].name if inv.invoice_line_ids else f"Rent Charge - {inv.name}"
+            else:
+                debit_val = 0.0
+                credit_val = inv.amount_total
+                desc = f"Credit Note - {inv.name}"
+
+            raw_lines.append({
+                'date': inv.invoice_date or fields.Date.today(),
+                'description': desc,
+                'ref': inv.name or 'Draft',
+                'debit': debit_val,
+                'credit': credit_val,
+            })
+
+            # Check reconciled payments against this invoice
+            reconciled_payments = self.env['account.payment']
+            if hasattr(inv, '_get_reconciled_payments'):
+                reconciled_payments = inv._get_reconciled_payments()
+            
+            for payment in reconciled_payments:
+                if payment.id in seen_payments:
+                    continue
+                seen_payments.add(payment.id)
+                raw_lines.append({
+                    'date': payment.date or fields.Date.today(),
+                    'description': f"Payment Received ({payment.journal_id.name or 'Receipt'})",
+                    'ref': payment.name or payment.ref or 'RCPT',
+                    'debit': 0.0,
+                    'credit': payment.amount,
+                })
+
+        # Sort all lines chronologically
+        raw_lines.sort(key=lambda x: (x['date'] or fields.Date.today()))
+
+        # Calculate running balances and totals
+        running_balance = 0.0
+        total_charges = 0.0
+        total_payments = 0.0
+
+        for line in raw_lines:
+            running_balance += (line['debit'] - line['credit'])
+            line['balance'] = running_balance
+            total_charges += line['debit']
+            total_payments += line['credit']
+
+        return {
+            'lines': raw_lines,
+            'total_charges': total_charges,
+            'total_payments': total_payments,
+            'outstanding_balance': running_balance,
+            'deposit_received': self.deposit or 0.0,
+            'deposit_utilized': 0.0,
+            'balance_held': self.deposit or 0.0,
+        }
 
     @api.depends('start_date', 'end_date')
     def _compute_duration(self):
@@ -574,8 +654,6 @@ class RentContract(models.Model):
             if not invoice_lines:
                 continue
 
-            # CRITICAL FIX: We now explicitly write both property_id and rent_contract_id directly!
-            # We use .with_context(skip_sync_installment=True) to prevent duplicate ledger creation.
             invoice_id = self.env['account.move'].with_context(skip_sync_installment=True).create({
                 'move_type': 'out_invoice',
                 'partner_id': self.tenant_id.id,
@@ -826,7 +904,6 @@ class RentContract(models.Model):
                 'invoice_date_due': fields.Date.today(),
                 'currency_id': contract_id.currency_id.id,
                 'invoice_origin': contract_id.name,
-                # CRITICAL PENALTY FIX: Automatically link the Property and Rent Contract here as well!
                 'property_id': contract_id.property_id.id,
                 'rent_contract_id': contract_id.id,
                 'invoice_line_ids': [(0, 0, {
@@ -837,7 +914,6 @@ class RentContract(models.Model):
                     'account_id': income_account_id.id,
                 })],
             }
-            # We use .with_context(skip_sync_installment=True) to prevent duplicate ledger creation.
             invoice_id = self.env['account.move'].with_context(skip_sync_installment=True).create(move_vals)
 
             self.env['rent.installment'].create({

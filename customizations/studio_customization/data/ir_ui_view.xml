@@ -1,0 +1,691 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<odoo>
+  <record id="odoo_studio_property_c62fc24a-43d6-4c55-98a8-2ab282073030" model="ir.ui.view" context="{'studio': True}">
+    <field name="arch" type="xml">
+      <data>
+        <xpath expr="/form//button[@name='action_set_available']" position="attributes">
+          <attribute name="string">Available For Rent</attribute>
+        </xpath>
+        <xpath expr="/form/sheet/group/field[@name='property_for']" position="after">
+          <field name="x_studio_dewa_premises_no"/>
+        </xpath>
+        <xpath expr="/form//field[@name='access_token']" position="attributes">
+          <attribute name="invisible">True</attribute>
+        </xpath>
+        <xpath expr="/form/sheet/group[2]/group" position="attributes">
+          <attribute name="invisible">True</attribute>
+        </xpath>
+        <xpath expr="/form/sheet/group[3]" position="attributes">
+          <attribute name="invisible">True</attribute>
+        </xpath>
+        <xpath expr="/form/sheet/group[3]/group" position="attributes">
+          <attribute name="invisible">True</attribute>
+        </xpath>
+        <xpath expr="/form/sheet/notebook/page/group/group/field[@name='total_area']" position="attributes">
+          <attribute name="string">Area Square meter </attribute>
+        </xpath>
+        <xpath expr="/form//field[@name='usable_area']" position="attributes">
+          <attribute name="options">{"digits":[8,4],"step":1}</attribute>
+          <attribute name="string">Area Square Feet</attribute>
+        </xpath>
+        <xpath expr="/form//field[@name='sub_project_id']" position="attributes">
+          <attribute name="invisible">True</attribute>
+        </xpath>
+        <xpath expr="/form//field[@name='area_measurement_ids']" position="attributes">
+          <attribute name="invisible">True</attribute>
+        </xpath>
+        <xpath expr="/form/sheet/notebook/page[2]/group[2]/group" position="attributes">
+          <attribute name="string"/>
+        </xpath>
+        <xpath expr="/form//field[@name='no_of_bhk']" position="attributes">
+          <attribute name="invisible">True</attribute>
+        </xpath>
+        <xpath expr="/form//field[@name='bedrooms']" position="attributes">
+          <attribute name="invisible">True</attribute>
+        </xpath>
+        <xpath expr="/form//field[@name='bathrooms']" position="attributes">
+          <attribute name="invisible">True</attribute>
+        </xpath>
+        <xpath expr="/form//field[@name='floor']" position="replace"/>
+        <xpath expr="/form//field[@name='no_of_floors']" position="replace">
+          <field name="x_studio_floor_no"/>
+        </xpath>
+        <xpath expr="/form//field[@name='parking']" position="attributes">
+          <attribute name="string">Parking Slot No</attribute>
+        </xpath>
+        <xpath expr="/form//field[@name='facing']" position="attributes">
+          <attribute name="invisible">True</attribute>
+        </xpath>
+        <xpath expr="/form/sheet/notebook/page[2]/group/group[2]" position="attributes">
+          <attribute name="invisible">True</attribute>
+        </xpath>
+      </data>
+    </field>
+    <field name="inherit_id" ref="eg_property_management.property_detail_form_view"/>
+    <field name="mode">extension</field>
+    <field name="model">property.detail</field>
+    <field name="name">Odoo Studio: property.detail.form customization</field>
+    <field name="priority">99</field>
+    <field name="type">form</field>
+  </record>
+  <record id="odoo_studio_rent_con_cff8aa43-8efc-44df-8056-9d7669ea898d" model="ir.ui.view" context="{'studio': True}">
+    <field name="arch" type="xml">
+      <data>
+        <xpath expr="/form//field[@name='end_date']" position="after">
+          <field name="x_studio_days" invisible="True"/>
+        </xpath>
+        <xpath expr="/form//field[@name='start_date']" position="attributes">
+          <attribute name="force_save">0</attribute>
+          <attribute name="options">{"numeric":true}</attribute>
+          <attribute name="readonly">False</attribute>
+        </xpath>
+        <xpath expr="/form//field[@name='end_date']" position="attributes">
+          <attribute name="force_save">0</attribute>
+          <attribute name="options">{"numeric":true}</attribute>
+          <attribute name="readonly">False</attribute>
+        </xpath>
+        <xpath expr="/form//field[@name='rent']" position="attributes">
+          <attribute name="force_save">0</attribute>
+          <attribute name="readonly">False</attribute>
+        </xpath>
+        <xpath expr="/form//field[@name='deposit']" position="attributes">
+          <attribute name="force_save">0</attribute>
+          <attribute name="readonly">False</attribute>
+        </xpath>
+        <xpath expr="/form//field[@name='invoice_start_date']" position="attributes">
+          <attribute name="options">{"numeric":true}</attribute>
+        </xpath>
+        <xpath expr="/form//field[@name='payment_term_id']" position="attributes">
+          <attribute name="force_save">0</attribute>
+          <attribute name="readonly">False</attribute>
+        </xpath>
+        <xpath expr="/form//field[@name='payment_count']" position="attributes">
+          <attribute name="force_save">0</attribute>
+          <attribute name="readonly">False</attribute>
+        </xpath>
+        <xpath expr="/form//field[@name='contract_type']" position="attributes">
+          <attribute name="force_save">0</attribute>
+          <attribute name="readonly">False</attribute>
+        </xpath>
+        <xpath expr="/form/sheet/group[2]/group[2]" position="replace"/>
+        <xpath expr="/form/sheet/group[2]/group" position="replace"/>
+        <xpath expr="/form/sheet/group[5]" position="attributes">
+          <attribute name="invisible">True</attribute>
+        </xpath>
+        <xpath expr="/form/sheet/group[6]" position="attributes">
+          <attribute name="invisible">True</attribute>
+        </xpath>
+        <xpath expr="/form/sheet/group[9]" position="attributes">
+          <attribute name="invisible">True</attribute>
+        </xpath>
+      </data>
+    </field>
+    <field name="inherit_id" ref="eg_property_management.rent_contract_form_view"/>
+    <field name="mode">extension</field>
+    <field name="model">rent.contract</field>
+    <field name="name">Odoo Studio: rent.contract.form customization</field>
+    <field name="priority">99</field>
+    <field name="type">form</field>
+  </record>
+  <record id="odoo_studio_crm_lead_3fd222f8-999a-44e9-bdf5-44fca77895c7" model="ir.ui.view" context="{'studio': True}">
+    <field name="arch" type="xml">
+      <data>
+        <xpath expr="/form//label[@for='street']" position="replace"/>
+        <xpath expr="/form/sheet/group/group[@name='lead_partner']/field[@name='lang_id']" position="replace"/>
+        <xpath expr="/form/sheet/group/group[@name='lead_partner']/field[@name='partner_name']" position="attributes">
+          <attribute name="invisible">True</attribute>
+        </xpath>
+        <xpath expr="/form/sheet/group/group[@name='lead_partner']/div/field[@name='country_id']" position="replace"/>
+        <xpath expr="/form/sheet/group/group[@name='lead_partner']/div/field[@name='zip']" position="replace"/>
+        <xpath expr="/form/sheet/group/group[@name='lead_partner']/div/field[@name='street2']" position="replace"/>
+        <xpath expr="/form/sheet/group/group[@name='lead_partner']/div/field[@name='state_id']" position="replace"/>
+        <xpath expr="/form/sheet/group/group[@name='lead_partner']/div/field[@name='city']" position="replace"/>
+        <xpath expr="/form/sheet/group/group[@name='lead_partner']/div/field[@name='street']" position="replace"/>
+        <xpath expr="/form/sheet/group/group[@name='lead_partner']/field[@name='website']" position="attributes">
+          <attribute name="invisible">True</attribute>
+        </xpath>
+        <xpath expr="/form/sheet/group/group[@name='lead_info']/div" position="after">
+          <xpath expr="/form/sheet/group/group[@name='lead_partner']/field[@name='partner_id']" position="move"/>
+        </xpath>
+        <xpath expr="/form/sheet/group/group[@name='lead_info']/div/field[@name='contact_name']" position="attributes">
+          <attribute name="invisible">True</attribute>
+        </xpath>
+        <xpath expr="/form//field[@name='email_cc']" position="attributes">
+          <attribute name="invisible">True</attribute>
+        </xpath>
+        <xpath expr="/form/sheet/group/group[@name='lead_info']/field[@name='function']" position="attributes">
+          <attribute name="invisible">True</attribute>
+        </xpath>
+      </data>
+    </field>
+    <field name="inherit_id" ref="crm.crm_lead_view_form"/>
+    <field name="mode">extension</field>
+    <field name="model">crm.lead</field>
+    <field name="name">Odoo Studio: crm.lead.form customization</field>
+    <field name="priority">160</field>
+    <field name="type">form</field>
+  </record>
+  <record id="odoo_studio_account__796a4ac2-ddf3-46d1-83fa-e6eeb337f51a" model="ir.ui.view" context="{'studio': True}">
+    <field name="arch" type="xml">
+      <data>
+        <xpath expr="/form//list[@name='journal_items']//field[@name='price_subtotal']" position="after">
+          <field optional="show" name="x_studio_target_company"/>
+        </xpath>
+      </data>
+    </field>
+    <field name="inherit_id" ref="account.view_move_form"/>
+    <field name="mode">extension</field>
+    <field name="model">account.move</field>
+    <field name="name">Odoo Studio: account.move.form customization</field>
+    <field name="priority">160</field>
+    <field name="type">form</field>
+  </record>
+  <record id="odoo_studio_rent_con_c83ff09e-3339-4885-935b-d0828219bff6" model="ir.ui.view" context="{'studio': True}">
+    <field name="arch" type="xml">
+      <data>
+        <xpath expr="/list//field[@name='rent']" position="after">
+          <field name="currency_id"/>
+          <field name="currency_id"/>
+        </xpath>
+        <xpath expr="/list//field[@name='total_area']" position="attributes">
+          <attribute name="column_invisible">True</attribute>
+        </xpath>
+        <xpath expr="/list//field[@name='contract_days']" position="attributes">
+          <attribute name="column_invisible">True</attribute>
+        </xpath>
+        <xpath expr="/list//field[@name='start_date']" position="attributes">
+          <attribute name="options">{"numeric":true}</attribute>
+        </xpath>
+        <xpath expr="/list//field[@name='end_date']" position="attributes">
+          <attribute name="options">{"numeric":true}</attribute>
+        </xpath>
+      </data>
+    </field>
+    <field name="inherit_id" ref="eg_property_management.rent_contract_list_view"/>
+    <field name="mode">extension</field>
+    <field name="model">rent.contract</field>
+    <field name="name">Odoo Studio: rent.contract.list customization</field>
+    <field name="priority">99</field>
+    <field name="type">list</field>
+  </record>
+  <record id="default_list_view_fo_ed695502-2219-4149-bf54-b4a55a4d5cb9" model="ir.ui.view" context="{'studio': True}">
+    <field name="arch" type="xml">
+      <list default_order="x_studio_sequence asc,id desc">
+        <field name="x_studio_sequence" widget="handle"/>
+        <field name="x_name"/>
+      </list>
+    </field>
+    <field name="model">x_asset_category</field>
+    <field name="name">Default list view for x_asset_category</field>
+    <field name="type">list</field>
+  </record>
+  <record id="default_form_view_fo_3e254165-87c5-4b4b-9b2c-9a39845538a4" model="ir.ui.view" context="{'studio': True}">
+    <field name="arch" type="xml">
+      <form>
+        <header/>
+        <sheet string="ASSET CATEGORY">
+          <widget name="web_ribbon" text="Archived" bg_color="text-bg-danger" invisible="x_active"/>
+          <field name="x_active" invisible="1"/>
+          <div class="oe_title">
+            <h1>
+              <field name="x_name" required="1" placeholder="Name..."/>
+            </h1>
+          </div>
+          <group name="studio_group_03cf4d">
+            <group name="studio_group_03cf4d_left"/>
+            <group name="studio_group_03cf4d_right"/>
+          </group>
+        </sheet>
+        <chatter/>
+      </form>
+    </field>
+    <field name="model">x_asset_category</field>
+    <field name="name">Default form view for x_asset_category</field>
+    <field name="type">form</field>
+  </record>
+  <record id="default_search_view__290be749-c3bf-488c-87a2-d1a6f5fa0955" model="ir.ui.view" context="{'studio': True}">
+    <field name="arch" type="xml">
+      <search>
+        <field name="x_name"/>
+        <filter invisible="1" string="My Activities" name="filter_activities_my" domain="[['activity_user_id', '=', uid]]"/>
+        <separator/>
+        <filter invisible="1" string="Late Activities" name="activities_overdue" domain="[('my_activity_date_deadline', '&lt;', 'today')]"/>
+        <filter invisible="1" string="Today Activities" name="activities_today" domain="[('my_activity_date_deadline', '=', 'today')]"/>
+        <filter invisible="1" string="Future Activities" name="activities_upcoming_all" domain="[('my_activity_date_deadline', '&gt;', 'today')]"/>
+        <separator/>
+        <separator/>
+        <filter string="Archived" name="archived_x_asset_category" domain="[['x_active', '=', False]]"/>
+        <separator/>
+      </search>
+    </field>
+    <field name="model">x_asset_category</field>
+    <field name="name">Default search view for x_asset_category</field>
+    <field name="type">search</field>
+  </record>
+  <record id="odoo_studio_default__cea1340f-e6b4-45a0-9dd5-a2506d9b0b10" model="ir.ui.view" context="{'studio': True}">
+    <field name="arch" type="xml">
+      <data>
+        <xpath expr="/list//field[@name='x_studio_sequence']" position="before">
+          <header>
+            <button string="New " type="object"/>
+          </header>
+        </xpath>
+        <xpath expr="/list//field[@name='x_name']" position="attributes">
+          <attribute name="string">Category Name</attribute>
+        </xpath>
+      </data>
+    </field>
+    <field name="inherit_id" ref="default_list_view_fo_ed695502-2219-4149-bf54-b4a55a4d5cb9"/>
+    <field name="mode">extension</field>
+    <field name="model">x_asset_category</field>
+    <field name="name">Odoo Studio: Default list view for x_asset_category customization</field>
+    <field name="priority">99</field>
+    <field name="type">list</field>
+  </record>
+  <record id="default_list_view_fo_396d4484-aaac-4328-b785-105676458212" model="ir.ui.view" context="{'studio': True}">
+    <field name="arch" type="xml">
+      <list default_order="x_studio_sequence asc,id desc">
+        <field name="x_studio_sequence" widget="handle"/>
+        <field name="x_name"/>
+      </list>
+    </field>
+    <field name="model">x_room_area</field>
+    <field name="name">Default list view for x_room_area</field>
+    <field name="type">list</field>
+  </record>
+  <record id="default_form_view_fo_a1301b11-4df6-48cd-8af0-b57cb451757b" model="ir.ui.view" context="{'studio': True}">
+    <field name="arch" type="xml">
+      <form>
+        <header/>
+        <sheet string="ROOM / AREA">
+          <widget name="web_ribbon" text="Archived" bg_color="text-bg-danger" invisible="x_active"/>
+          <field name="x_active" invisible="1"/>
+          <div class="oe_title">
+            <h1>
+              <field name="x_name" required="1" placeholder="Name..."/>
+            </h1>
+          </div>
+          <group name="studio_group_07738c">
+            <group name="studio_group_07738c_left"/>
+            <group name="studio_group_07738c_right"/>
+          </group>
+          <notebook>
+            <page string="Details" name="lines">
+              <field name="x_room_area_line_ids_df020"/>
+            </page>
+          </notebook>
+        </sheet>
+        <chatter/>
+      </form>
+    </field>
+    <field name="model">x_room_area</field>
+    <field name="name">Default form view for x_room_area</field>
+    <field name="type">form</field>
+  </record>
+  <record id="default_search_view__daae2c27-5714-46f6-9c7f-2de3af3dd9d2" model="ir.ui.view" context="{'studio': True}">
+    <field name="arch" type="xml">
+      <search>
+        <field name="x_name"/>
+        <filter invisible="1" string="My Activities" name="filter_activities_my" domain="[['activity_user_id', '=', uid]]"/>
+        <separator/>
+        <filter invisible="1" string="Late Activities" name="activities_overdue" domain="[('my_activity_date_deadline', '&lt;', 'today')]"/>
+        <filter invisible="1" string="Today Activities" name="activities_today" domain="[('my_activity_date_deadline', '=', 'today')]"/>
+        <filter invisible="1" string="Future Activities" name="activities_upcoming_all" domain="[('my_activity_date_deadline', '&gt;', 'today')]"/>
+        <separator/>
+        <separator/>
+        <filter string="Archived" name="archived_x_room_area" domain="[['x_active', '=', False]]"/>
+        <separator/>
+      </search>
+    </field>
+    <field name="model">x_room_area</field>
+    <field name="name">Default search view for x_room_area</field>
+    <field name="type">search</field>
+  </record>
+  <record id="default_list_view_fo_f0319b7d-125f-44da-916c-4b9b834cfa03" model="ir.ui.view" context="{'studio': True}">
+    <field name="arch" type="xml">
+      <list editable="bottom" default_order="x_studio_sequence asc,id desc">
+        <field name="x_studio_sequence" widget="handle"/>
+        <field name="x_name"/>
+      </list>
+    </field>
+    <field name="model">x_room_area_line_095b7</field>
+    <field name="name">Default list view for x_room_area_line_095b7</field>
+    <field name="type">list</field>
+  </record>
+  <record id="default_form_view_fo_0338e4a0-2455-492a-9c5f-7a62ac4d119f" model="ir.ui.view" context="{'studio': True}">
+    <field name="arch" type="xml">
+      <form>
+        <header/>
+        <sheet string="room_area_line">
+          <div class="oe_title">
+            <h1>
+              <field name="x_name" required="1" placeholder="Name..."/>
+            </h1>
+          </div>
+          <group name="studio_group_3450d8">
+            <group name="studio_group_3450d8_left"/>
+            <group name="studio_group_3450d8_right"/>
+          </group>
+        </sheet>
+      </form>
+    </field>
+    <field name="model">x_room_area_line_095b7</field>
+    <field name="name">Default form view for x_room_area_line_095b7</field>
+    <field name="type">form</field>
+  </record>
+  <record id="default_search_view__df0a0cdc-5df5-420f-8a63-c4b1c7350a7f" model="ir.ui.view" context="{'studio': True}">
+    <field name="arch" type="xml">
+      <search>
+        <field name="x_name"/>
+      </search>
+    </field>
+    <field name="model">x_room_area_line_095b7</field>
+    <field name="name">Default search view for x_room_area_line_095b7</field>
+    <field name="type">search</field>
+  </record>
+  <record id="odoo_studio_default__bcbde0e2-ef6a-4b97-8969-ca2868629dc3" model="ir.ui.view" context="{'studio': True}">
+    <field name="arch" type="xml">
+      <data>
+        <xpath expr="/form/header" position="inside">
+          <button string="ROOM / AREA" type="object"/>
+        </xpath>
+        <xpath expr="/form/sheet/notebook" position="replace"/>
+      </data>
+    </field>
+    <field name="inherit_id" ref="default_form_view_fo_a1301b11-4df6-48cd-8af0-b57cb451757b"/>
+    <field name="mode">extension</field>
+    <field name="model">x_room_area</field>
+    <field name="name">Odoo Studio: Default form view for x_room_area customization</field>
+    <field name="priority">99</field>
+    <field name="type">form</field>
+  </record>
+  <record id="odoo_studio_default__e5cb3e12-d7da-4682-94e6-bd137e5aa9a6" model="ir.ui.view" context="{'studio': True}">
+    <field name="arch" type="xml">
+      <data>
+        <xpath expr="/list//field[@name='x_studio_sequence']" position="before">
+          <header>
+            <button string="New " type="object"/>
+          </header>
+        </xpath>
+        <xpath expr="/list//field[@name='x_name']" position="attributes">
+          <attribute name="string">Area Description </attribute>
+        </xpath>
+      </data>
+    </field>
+    <field name="inherit_id" ref="default_list_view_fo_396d4484-aaac-4328-b785-105676458212"/>
+    <field name="mode">extension</field>
+    <field name="model">x_room_area</field>
+    <field name="name">Odoo Studio: Default list view for x_room_area customization</field>
+    <field name="priority">99</field>
+    <field name="type">list</field>
+  </record>
+  <record id="default_list_view_fo_ed10ca23-1b08-42e6-90a6-42a21f1bfc67" model="ir.ui.view" context="{'studio': True}">
+    <field name="arch" type="xml">
+      <list default_order="x_studio_sequence asc,id desc">
+        <field name="x_studio_sequence" widget="handle"/>
+        <field name="x_name"/>
+      </list>
+    </field>
+    <field name="model">x_level</field>
+    <field name="name">Default list view for x_level</field>
+    <field name="type">list</field>
+  </record>
+  <record id="default_form_view_fo_7c93c0e7-c474-4c2d-817c-1137a964dc7a" model="ir.ui.view" context="{'studio': True}">
+    <field name="arch" type="xml">
+      <form>
+        <header/>
+        <sheet string="Level">
+          <widget name="web_ribbon" text="Archived" bg_color="text-bg-danger" invisible="x_active"/>
+          <field name="x_active" invisible="1"/>
+          <div class="oe_title">
+            <h1>
+              <field name="x_name" required="1" placeholder="Name..."/>
+            </h1>
+          </div>
+          <group name="studio_group_231730">
+            <group name="studio_group_231730_left"/>
+            <group name="studio_group_231730_right"/>
+          </group>
+        </sheet>
+        <chatter/>
+      </form>
+    </field>
+    <field name="model">x_level</field>
+    <field name="name">Default form view for x_level</field>
+    <field name="type">form</field>
+  </record>
+  <record id="default_search_view__1703876b-d8b3-41fe-979a-016bb8fc01f1" model="ir.ui.view" context="{'studio': True}">
+    <field name="arch" type="xml">
+      <search>
+        <field name="x_name"/>
+        <filter invisible="1" string="My Activities" name="filter_activities_my" domain="[['activity_user_id', '=', uid]]"/>
+        <separator/>
+        <filter invisible="1" string="Late Activities" name="activities_overdue" domain="[('my_activity_date_deadline', '&lt;', 'today')]"/>
+        <filter invisible="1" string="Today Activities" name="activities_today" domain="[('my_activity_date_deadline', '=', 'today')]"/>
+        <filter invisible="1" string="Future Activities" name="activities_upcoming_all" domain="[('my_activity_date_deadline', '&gt;', 'today')]"/>
+        <separator/>
+        <separator/>
+        <filter string="Archived" name="archived_x_level" domain="[['x_active', '=', False]]"/>
+        <separator/>
+      </search>
+    </field>
+    <field name="model">x_level</field>
+    <field name="name">Default search view for x_level</field>
+    <field name="type">search</field>
+  </record>
+  <record id="default_list_view_fo_70f086e1-53ba-4e2b-a9ef-71a43308ac8b" model="ir.ui.view" context="{'studio': True}">
+    <field name="arch" type="xml">
+      <list default_order="x_studio_sequence asc,id desc">
+        <field name="x_studio_sequence" widget="handle"/>
+        <field name="x_name"/>
+      </list>
+    </field>
+    <field name="model">x_block</field>
+    <field name="name">Default list view for x_block</field>
+    <field name="type">list</field>
+  </record>
+  <record id="default_form_view_fo_378bb9b3-5eb8-46ec-af51-a04696571e20" model="ir.ui.view" context="{'studio': True}">
+    <field name="arch" type="xml">
+      <form>
+        <header/>
+        <sheet string="Block">
+          <widget name="web_ribbon" text="Archived" bg_color="text-bg-danger" invisible="x_active"/>
+          <field name="x_active" invisible="1"/>
+          <div class="oe_title">
+            <h1>
+              <field name="x_name" required="1" placeholder="Name..."/>
+            </h1>
+          </div>
+          <group name="studio_group_8d4dca">
+            <group name="studio_group_8d4dca_left"/>
+            <group name="studio_group_8d4dca_right"/>
+          </group>
+        </sheet>
+        <chatter/>
+      </form>
+    </field>
+    <field name="model">x_block</field>
+    <field name="name">Default form view for x_block</field>
+    <field name="type">form</field>
+  </record>
+  <record id="default_search_view__39f298a4-3f02-4b18-b2cb-7aa9a6262b71" model="ir.ui.view" context="{'studio': True}">
+    <field name="arch" type="xml">
+      <search>
+        <field name="x_name"/>
+        <filter invisible="1" string="My Activities" name="filter_activities_my" domain="[['activity_user_id', '=', uid]]"/>
+        <separator/>
+        <filter invisible="1" string="Late Activities" name="activities_overdue" domain="[('my_activity_date_deadline', '&lt;', 'today')]"/>
+        <filter invisible="1" string="Today Activities" name="activities_today" domain="[('my_activity_date_deadline', '=', 'today')]"/>
+        <filter invisible="1" string="Future Activities" name="activities_upcoming_all" domain="[('my_activity_date_deadline', '&gt;', 'today')]"/>
+        <separator/>
+        <separator/>
+        <filter string="Archived" name="archived_x_block" domain="[['x_active', '=', False]]"/>
+        <separator/>
+      </search>
+    </field>
+    <field name="model">x_block</field>
+    <field name="name">Default search view for x_block</field>
+    <field name="type">search</field>
+  </record>
+  <record id="odoo_studio_asset_ma_b9f85d39-f459-41a9-ac87-864aed2c372d" model="ir.ui.view" context="{'studio': True}">
+    <field name="arch" type="xml">
+      <data>
+        <xpath expr="/form//field[@name='transfer_count']" position="after">
+          <field name="x_studio_block" options="{'create_name_field': 'x_name'}"/>
+          <field name="x_studio_level" options="{'create_name_field': 'x_name'}"/>
+          <field name="x_studio_room_area_1" options="{'create_name_field': 'x_name'}"/>
+        </xpath>
+        <xpath expr="/form//field[@name='model_type']" position="after">
+          <field name="x_studio_asset_category" options="{&quot;create_name_field&quot;:&quot;x_name&quot;,&quot;search_threshold&quot;:1}"/>
+        </xpath>
+        <xpath expr="/form//field[@name='product_id']" position="attributes">
+          <attribute name="string">Associated Product/Asset</attribute>
+        </xpath>
+        <xpath expr="/form//field[@name='asset_type_id']" position="attributes">
+          <attribute name="invisible">True</attribute>
+        </xpath>
+        <xpath expr="/form//field[@name='transfer_count']" position="attributes">
+          <attribute name="invisible">True</attribute>
+        </xpath>
+        <xpath expr="/form//field[@name='model_type']" position="attributes">
+          <attribute name="invisible">True</attribute>
+        </xpath>
+        <xpath expr="/form//field[@name='active_transfers']" position="attributes">
+          <attribute name="invisible">True</attribute>
+        </xpath>
+        <xpath expr="/form//field[@name='invoice_date']" position="after">
+          <field name="x_studio_related_field_82a_1jsphmn5m" force_save="0" readonly="False" invisible="True"/>
+        </xpath>
+        <xpath expr="/form//field[@name='depreciation_apply']" position="after">
+          <xpath expr="/form//field[@name='current_amount']" position="move"/>
+        </xpath>
+        <xpath expr="/form//field[@name='current_amount']" position="attributes">
+          <attribute name="force_save">0</attribute>
+          <attribute name="readonly">False</attribute>
+        </xpath>
+        <xpath expr="/form//field[@name='expired_warranty_date']" position="after">
+          <field name="x_studio_fm_vendor"/>
+        </xpath>
+        <xpath expr="/form//field[@name='vendor_id']" position="attributes">
+          <attribute name="invisible">True</attribute>
+        </xpath>
+        <xpath expr="/form//field[@name='document_ids']" position="before">
+          <field name="x_studio_forecasted_useful_life_year"/>
+        </xpath>
+        <xpath expr="/form/sheet/notebook/page" position="attributes">
+          <attribute name="invisible">True</attribute>
+        </xpath>
+        <xpath expr="/form/sheet/notebook/page[2]/field[@name='maintenance_ids']/list//field[@name='maintenance_vendor_id']" position="after">
+          <field optional="show" name="x_studio_fm_vendor"/>
+        </xpath>
+        <xpath expr="/form/sheet/notebook/page[2]/field[@name='maintenance_ids']/list//field[@name='maintenance_vendor_id']" position="attributes">
+          <attribute name="column_invisible">True</attribute>
+        </xpath>
+      </data>
+    </field>
+    <field name="inherit_id" ref="asset_management.view_asset_form"/>
+    <field name="mode">extension</field>
+    <field name="model">asset.management</field>
+    <field name="name">Odoo Studio: asset.management.form customization</field>
+    <field name="priority">99</field>
+    <field name="type">form</field>
+  </record>
+  <record id="odoo_studio_property_aafa0a51-3ed8-4f83-a3c7-69772e3ab5f3" model="ir.ui.view" context="{'studio': True}">
+    <field name="arch" type="xml">
+      <data>
+        <xpath expr="/form//label[@for='is_sub_project']" position="replace"/>
+        <xpath expr="/form//field[@name='is_sub_project']" position="attributes">
+          <attribute name="invisible">True</attribute>
+        </xpath>
+        <xpath expr="/form//field[@name='construction_year']" position="attributes">
+          <attribute name="string">Project Start Date</attribute>
+        </xpath>
+        <xpath expr="/form//field[@name='date_of_project']" position="attributes">
+          <attribute name="string">Handover Date</attribute>
+        </xpath>
+        <xpath expr="/form/sheet/group[3]/group" position="attributes">
+          <attribute name="invisible">True</attribute>
+        </xpath>
+        <xpath expr="/form/sheet/group[3]/group[2]" position="attributes">
+          <attribute name="invisible">True</attribute>
+        </xpath>
+        <xpath expr="/form//field[@name='total_subprojects']" position="attributes">
+          <attribute name="invisible">True</attribute>
+        </xpath>
+        <xpath expr="/form//field[@name='available_area']" position="attributes">
+          <attribute name="invisible">True</attribute>
+        </xpath>
+      </data>
+    </field>
+    <field name="inherit_id" ref="eg_property_management.property_project_form_view"/>
+    <field name="mode">extension</field>
+    <field name="model">property.project</field>
+    <field name="name">Odoo Studio: property.project.form customization</field>
+    <field name="priority">99</field>
+    <field name="type">form</field>
+  </record>
+  <record id="odoo_studio_property_6b62b3b7-f884-443c-ade9-b5fa6a236b03" model="ir.ui.view" context="{'studio': True}">
+    <field name="arch" type="xml">
+      <data>
+        <xpath expr="/list//field[@name='property_for']" position="after">
+          <field optional="show" name="x_studio_area_square_mete" string="Area Square meter "/>
+          <field optional="show" name="x_studio_area_square_feet"/>
+        </xpath>
+      </data>
+    </field>
+    <field name="inherit_id" ref="eg_property_management.property_detail_list_view"/>
+    <field name="mode">extension</field>
+    <field name="model">property.detail</field>
+    <field name="name">Odoo Studio: property.detail.list customization</field>
+    <field name="priority">99</field>
+    <field name="type">list</field>
+  </record>
+  <record id="odoo_studio_asset_ma_746980e6-3860-49c6-b296-d591338a0476" model="ir.ui.view" context="{'studio': True}">
+    <field name="arch" type="xml">
+      <data>
+        <xpath expr="/list//field[@name='name']" position="after">
+          <field name="product_id" optional="show"/>
+        </xpath>
+        <xpath expr="/list//field[@name='model_type']" position="after">
+          <field optional="show" name="x_studio_block_1" options="{'create_name_field': 'x_name'}"/>
+          <field optional="show" name="x_studio_level_1" options="{'create_name_field': 'x_name'}"/>
+          <field optional="show" name="x_studio_room_area" options="{'create_name_field': 'x_name'}"/>
+          <field optional="show" name="x_studio_asset_category_1" options="{'create_name_field': 'x_name'}"/>
+        </xpath>
+        <xpath expr="/list//field[@name='model_type']" position="attributes">
+          <attribute name="column_invisible">True</attribute>
+        </xpath>
+        <xpath expr="/list//field[@name='initial_stock']" position="attributes">
+          <attribute name="column_invisible">True</attribute>
+        </xpath>
+        <xpath expr="/list//field[@name='current_stock']" position="attributes">
+          <attribute name="column_invisible">True</attribute>
+        </xpath>
+        <xpath expr="/list//field[@name='active_transfers']" position="attributes">
+          <attribute name="column_invisible">True</attribute>
+        </xpath>
+        <xpath expr="/list//field[@name='invoice_date']" position="attributes">
+          <attribute name="column_invisible">True</attribute>
+        </xpath>
+        <xpath expr="/list//field[@name='total_depreciation_amount']" position="attributes">
+          <attribute name="column_invisible">True</attribute>
+        </xpath>
+        <xpath expr="/list//field[@name='total_maintenance_amount']" position="attributes">
+          <attribute name="column_invisible">True</attribute>
+        </xpath>
+        <xpath expr="/list//field[@name='depreciation_count']" position="attributes">
+          <attribute name="column_invisible">True</attribute>
+        </xpath>
+        <xpath expr="/list//field[@name='transfer_count']" position="attributes">
+          <attribute name="column_invisible">True</attribute>
+        </xpath>
+      </data>
+    </field>
+    <field name="inherit_id" ref="asset_management.view_asset_tree"/>
+    <field name="mode">extension</field>
+    <field name="model">asset.management</field>
+    <field name="name">Odoo Studio: asset.management.tree customization</field>
+    <field name="priority">99</field>
+    <field name="type">list</field>
+  </record>
+</odoo>

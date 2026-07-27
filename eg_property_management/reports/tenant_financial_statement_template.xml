@@ -1,0 +1,173 @@
+<odoo>
+    <template id="report_tenant_financial_statement_template">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="web.external_layout">
+                    <div class="page" style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #1F2937; background-color: #FFFFFF; padding: 10px;">
+                        
+                        <t t-set="data" t-value="o.get_tenant_financial_statement()"/>
+
+                        <!-- Title Header Banner -->
+                        <div style="border-bottom: 2px solid #1F2937; padding-bottom: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-end;">
+                            <div>
+                                <h2 style="font-weight: 700; color: #111827; font-size: 22px; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">
+                                    Statement of Account
+                                </h2>
+                                <p style="color: #4B5563; font-size: 13px; margin: 4px 0 0 0;">
+                                    Contract Reference: <strong style="color: #2563EB;"><span t-field="o.name"/></strong>
+                                </p>
+                            </div>
+                            <div style="text-align: right;">
+                                <span style="background-color: #F3F4F6; border: 1px solid #D1D5DB; color: #374151; font-size: 12px; padding: 5px 10px; border-radius: 4px; font-weight: 500;">
+                                    Generated: <span t-out="datetime.date.today().strftime('%d-%b-%Y')"/>
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- 1. TENANT DETAILS (Header Info) -->
+                        <div style="background-color: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 6px; padding: 14px; margin-bottom: 20px;">
+                            <h3 style="font-size: 14px; font-weight: 700; color: #374151; text-transform: uppercase; margin-top: 0; margin-bottom: 10px; border-bottom: 1px solid #E5E7EB; padding-bottom: 6px;">
+                                Tenant Details
+                            </h3>
+                            <table style="width: 100%; font-size: 13px; border-collapse: collapse; color: #374151;">
+                                <tr>
+                                    <td style="padding: 5px 0; width: 18%; font-weight: 600; color: #6B7280;">Tenant Name:</td>
+                                    <td style="padding: 5px 0; width: 32%; color: #111827; font-weight: 600;">
+                                        <span t-field="o.tenant_id.name"/>
+                                    </td>
+                                    <td style="padding: 5px 0; width: 18%; font-weight: 600; color: #6B7280;">Lease Period:</td>
+                                    <td style="padding: 5px 0; width: 32%; color: #111827;">
+                                        <span t-field="o.start_date" t-options="{'widget': 'date', 'format': 'dd-MMM-yyyy'}"/> – 
+                                        <span t-field="o.end_date" t-options="{'widget': 'date', 'format': 'dd-MMM-yyyy'}"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 5px 0; font-weight: 600; color: #6B7280;">Property:</td>
+                                    <td style="padding: 5px 0; color: #111827;">
+                                        <span t-out="o.property_id.display_name or o.property_id.name"/>
+                                    </td>
+                                    <td style="padding: 5px 0; font-weight: 600; color: #6B7280;">Tenant ID:</td>
+                                    <td style="padding: 5px 0; color: #111827;">
+                                        <span t-out="o.tenant_id.ref or ('TEN-%05d' % o.tenant_id.id)"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 5px 0; font-weight: 600; color: #6B7280;">Unit No.:</td>
+                                    <td style="padding: 5px 0; color: #2563EB; font-weight: 700;">
+                                        <span t-field="o.property_id.name"/>
+                                    </td>
+                                    <td style="padding: 5px 0; font-weight: 600; color: #6B7280;">Statement Period:</td>
+                                    <td style="padding: 5px 0; color: #111827;">
+                                        <span t-field="o.start_date" t-options="{'widget': 'date', 'format': 'dd-MMM-yyyy'}"/> – 
+                                        <span t-out="datetime.date.today().strftime('%d-%b-%Y')"/>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <!-- 2. STATEMENT OF TRANSACTIONS -->
+                        <div style="margin-bottom: 20px;">
+                            <h3 style="font-size: 14px; font-weight: 700; color: #374151; text-transform: uppercase; margin-bottom: 8px;">
+                                Statement of Transactions
+                            </h3>
+                            <table style="width: 100%; font-size: 12px; border-collapse: collapse; border: 1px solid #D1D5DB;">
+                                <thead>
+                                    <tr style="background-color: #1F2937; color: #FFFFFF; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">
+                                        <th style="padding: 8px 10px; text-align: left;">Date</th>
+                                        <th style="padding: 8px 10px; text-align: left;">Description</th>
+                                        <th style="padding: 8px 10px; text-align: left;">Invoice No.</th>
+                                        <th style="padding: 8px 10px; text-align: right;">Debit (<span t-field="o.currency_id.name"/>)</th>
+                                        <th style="padding: 8px 10px; text-align: right;">Credit (<span t-field="o.currency_id.name"/>)</th>
+                                        <th style="padding: 8px 10px; text-align: right;">Balance (<span t-field="o.currency_id.name"/>)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="data['lines']" t-as="line">
+                                        <tr style="border-bottom: 1px solid #E5E7EB; color: #1F2937;">
+                                            <td style="padding: 7px 10px; white-space: nowrap;">
+                                                <span t-out="line['date']" t-options="{'widget': 'date', 'format': 'dd-MMM-yyyy'}"/>
+                                            </td>
+                                            <td style="padding: 7px 10px;"><span t-out="line['description']"/></td>
+                                            <td style="padding: 7px 10px; color: #4B5563;"><span t-out="line['ref']"/></td>
+                                            <td style="padding: 7px 10px; text-align: right;">
+                                                <span t-if="line['debit'] &gt; 0" t-out="'{:,.2f}'.format(line['debit'])"/>
+                                                <span t-else="" style="color: #9CA3AF;">-</span>
+                                            </td>
+                                            <td style="padding: 7px 10px; text-align: right; color: #059669; font-weight: 500;">
+                                                <span t-if="line['credit'] &gt; 0" t-out="'{:,.2f}'.format(line['credit'])"/>
+                                                <span t-else="" style="color: #9CA3AF;">-</span>
+                                            </td>
+                                            <td style="padding: 7px 10px; text-align: right; font-weight: 600; color: #111827;">
+                                                <span t-out="'{:,.2f}'.format(line['balance'])"/>
+                                            </td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- 3. SUMMARY -->
+                        <div style="margin-bottom: 20px; width: 50%; float: right;">
+                            <div style="background-color: #F9FAFB; border: 1px solid #D1D5DB; border-radius: 6px; padding: 14px;">
+                                <h3 style="font-size: 13px; font-weight: 700; color: #374151; text-transform: uppercase; margin-top: 0; margin-bottom: 8px; border-bottom: 1px solid #E5E7EB; padding-bottom: 5px;">
+                                    Summary
+                                </h3>
+                                <table style="width: 100%; font-size: 13px; color: #1F2937;">
+                                    <tr>
+                                        <td style="padding: 5px 0; font-weight: 500;">Total Charges</td>
+                                        <td style="padding: 5px 0; text-align: right; font-weight: 600;"><span t-out="'{:,.2f}'.format(data['total_charges'])"/></td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 5px 0; font-weight: 500;">Total Payments</td>
+                                        <td style="padding: 5px 0; text-align: right; color: #DC2626; font-weight: 600;">
+                                            (<span t-out="'{:,.2f}'.format(data['total_payments'])"/>)
+                                        </td>
+                                    </tr>
+                                    <tr style="border-top: 2px solid #D1D5DB; font-size: 14px;">
+                                        <td style="padding: 8px 0 2px 0; font-weight: 700; color: #111827;">Outstanding Balance</td>
+                                        <td style="padding: 8px 0 2px 0; text-align: right; font-weight: 700; color: #2563EB;">
+                                            <span t-out="'{:,.2f}'.format(data['outstanding_balance'])"/> <span t-field="o.currency_id.name"/>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                        <div style="clear: both;"/>
+
+                        <!-- 4. SECURITY DEPOSIT (Optional, rendered only if deposit exists) -->
+                        <t t-if="o.deposit and o.deposit &gt; 0">
+                            <div style="background-color: #F9FAFB; border: 1px solid #D1D5DB; border-radius: 6px; padding: 14px; margin-top: 10px;">
+                                <h3 style="font-size: 13px; font-weight: 700; color: #374151; text-transform: uppercase; margin-top: 0; margin-bottom: 8px; border-bottom: 1px solid #E5E7EB; padding-bottom: 5px;">
+                                    Security Deposit (Optional)
+                                </h3>
+                                <table style="width: 100%; font-size: 13px; color: #1F2937;">
+                                    <thead>
+                                        <tr style="color: #6B7280; font-size: 11px; text-transform: uppercase;">
+                                            <th style="text-align: left; padding-bottom: 4px;">Description</th>
+                                            <th style="text-align: right; padding-bottom: 4px;">Amount (<span t-field="o.currency_id.name"/>)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr style="border-bottom: 1px solid #E5E7EB;">
+                                            <td style="padding: 5px 0;">Security Deposit Received</td>
+                                            <td style="padding: 5px 0; text-align: right; font-weight: 600;"><span t-out="'{:,.2f}'.format(data['deposit_received'])"/></td>
+                                        </tr>
+                                        <tr style="border-bottom: 1px solid #E5E7EB;">
+                                            <td style="padding: 5px 0;">Security Deposit Utilized</td>
+                                            <td style="padding: 5px 0; text-align: right; color: #6B7280;">-</td>
+                                        </tr>
+                                        <tr style="font-weight: 700;">
+                                            <td style="padding: 7px 0 0 0; color: #111827;">Balance Held</td>
+                                            <td style="padding: 7px 0 0 0; text-align: right; color: #059669;"><span t-out="'{:,.2f}'.format(data['balance_held'])"/></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </t>
+
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+</odoo>

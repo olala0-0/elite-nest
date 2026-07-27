@@ -184,7 +184,6 @@
     <field name="arch" type="xml">
       <data>
         <xpath expr="/list//field[@name='rent']" position="after">
-          <field optional="show" name="x_studio_security_deposit"/>
           <field name="currency_id"/>
           <field name="currency_id"/>
         </xpath>

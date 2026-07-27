@@ -265,7 +265,6 @@
   </record>
   <record id="odoo_studio_default__cea1340f-e6b4-45a0-9dd5-a2506d9b0b10" model="ir.ui.view" context="{'studio': True}">
     <field name="arch" type="xml">
-      <field name="arch" type="xml">
       <data>
         <xpath expr="/list//field[@name='x_studio_sequence']" position="before">
           <header>

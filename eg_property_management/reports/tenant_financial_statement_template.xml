@@ -19,7 +19,7 @@
                             </div>
                             <div style="text-align: right;">
                                 <span style="background-color: #F3F4F6; border: 1px solid #D1D5DB; color: #374151; font-size: 12px; padding: 5px 10px; border-radius: 4px; font-weight: 500;">
-                                    Generated: <span t-out="context_today().strftime('%d-%b-%Y')"/>
+                                    Generated: <span t-out="datetime.date.today().strftime('%d-%b-%Y')"/>
                                 </span>
                             </div>
                         </div>
@@ -59,7 +59,7 @@
                                     <td style="padding: 5px 0; font-weight: 600; color: #6B7280;">Statement Period:</td>
                                     <td style="padding: 5px 0; color: #111827;">
                                         <span t-field="o.start_date" t-options="{'widget': 'date', 'format': 'dd-MMM-yyyy'}"/> – 
-                                        <span t-out="context_today().strftime('%d-%b-%Y')"/>
+                                        <span t-out="datetime.date.today().strftime('%d-%b-%Y')"/>
                                     </td>
                                 </tr>
                             </table>

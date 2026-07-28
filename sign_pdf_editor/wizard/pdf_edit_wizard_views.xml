@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_sign_pdf_edit_wizard_form" model="ir.ui.view">
+        <field name="name">sign.pdf.edit.wizard.form</field>
+        <field name="model">sign.pdf.edit.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Edit PDF">
+                <group>
+                    <field name="template_id" options="{'no_create': True}"/>
+                    <field name="page_count" readonly="1"/>
+                    <field name="operation" widget="radio" invisible="not template_id"/>
+                </group>
+
+                <group string="Diagnostic Info (share this with support if 'no PDF' errors persist)">
+                    <field name="debug_info" nolabel="1" widget="text"
+                           readonly="1"/>
+                </group>
+
+                <!-- ADD TEXT -->
+                <group string="Text" invisible="operation != 'add_text'">
+                    <field name="text_value"/>
+                    <field name="text_page"/>
+                    <field name="text_pos_x"/>
+                    <field name="text_pos_y"/>
+                    <field name="text_font"/>
+                    <field name="text_size"/>
+                    <field name="text_color" widget="color"/>
+                </group>
+
+                <!-- ADD IMAGE -->
+                <group string="Image" invisible="operation != 'add_image'">
+                    <field name="image_data" widget="image" filename="image_filename"/>
+                    <field name="image_filename" invisible="1"/>
+                    <field name="image_page"/>
+                    <field name="image_pos_x"/>
+                    <field name="image_pos_y"/>
+                    <field name="image_width"/>
+                </group>
+
+                <!-- WATERMARK -->
+                <group string="Watermark" invisible="operation != 'watermark'">
+                    <field name="watermark_text"/>
+                    <field name="watermark_opacity"/>
+                    <field name="watermark_size"/>
+                </group>
+
+                <!-- ROTATE -->
+                <group string="Rotate" invisible="operation != 'rotate'">
+                    <field name="rotate_pages"/>
+                    <field name="rotate_angle"/>
+                </group>
+
+                <!-- DELETE -->
+                <group string="Delete Pages" invisible="operation != 'delete'">
+                    <field name="delete_pages_str"/>
+                </group>
+
+                <!-- REORDER -->
+                <group string="Reorder Pages" invisible="operation != 'reorder'">
+                    <field name="reorder_str"/>
+                </group>
+
+                <!-- MERGE -->
+                <group string="Merge PDF" invisible="operation != 'merge'">
+                    <field name="merge_pdf_data" filename="merge_pdf_filename"/>
+                    <field name="merge_pdf_filename" invisible="1"/>
+                    <field name="merge_insert_at"/>
+                </group>
+
+                <!-- SPLIT -->
+                <group string="Split Pages" invisible="operation != 'split'">
+                    <field name="split_range"/>
+                    <field name="split_new_name"/>
+                </group>
+
+                <div class="alert alert-warning" role="alert"
+                     invisible="operation not in ('delete','reorder','merge','split')">
+                    This operation changes the page structure. Existing Sign fields
+                    already placed on this template may shift to the wrong page —
+                    review field positions afterwards.
+                </div>
+
+                <footer>
+                    <button name="action_apply" type="object" string="Apply"
+                            class="btn-primary"/>
+                    <button name="action_diagnose" type="object" string="Diagnose"
+                            class="btn-secondary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

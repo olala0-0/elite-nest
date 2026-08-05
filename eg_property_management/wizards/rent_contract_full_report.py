@@ -26,7 +26,7 @@ class RentContractFulkReport(models.TransientModel):
                    'Total Amount', 'Paid Amount', 'Remaining Amount', 'Status']
         contract_groups_ids = {'All Contracts': self.rent_contract_ids,
                                'Running Contracts': self.rent_contract_ids.filtered(lambda c: c.state == 'running'),
-                               'Closed Contracts': self.rent_contract_ids.filtered(lambda c: c.state == 'close'),
+                               'Terminated Contracts': self.rent_contract_ids.filtered(lambda c: c.state == 'terminate'),
                                'Expired Contracts': self.rent_contract_ids.filtered(lambda c: c.state == 'expire'), }
 
         for sheet_name, contracts_id in contract_groups_ids.items():

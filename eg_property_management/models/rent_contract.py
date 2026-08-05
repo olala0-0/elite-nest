@@ -144,7 +144,7 @@ class RentContract(models.Model):
                                   store=True)
 
     state = fields.Selection(
-        [('draft', 'Draft'), ('running', 'Running'), ('cancel', 'Cancel'), ('close', 'Close'), ('expire', 'Expire'), ],
+        [('draft', 'Draft'), ('running', 'Running'), ('cancel', 'Cancel'), ('terminate', 'Terminate'), ('expire', 'Expire'), ],
         string="Status", default='draft', tracking=True)
 
     invoice_count = fields.Integer(string="Invoices", compute="_compute_invoice_count")
@@ -333,7 +333,7 @@ class RentContract(models.Model):
             if existing_contract:
                 raise UserError(
                     f"Unit '{rec.property_id.display_name}' already has an active running contract "
-                    f"('{existing_contract.name}'). Please close, cancel, or expire it before creating "
+                    f"('{existing_contract.name}'). Please terminate, cancel, or expire it before creating "
                     f"or starting another contract for this unit."
                 )
 
@@ -475,9 +475,9 @@ class RentContract(models.Model):
             rec.state = 'running'
             rec.property_id.state = 'rent'
 
-    def action_state_close(self):
+    def action_state_terminate(self):
         for rec in self:
-            rec.state = 'close'
+            rec.state = 'terminate'
             rec.property_id.state = 'on_rent'
 
     def action_state_cancel(self):

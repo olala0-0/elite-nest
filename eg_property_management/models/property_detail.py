@@ -178,7 +178,7 @@ class PropertyDetails(models.Model):
             if active_rent:
                 raise UserError(
                     f"Cannot set '{rec.name}' to {target_state_label} while it has an active "
-                    f"running rent contract ('{active_rent.name}'). Close, cancel, or expire the "
+                    f"running rent contract ('{active_rent.name}'). Terminate, cancel, or expire the "
                     f"contract first."
                 )
             active_sale = rec._get_active_sale_contract()

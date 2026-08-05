@@ -31,22 +31,22 @@
             <field name="arch" type="xml">
                 <form>
                     <header>
-                        <field name="state" widget="statusbar" statusbar_visible="draft,running,cancel,close,expire"/>
+                        <field name="state" widget="statusbar" statusbar_visible="draft,running,cancel,terminate,expire"/>
                         <button name="action_state_draft" string="Reset to Draft" type="object" class="btn-secondary"
                                 invisible="state in ['draft','running','cancel','expire']"/>
                         <button name="action_state_running" string="Running" type="object" class="btn-primary"
-                                invisible="state in ['running','cancel','close','expire']"/>
+                                invisible="state in ['running','cancel','terminate','expire']"/>
                         <button name="action_create_invoice" string="Create Invoice" type="object" class="btn-primary"
-                                invisible="state in ['draft','cancel','close','expire']"/>
-                        <button name="action_state_close" string="Close Contract" type="object" class="btn-secondary"
-                                invisible="state in ['draft','cancel','close','expire']"/>
+                                invisible="state in ['draft','cancel','terminate','expire']"/>
+                        <button name="action_state_terminate" string="Terminate Contract" type="object" class="btn-secondary"
+                                invisible="state in ['draft','cancel','terminate','expire']"/>
                         <button name="action_state_cancel" string="Cancel" type="object" class="btn-secondary"
-                                invisible="state in ['draft','cancel','close','expire']"/>
+                                invisible="state in ['draft','cancel','terminate','expire']"/>
                         <button name="action_create_broker_bill" string="Create Broker Bill" type="object"
                                 class="btn-primary"
                                 invisible="not broker_id or not broker_commission or state != 'running' or has_broker_bill == True"/>
                         <button name="%(action_rent_contract_extend_wizard)d" string="Extend Contract" type="action"
-                                class="btn-primary" invisible="state in ['draft','running','cancel','close']"/>
+                                class="btn-primary" invisible="state in ['draft','running','cancel','terminate']"/>
                     </header>
                     <sheet>
                         <div class="oe_button_box" name="button_box">
@@ -356,7 +356,7 @@
                     <field name="end_date" string="End Date"/>
                     <field name="state" string="Status"/>
 
-                    <filter string="Expired Contracts" name="expired_contracts" domain="[('state', '=', 'close')]"/>
+                    <filter string="Terminated Contracts" name="terminated_contracts" domain="[('state', '=', 'terminate')]"/>
                     <filter string="Automatic Installment" name="auto_contract"
                             domain="[('contract_type', '=', 'auto')]"/>
                     <filter string="Manual Installment" name="manual_contract"

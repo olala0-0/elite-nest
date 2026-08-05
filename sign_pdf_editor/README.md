@@ -68,6 +68,31 @@ instead of its own top-level entry, open Settings → Technical → Menu
 Items (developer mode on) and note the exact menu you want it under —
 send me that and I'll adjust the `parent` safely without guessing.
 
+## Visual page picker (Add Text / Add Image)
+
+The wizard now renders the actual PDF page inline (using Odoo's own bundled
+pdf.js) for the **Add Text** and **Add Image / Stamp** operations. Click
+directly on the page and the X/Y position fields fill in automatically -
+you can still edit those number fields by hand afterward to fine-tune.
+
+This relies on two things I can't verify without you testing on your
+instance:
+
+- **pdf.js location**: assumes Odoo serves its bundled pdf.js at
+  `/web/static/lib/pdfjs/build/pdf.js` (stable in Odoo for many versions).
+  If the preview area shows "Could not load the PDF preview", open the
+  browser console, find the failing request URL, and send it to me -
+  I'll update the constant in `static/src/js/pdf_page_picker.js`.
+- **Widget registration API**: uses the `view_widgets` registry and
+  `standardWidgetProps` from `@web/views/widgets/standard_widget_props`,
+  the standard pattern for non-field form widgets in recent Odoo web
+  client versions. If the wizard fails to open at all after upgrading
+  (rather than just failing to render the PDF), check the browser
+  console for a JS import error and send me the exact message.
+
+The other operations (Rotate/Delete/Reorder/Merge/Split, and Watermark)
+don't need a click position, so they keep their existing plain fields.
+
 ## Known limitation to flag to your team
 
 Deleting, reordering, or merging pages changes page numbers. Existing

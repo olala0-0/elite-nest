@@ -11,6 +11,10 @@
                     <field name="operation" widget="radio" invisible="not template_id"/>
                 </group>
 
+                <div invisible="not template_id or operation not in ('add_text', 'add_image')">
+                    <widget name="pdf_page_picker"/>
+                </div>
+
                 <group string="Diagnostic Info (share this with support if 'no PDF' errors persist)">
                     <field name="debug_info" nolabel="1" widget="text"
                            readonly="1"/>
@@ -20,8 +24,8 @@
                 <group string="Text" invisible="operation != 'add_text'">
                     <field name="text_value"/>
                     <field name="text_page"/>
-                    <field name="text_pos_x"/>
-                    <field name="text_pos_y"/>
+                    <field name="text_pos_x" help="Set automatically when you click the page preview above; edit here to fine-tune."/>
+                    <field name="text_pos_y" help="Set automatically when you click the page preview above; edit here to fine-tune."/>
                     <field name="text_font"/>
                     <field name="text_size"/>
                     <field name="text_color" widget="color"/>
@@ -32,8 +36,8 @@
                     <field name="image_data" widget="image" filename="image_filename"/>
                     <field name="image_filename" invisible="1"/>
                     <field name="image_page"/>
-                    <field name="image_pos_x"/>
-                    <field name="image_pos_y"/>
+                    <field name="image_pos_x" help="Set automatically when you click the page preview above; edit here to fine-tune."/>
+                    <field name="image_pos_y" help="Set automatically when you click the page preview above; edit here to fine-tune."/>
                     <field name="image_width"/>
                 </group>
 

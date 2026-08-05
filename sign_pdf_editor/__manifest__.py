@@ -36,6 +36,13 @@ paragraphs. For that level of editing, a commercial PDF SDK is required.
         "wizard/pdf_edit_wizard_views.xml",
         "views/sign_menu.xml",
     ],
+    "assets": {
+        "web.assets_backend": [
+            "sign_pdf_editor/static/src/css/pdf_page_picker.css",
+            "sign_pdf_editor/static/src/js/pdf_page_picker.js",
+            "sign_pdf_editor/static/src/xml/pdf_page_picker.xml",
+        ],
+    },
     "installable": True,
     "application": False,
 }

@@ -55,32 +55,60 @@ class SignTemplate(models.Model):
                 return value
         return None
 
-    def _get_pdf_via_sign_document(self):
-        """Pattern 3: sign.template links to a separate sign.document
-        record (Many2one, One2many, or Many2many), and THAT record's PDF
-        is stored as an ir.attachment linked via res_model='sign.document'.
-        Confirmed to be the real pattern on Odoo 19 instances where
-        sign.template has no direct attachment of its own."""
+    def _get_sign_documents(self):
+        """All sign.document records related to this template, via any
+        Many2one/One2many/Many2many field pointing to sign.document."""
         self.ensure_one()
         if "sign.document" not in self.env:
-            return None
+            return self.env["sign.document"]
         fields_info = self.fields_get(attributes=["type", "relation"])
-        doc_ids = set()
+        docs = self.env["sign.document"]
         for name, info in fields_info.items():
             if info.get("relation") != "sign.document":
                 continue
             if info.get("type") == "many2one":
-                value = self[name]
-                if value:
-                    doc_ids.add(value.id)
+                docs |= self[name]
             elif info.get("type") in ("one2many", "many2many"):
-                for value in self[name]:
-                    doc_ids.add(value.id)
+                docs |= self[name]
+        return docs
+
+    def _get_binary_field_candidates(self, record):
+        """Binary field names on `record`'s model, best-guess-first."""
+        fields_info = record.fields_get(attributes=["type"])
+        names = [n for n, i in fields_info.items() if i["type"] == "binary"]
+        names.sort(key=lambda n: (
+            0 if any(k in n.lower() for k in ("attach", "pdf", "doc", "data")) else 1
+        ))
+        return names
+
+    def _get_pdf_via_sign_document(self):
+        """Pattern 3: sign.template links to a separate sign.document
+        record (Many2one, One2many, or Many2many). Read the PDF directly
+        off a Binary field on that record via the ORM (not by guessing
+        which ir.attachment belongs to it) - this matters because a single
+        sign.document can have several ir.attachment rows against it (one
+        per attachment=True Binary field, tagged by res_field), so picking
+        'whichever has the highest id' can silently read/write the wrong
+        one. Returns (document_record, field_name) or (None, None)."""
+        self.ensure_one()
+        for doc in self._get_sign_documents():
+            for field_name in self._get_binary_field_candidates(doc):
+                if doc[field_name]:
+                    return doc, field_name
+        return None, None
+
+    def _get_pdf_via_sign_document_attachment_guess(self):
+        """Last-resort fallback: guess the sign.document's attachment by
+        res_model/res_id alone, ignoring res_field. Kept only in case a
+        sign.document's PDF isn't reachable through any of its own Binary
+        fields for some reason - prefer _get_pdf_via_sign_document()."""
+        self.ensure_one()
+        doc_ids = self._get_sign_documents().ids
         if not doc_ids:
             return None
         return self.env["ir.attachment"].search([
             ("res_model", "=", "sign.document"),
-            ("res_id", "in", list(doc_ids)),
+            ("res_id", "in", doc_ids),
         ], order="id desc", limit=1)
 
     def _get_pdf_field_name(self):
@@ -108,9 +136,12 @@ class SignTemplate(models.Model):
         related = self._get_pdf_via_relation()
         if related:
             return related.datas
-        via_doc = self._get_pdf_via_sign_document()
-        if via_doc and via_doc.datas:
-            return via_doc.datas
+        doc, field_name = self._get_pdf_via_sign_document()
+        if doc:
+            return doc[field_name]
+        via_doc_guess = self._get_pdf_via_sign_document_attachment_guess()
+        if via_doc_guess and via_doc_guess.datas:
+            return via_doc_guess.datas
         field_name = self._get_pdf_field_name()
         if field_name:
             return self[field_name]
@@ -127,9 +158,13 @@ class SignTemplate(models.Model):
         if related:
             related.write({"datas": new_data})
             return
-        via_doc = self._get_pdf_via_sign_document()
-        if via_doc:
-            via_doc.write({"datas": new_data})
+        doc, field_name = self._get_pdf_via_sign_document()
+        if doc:
+            doc.write({field_name: new_data})
+            return
+        via_doc_guess = self._get_pdf_via_sign_document_attachment_guess()
+        if via_doc_guess:
+            via_doc_guess.write({"datas": new_data})
             return
         field_name = self._get_pdf_field_name()
         if field_name:
@@ -217,10 +252,28 @@ class SignTemplate(models.Model):
             except Exception as e:
                 lines.append("  - %s: error reading (%s)" % (name, e))
 
-        via_doc_attachment = self._get_pdf_via_sign_document()
-        lines.append("PDF found via sign.document chain: %s" % (
-            "id=%s (%s)" % (via_doc_attachment.id, via_doc_attachment.name)
-            if via_doc_attachment else "no"
+        docs = self._get_sign_documents()
+        lines.append("")
+        lines.append("sign.document record(s) found: %s" % (docs.ids or "none"))
+        for doc in docs:
+            binary_fields = self._get_binary_field_candidates(doc)
+            lines.append("  - sign.document(%s): binary fields = %s" % (doc.id, binary_fields or "none"))
+            for field_name in binary_fields:
+                has_data = bool(doc[field_name])
+                lines.append("      %s: %s" % (field_name, "HAS DATA" if has_data else "empty"))
+            doc_attachments = self.env["ir.attachment"].search([
+                ("res_model", "=", "sign.document"),
+                ("res_id", "=", doc.id),
+            ])
+            lines.append("      ir.attachment rows against this document: %s" % len(doc_attachments))
+            for a in doc_attachments:
+                lines.append("        id=%s name=%r res_field=%r has_datas=%s"
+                             % (a.id, a.name, a.res_field, bool(a.datas)))
+
+        doc, field_name = self._get_pdf_via_sign_document()
+        lines.append("")
+        lines.append("PDF resolved via sign.document field: %s" % (
+            "sign.document(%s).%s" % (doc.id, field_name) if doc else "no"
         ))
 
         # Broader net: any attachment anywhere with a similar filename,

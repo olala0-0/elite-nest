@@ -136,14 +136,23 @@ class SignPdfEditWizard(models.TransientModel):
         return pages
 
     def action_diagnose(self):
-        """Pop up the diagnostic info as a dialog - bypasses any issue with
-        the inline field rendering."""
+        """Refresh the diagnostic info and show it as a plain notification -
+        not an error dialog, since finding the PDF successfully is the
+        normal, expected outcome."""
         self.ensure_one()
         if not self.template_id:
             raise UserError(_("Please select a template first."))
         info = self.template_id._build_debug_info()
         self.debug_info = info
-        raise UserError(info)
+        return {
+            "type": "ir.actions.client",
+            "tag": "display_notification",
+            "params": {
+                "title": _("Diagnostic Info"),
+                "message": info,
+                "sticky": True,
+            },
+        }
 
     def action_apply(self):
         self.ensure_one()

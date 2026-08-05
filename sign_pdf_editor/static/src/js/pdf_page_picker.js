@@ -82,7 +82,7 @@ export class PdfPagePicker extends Component {
             if (window.pdfjsLib && window.pdfjsLib.GlobalWorkerOptions) {
                 window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_WORKER_URL;
             }
-            const url = `/sign_pdf_editor/preview/${this.props.record.resId}`;
+            const url = `/sign_pdf_editor/preview/${this._templateId}`;
             const loadingTask = window.pdfjsLib.getDocument(url);
             this._pdfDoc = await loadingTask.promise;
             this.state.pageCount = this._pdfDoc.numPages;

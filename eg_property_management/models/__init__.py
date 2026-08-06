@@ -23,4 +23,5 @@ from . import property_payment_term
 from . import property_residential_type
 from . import res_config_settings
 from . import helpdesk_ticket
+from . import property_inspection
 # from . import

@@ -1,0 +1,154 @@
+<odoo>
+    <data>
+        <!-- Checklist master list (Configuration) -->
+        <record id="property_inspection_checklist_item_view_list" model="ir.ui.view">
+            <field name="name">property.inspection.checklist.item.list</field>
+            <field name="model">property.inspection.checklist.item</field>
+            <field name="arch" type="xml">
+                <list string="Inspection Checklist Items" editable="bottom">
+                    <field name="sequence" widget="handle"/>
+                    <field name="area"/>
+                    <field name="name"/>
+                    <field name="active" invisible="1"/>
+                </list>
+            </field>
+        </record>
+
+        <record id="action_property_inspection_checklist_item" model="ir.actions.act_window">
+            <field name="name">Inspection Checklist Items</field>
+            <field name="res_model">property.inspection.checklist.item</field>
+            <field name="view_mode">list</field>
+        </record>
+
+        <!-- Inspection lines (embedded) -->
+        <record id="property_inspection_line_view_list" model="ir.ui.view">
+            <field name="name">property.inspection.line.list</field>
+            <field name="model">property.inspection.line</field>
+            <field name="arch" type="xml">
+                <list string="Checklist" editable="bottom">
+                    <field name="sequence" widget="handle"/>
+                    <field name="checklist_item_id"/>
+                    <field name="area"/>
+                    <field name="name"/>
+                    <field name="condition"/>
+                    <field name="notes"/>
+                    <field name="photo" widget="image" class="oe_avatar" options="{'size': [40, 40]}"/>
+                    <field name="estimated_cost" invisible="condition == 'ok'"/>
+                    <field name="currency_id" column_invisible="1"/>
+                </list>
+            </field>
+        </record>
+
+        <!-- Inspection form -->
+        <record id="property_inspection_view_form" model="ir.ui.view">
+            <field name="name">property.inspection.form</field>
+            <field name="model">property.inspection</field>
+            <field name="arch" type="xml">
+                <form string="Property Inspection">
+                    <header>
+                        <button name="action_start" string="Start Inspection" type="object"
+                                class="btn-primary" invisible="state != 'draft'"/>
+                        <button name="action_share_report" string="Share Report with Tenant" type="object"
+                                class="btn-primary" invisible="state != 'in_progress'"/>
+                        <button name="action_tenant_acknowledge" string="Tenant Acknowledged" type="object"
+                                class="btn-primary" invisible="state != 'report_shared'"/>
+                        <button name="action_done" string="Mark Done" type="object"
+                                class="btn-primary" invisible="state != 'tenant_acknowledged'"/>
+                        <button name="action_reset_draft" string="Reset to Draft" type="object"
+                                invisible="state == 'draft'"/>
+                        <field name="state" widget="statusbar"
+                               statusbar_visible="draft,in_progress,report_shared,tenant_acknowledged,done"/>
+                    </header>
+                    <sheet>
+                        <div class="oe_title">
+                            <h1>
+                                <field name="name" readonly="1"/>
+                            </h1>
+                        </div>
+                        <group>
+                            <group>
+                                <field name="inspection_type"/>
+                                <field name="rent_contract_id"/>
+                                <field name="property_id"/>
+                                <field name="tenant_id"/>
+                            </group>
+                            <group>
+                                <field name="inspector_id"/>
+                                <field name="inspection_date"/>
+                                <field name="company_id" groups="base.group_multi_company"/>
+                                <field name="currency_id" invisible="1"/>
+                                <field name="total_deduction_amount"/>
+                            </group>
+                        </group>
+                        <notebook>
+                            <page string="Checklist">
+                                <field name="line_ids"/>
+                            </page>
+                            <page string="Sign-Off" invisible="state in ('draft', 'in_progress')">
+                                <group>
+                                    <field name="report_shared_date" readonly="1"/>
+                                    <field name="tenant_ack_date" readonly="1"/>
+                                    <field name="tenant_signature" widget="image"/>
+                                </group>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="property_inspection_view_list" model="ir.ui.view">
+            <field name="name">property.inspection.list</field>
+            <field name="model">property.inspection</field>
+            <field name="arch" type="xml">
+                <list string="Property Inspections">
+                    <field name="name"/>
+                    <field name="inspection_type"/>
+                    <field name="property_id"/>
+                    <field name="tenant_id"/>
+                    <field name="inspector_id"/>
+                    <field name="inspection_date"/>
+                    <field name="total_deduction_amount" sum="Total"/>
+                    <field name="state" widget="badge"
+                           decoration-success="state == 'done'"
+                           decoration-info="state in ('report_shared', 'tenant_acknowledged')"/>
+                </list>
+            </field>
+        </record>
+
+        <record id="property_inspection_view_search" model="ir.ui.view">
+            <field name="name">property.inspection.search</field>
+            <field name="model">property.inspection</field>
+            <field name="arch" type="xml">
+                <search string="Property Inspections">
+                    <field name="name"/>
+                    <field name="property_id"/>
+                    <field name="tenant_id"/>
+                    <field name="rent_contract_id"/>
+                    <filter string="Pre-Move-In" name="filter_move_in" domain="[('inspection_type', '=', 'move_in')]"/>
+                    <filter string="Move-Out" name="filter_move_out" domain="[('inspection_type', '=', 'move_out')]"/>
+                    <separator/>
+                    <filter string="Draft" name="filter_draft" domain="[('state', '=', 'draft')]"/>
+                    <filter string="Done" name="filter_done" domain="[('state', '=', 'done')]"/>
+                    <group expand="0" string="Group By">
+                        <filter string="Type" name="group_type" context="{'group_by': 'inspection_type'}"/>
+                        <filter string="Status" name="group_state" context="{'group_by': 'state'}"/>
+                        <filter string="Property" name="group_property" context="{'group_by': 'property_id'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <record id="action_property_inspection" model="ir.actions.act_window">
+            <field name="name">Property Inspections</field>
+            <field name="res_model">property.inspection</field>
+            <field name="view_mode">list,form</field>
+        </record>
+
+        <menuitem id="property_inspection_menu" name="Inspections" parent="property_management_menu"
+                  action="action_property_inspection" sequence="65"/>
+        <menuitem id="property_inspection_checklist_item_submenu" name="Inspection Checklist Items"
+                  parent="property_configuration_menu" action="action_property_inspection_checklist_item"
+                  sequence="20"/>
+    </data>
+</odoo>

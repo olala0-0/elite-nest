@@ -1,6 +1,6 @@
 # Move-In / Move-Out / Inspection — Implementation Plan
 
-Status: **Design only — no code changed yet.** This document is the plan to review before anything is built.
+Status: **All 6 phases (0-5) built, pushed to `Test`, and upgraded.** This document is kept as the design record and decision log.
 
 **Decisions locked in (2026-08-06):**
 - Multi-company split → **separate follow-up project**, not part of this feature.
@@ -197,14 +197,14 @@ rent.contract.moveout.state (NEW):
 
 Each phase is independently shippable/testable via the existing fetch → compile-check → commit → push → Odoo.sh Upgrade workflow. New models = schema change, so **every phase below needs a module Upgrade on Odoo.sh, not just a worker reload** (unlike the pure-logic financial-statement fixes done earlier this session).
 
-| Phase | Scope | Test before moving on |
+| Phase | Scope | Status |
 |---|---|---|
-| **0** | `property.inspection` + `property.inspection.line` models, views, security rules, seed data for the §3.4 checklist master list. No contract linkage yet. | Create a standalone inspection record manually in the UI, confirm checklist lines pre-populate from the seed list and computed `total_deduction_amount` works. |
-| **1** | `rent.contract.movein` model + smart button + Pre-Move-In inspection linkage. Purely additive to the contract form. | Create a new test contract, confirm existing Draft/Running/Terminate buttons behave exactly as before, then walk the move-in record through its states. |
-| **2** | `rent.contract.moveout` model (Option A, locked in §5), clearance + inspection tabs, statusbar, admin-only Approve action. **No financial posting yet** — deduction lines are just numbers on screen. | Full manual walk-through on a disposable test contract; confirm `action_state_terminate` is untouched and still callable directly, and confirm a non-admin user cannot click Approve. |
-| **3** | Financial finalize logic from §4: deduction invoices, refund credit note, `deposit_utilized`/`balance_held` fix in `get_tenant_financial_statement`, "Deposit Settlement" section in the QWeb template. | Reprint the tenant statement for a contract with a finalized move-out and confirm deductions, refund, and balances all agree — same verification rigor as the payment-statement fix earlier this session. |
-| **4** | Emails (welcome package, move-out NOC, report-shared notification) + printable Move-In Permit / NOC / Inspection Report documents. | Send-test each email/report on a test tenant address. |
-| **5** | Renewal-notice cron (90-day-before-expiry reminder, diagram step 1) + polish (statusbar colors, access rights per role — FM Team vs Finance vs PM). | Confirm cron only touches contracts nearing expiry, doesn't touch already-terminated ones. |
+| **0** ✅ | `property.inspection` + `property.inspection.line` models, views, security rules, seed data for the §3.4 checklist master list. No contract linkage yet. | Done. Custom search view had to be dropped (caused an upgrade ParseError whose exact cause the instance's error dialog never surfaced) — Odoo's auto-generated one is in its place. |
+| **1** ✅ | `rent.contract.movein` model + smart button + Pre-Move-In inspection linkage. Purely additive to the contract form. | Done, user-confirmed working. |
+| **2** ✅ | `rent.contract.moveout` model (Option A, locked in §5), clearance + inspection tabs, statusbar, admin-only Approve action. No financial posting yet. | Done, user-confirmed working. |
+| **3** ✅ | Financial finalize logic from §4: deduction invoices, refund credit note, `deposit_utilized`/`balance_held` fix in `get_tenant_financial_statement`, "Deposit Settlement" section in the QWeb template. | Done. |
+| **4** ✅ | Emails (welcome package, move-out NOC, report-shared notification) + printable Move-In Permit / NOC / Inspection Report documents. | Done. All three emails reuse the existing `mail.mail.create(...).send()` convention already used by this module's crons - no new email mechanism introduced. |
+| **5** ✅ | Renewal-notice cron (90-day-before-expiry reminder, diagram step 1) + polish (statusbar colors, access rights per role). | Cron done, registered alongside the module's four existing crons. Role-based access rights explicitly **declined** — see §8.6. Statusbar colors: no change needed, Odoo's default statusbar widget already highlights the current stage. |
 
 ---
 
@@ -215,6 +215,7 @@ Each phase is independently shippable/testable via the existing fetch → compil
 3. **Approver** — no new "Deposit Release Approver" field/group. `action_approve_deposit_release()` is gated on `self.env.user.has_group('base.group_system')` (Odoo's built-in Administrator/Settings group). `approved_by` records whichever admin clicks it — reflects "Ms. Gawhar" as a stand-in for "the admin," not a hardcoded name anywhere in code.
 4. **Checklist master list** — first-draft proposal seeded as data in §3.4, fully editable post-install.
 5. **`sign_pdf_editor` integration** — held. v1 ships with the Binary signature/photo upload already scoped in §3.1 (`tenant_signature` field). Revisit once Move-In/Move-Out is stable.
+6. **Role-based access rights (Phase 5)** — declined for now. Every model in this module, old and new, has zero group restrictions (any internal user can read/write everything); the one exception stays the admin-only Approve Deposit Release action (§8.3). Building real `res.groups` for FM Team/Finance/PM requires knowing this company's actual users and exactly what each role should/shouldn't touch - a separate, deliberate task to pick up once those roles are defined in Odoo, not a default to guess at.
 
 ---
 

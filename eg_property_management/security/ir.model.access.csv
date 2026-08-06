@@ -26,6 +26,7 @@ access_property_area_measurement,access.property.area.measurement,model_property
 access_property_inspection,access.property.inspection,model_property_inspection,,1,1,1,1
 access_property_inspection_line,access.property.inspection.line,model_property_inspection_line,,1,1,1,1
 access_property_inspection_checklist_item,access.property.inspection.checklist.item,model_property_inspection_checklist_item,,1,1,1,1
+access_rent_contract_movein,access.rent.contract.movein,model_rent_contract_movein,,1,1,1,1
 
 
 

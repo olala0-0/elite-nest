@@ -1142,3 +1142,30 @@ class RentContract(models.Model):
     def _compute_has_broker_bill(self):
         for rec in self:
             rec.has_broker_bill = any(inst.payment_type == 'broker_bill' for inst in rec.rent_installment_ids)
+
+    movein_id = fields.Many2one(comodel_name='rent.contract.movein', string='Move-In Record',
+                                compute='_compute_movein_id')
+
+    def _compute_movein_id(self):
+        for rec in self:
+            rec.movein_id = self.env['rent.contract.movein'].search(
+                [('rent_contract_id', '=', rec.id)], limit=1
+            )
+
+    def action_open_movein(self):
+        """Smart-button target: opens the contract's Move-In record,
+        creating it on first click. Purely additive - does not touch
+        contract creation (rent.contract.create()) or any existing state
+        transition, so every contract created before this feature shipped
+        works exactly as before until someone clicks this button."""
+        self.ensure_one()
+        movein = self.movein_id
+        if not movein:
+            movein = self.env['rent.contract.movein'].create({'rent_contract_id': self.id})
+        return {
+            'type': 'ir.actions.act_window',
+            'res_model': 'rent.contract.movein',
+            'res_id': movein.id,
+            'view_mode': 'form',
+            'target': 'current',
+        }

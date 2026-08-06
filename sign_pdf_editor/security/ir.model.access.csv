@@ -1,2 +1,3 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_sign_pdf_edit_wizard,sign.pdf.edit.wizard,model_sign_pdf_edit_wizard,base.group_user,1,1,1,1
+access_sign_pdf_text_overlay,sign.pdf.text.overlay,model_sign_pdf_text_overlay,base.group_user,1,1,1,1

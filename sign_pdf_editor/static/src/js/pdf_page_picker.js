@@ -13,11 +13,6 @@ import { Component, useRef, useState, onMounted, onWillUnmount } from "@odoo/owl
 const PDFJS_URL = "/web/static/lib/pdfjs/build/pdf.js";
 const PDFJS_WORKER_URL = "/web/static/lib/pdfjs/build/pdf.worker.js";
 
-const PAGE_FIELDS = {
-    add_text: { page: "text_page", x: "text_pos_x", y: "text_pos_y" },
-    add_image: { page: "image_page", x: "image_pos_x", y: "image_pos_y" },
-};
-
 export class PdfPagePicker extends Component {
     static template = "sign_pdf_editor.PdfPagePicker";
     static props = { ...standardWidgetProps };
@@ -38,13 +33,8 @@ export class PdfPagePicker extends Component {
         });
     }
 
-    get fieldNames() {
-        const operation = this.props.record.data.operation;
-        return PAGE_FIELDS[operation] || null;
-    }
-
     get isApplicable() {
-        return !!this.fieldNames && !!this._templateId;
+        return !!this._templateId;
     }
 
     get _templateId() {
@@ -69,10 +59,6 @@ export class PdfPagePicker extends Component {
             await this._loadPdf();
         }
         await this._renderCurrentPage();
-    }
-
-    async onOperationOrTemplateChanged() {
-        await this._refresh();
     }
 
     async _loadPdf() {
@@ -113,14 +99,12 @@ export class PdfPagePicker extends Component {
         if (!this._pdfDoc || !this.canvasRef.el) {
             return;
         }
-        const fields = this.fieldNames;
-        let pageNum = (fields && this.props.record.data[fields.page]) || 1;
+        let pageNum = this.props.record.data.text_page || 1;
         pageNum = Math.min(Math.max(parseInt(pageNum, 10) || 1, 1), this.state.pageCount);
         try {
             const page = await this._pdfDoc.getPage(pageNum);
-            // Re-check after the await: the operation may have changed
-            // (removing the canvas from the DOM) while getPage() was
-            // in flight.
+            // Re-check after the await: the wizard may have closed (removing
+            // the canvas from the DOM) while getPage() was in flight.
             if (!this.canvasRef.el) {
                 return;
             }
@@ -147,13 +131,9 @@ export class PdfPagePicker extends Component {
     }
 
     async _changePage(delta) {
-        const fields = this.fieldNames;
-        if (!fields) {
-            return;
-        }
-        const current = parseInt(this.props.record.data[fields.page], 10) || 1;
+        const current = parseInt(this.props.record.data.text_page, 10) || 1;
         const next = Math.min(Math.max(current + delta, 1), this.state.pageCount || 1);
-        await this.props.record.update({ [fields.page]: next });
+        await this.props.record.update({ text_page: next });
         await this._renderCurrentPage();
     }
 
@@ -162,10 +142,6 @@ export class PdfPagePicker extends Component {
     }
 
     async onCanvasClick(ev) {
-        const fields = this.fieldNames;
-        if (!fields) {
-            return;
-        }
         const canvas = this.canvasRef.el;
         const rect = canvas.getBoundingClientRect();
         const xPct = ((ev.clientX - rect.left) / rect.width) * 100;
@@ -175,8 +151,8 @@ export class PdfPagePicker extends Component {
             top: ev.clientY - rect.top,
         };
         await this.props.record.update({
-            [fields.x]: Math.round(xPct * 100) / 100,
-            [fields.y]: Math.round(yPct * 100) / 100,
+            text_pos_x: Math.round(xPct * 100) / 100,
+            text_pos_y: Math.round(yPct * 100) / 100,
         });
     }
 }

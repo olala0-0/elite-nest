@@ -1,11 +1,23 @@
 import base64
+import io
 
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
 
+from .pdf_text_overlay import FONT_MAP
+
 
 class SignTemplate(models.Model):
     _inherit = "sign.template"
+
+    pdf_original_data = fields.Binary(
+        string="Original PDF (before text overlays)",
+        help="Snapshot of the PDF taken the first time text was added through "
+             "the PDF Editor. Overlays are always redrawn onto this pristine "
+             "copy rather than the last-rendered file, so editing or deleting "
+             "a text row actually changes the result instead of compounding.",
+    )
+    text_overlay_ids = fields.One2many("sign.pdf.text.overlay", "template_id", string="Added Text")
 
     def action_open_pdf_editor(self):
         """Open the PDF editor wizard for this template."""
@@ -171,6 +183,66 @@ class SignTemplate(models.Model):
             self.write({field_name: new_data})
             return
         raise UserError(_("Could not find where this template's PDF is stored."))
+
+    def _ensure_original_backup(self):
+        """Capture the current PDF as the pristine base, exactly once. If
+        this template already had text burned into it by an earlier version
+        of this module (before overlays existed), that content becomes part
+        of the "original" from this point on - it can't be retroactively
+        split out into an editable row."""
+        self.ensure_one()
+        if not self.pdf_original_data:
+            self.pdf_original_data = self._get_pdf_datas()
+
+    def _render_text_overlays(self):
+        """Redraw the PDF from the pristine original plus every current
+        text_overlay_ids row. Always starting from the original - never the
+        previously-rendered file - means editing or deleting a row actually
+        changes the output instead of drift compounding on every Apply."""
+        self.ensure_one()
+        try:
+            import fitz  # PyMuPDF
+        except ImportError:
+            raise UserError(_(
+                "The PyMuPDF library ('fitz') is not installed on this server. "
+                "Ask your administrator to add 'PyMuPDF' to requirements.txt."
+            ))
+        self._ensure_original_backup()
+        base_datas = self.pdf_original_data
+        if not base_datas:
+            raise UserError(_("This template has no PDF attached."))
+        doc = fitz.open(stream=base64.b64decode(base_datas), filetype="pdf")
+        for overlay in self.text_overlay_ids.sorted("sequence"):
+            page_index = overlay.page - 1
+            if page_index < 0 or page_index >= doc.page_count:
+                continue
+            page = doc[page_index]
+            rect = page.rect
+            x = rect.width * (overlay.pos_x / 100.0)
+            y = rect.height * (overlay.pos_y / 100.0)
+            color_hex = (overlay.color or "#000000").lstrip("#")
+            color = tuple(int(color_hex[i:i + 2], 16) / 255.0 for i in (0, 2, 4))
+            fontname = FONT_MAP.get(overlay.font, "helv")
+            # Shift the box up by the font's real ascender so the text sits
+            # ON the clicked line (its baseline) instead of starting below
+            # it - insert_textbox anchors the TOP of the box at y0.
+            ascender = fitz.Font(fontname).ascender
+            y0 = y - (overlay.size * ascender)
+            box = fitz.Rect(x, y0, rect.width, rect.height)
+            page.insert_textbox(
+                box,
+                overlay.text_value,
+                fontsize=overlay.size,
+                fontname=fontname,
+                color=color,
+                align=0,
+            )
+        out = io.BytesIO()
+        doc.save(out)
+        doc.close()
+        out.seek(0)
+        new_data = base64.b64encode(out.read())
+        self._set_pdf_datas(new_data)
 
     def _get_page_count(self):
         self.ensure_one()

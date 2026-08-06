@@ -1,15 +1,14 @@
 # Sign PDF Editor (Odoo 19)
 
-Adds an **"Edit PDF"** button on Sign Templates to add text, images,
-watermarks, and manage pages (rotate/delete/reorder/merge/split) directly
-on the underlying PDF — before you place Sign fields or send it out.
+Adds an **"Edit PDF"** button on Sign Templates to add text onto the
+underlying PDF — before you place Sign fields or send it out.
 
 ## What this does / doesn't do
 
-- ✅ Overlays new text, images, and watermarks onto the PDF (the same
-  technique used by iLovePDF's "Edit PDF" tool and most online editors).
-- ✅ Rotate, delete, reorder pages; merge in another PDF; split a page
-  range into a brand-new template.
+- ✅ Overlays new text onto the PDF (the same technique used by iLovePDF's
+  "Edit PDF" tool and most online editors).
+- ✅ Every piece of added text stays editable: fix a typo or remove a line
+  and re-apply — see "Editing / undoing added text" below.
 - ❌ Does **not** rewrite/reflow text that already exists in the PDF —
   PDFs don't store text as editable paragraphs the way Word does. True
   in-place text editing needs a commercial SDK (e.g. Nutrient/PSPDFKit,
@@ -33,21 +32,7 @@ on the underlying PDF — before you place Sign fields or send it out.
    Odoo.sh installs this automatically on the next build.
 3. Commit & push to your staging branch. Odoo.sh will rebuild.
 4. In Odoo: Apps → remove the "Apps" filter, search **"Sign PDF Editor"**,
-   click Install.
-
-## Fixed in this version
-
-Odoo 19's `sign.template` model does **not** expose a direct `attachment_id`
-field — the PDF is stored as a separate `ir.attachment` record linked via
-`res_model`/`res_id`. All code now looks it up that way instead of
-assuming a field name. If you hit another `Unknown field` install error
-anywhere, send me the exact error text (it names the missing field) and
-I'll correct it the same way — I can't inspect your live schema directly,
-so these fixes are reactive to what your server reports.
-
-**Test "Merge" and "Split" on staging specifically** — they create/link
-new `ir.attachment`/`sign.template` records, which is the area most
-likely to depend on internal fields I can't fully verify from here.
+   click Install (or Upgrade if already installed).
 
 ## Where to find it
 
@@ -58,43 +43,44 @@ screen. Instead it adds its own menu:
 
 **Top menu bar → "PDF Editor" → "Edit PDF"**
 
-Pick your template from the dropdown at the top of the wizard, choose an
-operation, fill in the fields, and click Apply. The change is written to
-the template's PDF attachment immediately — reopen the template's normal
-editor screen afterward to confirm it, place/adjust Sign fields, etc.
+Pick your template from the dropdown, click on the page preview where you
+want text to start, type it in, and click Apply.
 
-If you'd rather this live nested inside the existing "Sign" app menu
-instead of its own top-level entry, open Settings → Technical → Menu
-Items (developer mode on) and note the exact menu you want it under —
-send me that and I'll adjust the `parent` safely without guessing.
+## Editing / undoing added text
 
-## Visual page picker (Add Text / Add Image)
+Every piece of text you add is kept as its own row (page, position, text,
+font, size, color) linked to the template — not burned permanently into
+the PDF the moment you click Apply. Each time you click Apply, the PDF is
+rebuilt from scratch from a saved pristine copy of the original file plus
+every row currently in the list, so:
 
-The wizard now renders the actual PDF page inline (using Odoo's own bundled
-pdf.js) for the **Add Text** and **Add Image / Stamp** operations. Click
-directly on the page and the X/Y position fields fill in automatically -
-you can still edit those number fields by hand afterward to fine-tune.
+- **Fix a typo**: edit the text directly in the "Text Already On This PDF"
+  list and click Apply.
+- **Undo an addition**: click the trash icon on that row and click Apply.
+  Since the PDF is always rebuilt from the original, the removed text is
+  gone from the result — it doesn't leave a trace.
 
-**Confirmed working on this instance**: pdf.js loads fine from
-`/web/static/lib/pdfjs/build/pdf.js`, and the PDF is correctly located via
-the `sign.document` field fix above.
+**Caveat**: text added through an earlier version of this module (before
+this row-based system existed) was burned directly into the PDF with no
+backup taken. That existing text is not retroactively split out into an
+editable row — it's just part of the base document now. Everything added
+going forward through this version is fully editable/removable as above.
 
-One thing that still relies on you testing:
+## Text placement accuracy
 
-- **Widget registration API**: uses the `view_widgets` registry and
-  `standardWidgetProps` from `@web/views/widgets/standard_widget_props`,
-  the standard pattern for non-field form widgets in recent Odoo web
-  client versions. If the wizard fails to open at all after upgrading
-  (rather than just failing to render the PDF), check the browser
-  console for a JS import error and send me the exact message.
+Click position maps to the exact spot on the page, and text is anchored
+to its baseline using the actual font's ascender metric (not a guessed
+offset), so the first line lands exactly where you clicked rather than
+starting either above or below it.
 
-The other operations (Rotate/Delete/Reorder/Merge/Split, and Watermark)
-don't need a click position, so they keep their existing plain fields.
+Font: PyMuPDF can only draw with three built-in fonts (Helvetica, Times,
+Courier). The wizard auto-detects the page's existing font and pre-selects
+the closest visual match (serif/sans/mono) — it won't reproduce the exact
+embedded font, just lean the same direction.
 
 ## Known limitation to flag to your team
 
-Deleting, reordering, or merging pages changes page numbers. Existing
-Sign fields (the drag-and-drop signature/text boxes) are tied to a page
-number + position, and are **not** automatically remapped. The wizard
-shows a warning for these operations — always re-check field placement
-afterward before sending a document for signature.
+The visual page picker relies on Odoo's own bundled pdf.js
+(`/web/static/lib/pdfjs/build/pdf.js`) to render the page preview in the
+browser. If that ever fails to load (banner shown in the wizard), you can
+still type the page number and X/Y percentages by hand.

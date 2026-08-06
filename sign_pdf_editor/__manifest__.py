@@ -1,24 +1,20 @@
 {
     "name": "Sign PDF Editor",
-    "version": "19.0.1.0.0",
+    "version": "19.0.1.1.0",
     "category": "Productivity/Sign",
-    "summary": "Edit PDF content (text, images, watermark, pages) directly on Sign templates before sending for signature.",
+    "summary": "Add text overlays directly on Sign templates before sending for signature.",
     "description": """
 Sign PDF Editor
 ================
-Adds an "Edit PDF" action on Sign Templates (sign.template) that lets you:
+Adds an "Edit PDF" action on Sign Templates (sign.template) that lets you add
+text onto the PDF (choose font, size, color, position, page) before you place
+Sign fields or send it out.
 
-- Add text overlays (choose font, size, color, position, page)
-- Add image overlays / stamps / logos
-- Add a watermark across all pages
-- Rotate pages
-- Delete pages
-- Reorder pages
-- Merge another PDF in
-- Split out a range of pages into a new template
-
-All operations act on the underlying PDF attachment of the template, so the
-result looks like native, edited PDF content — not an Odoo Sign form field.
+Each piece of added text is kept as an editable row linked to the template -
+not burned permanently into the PDF on first save. The PDF is always
+regenerated from a saved pristine original plus the current set of rows, so
+fixing a typo or removing a row and clicking Apply again gives a clean
+result, with no drift from repeated edits.
 
 Note: this module overlays new content onto the PDF (the same approach used
 by most online "PDF editors"). It does not reflow or rewrite existing text

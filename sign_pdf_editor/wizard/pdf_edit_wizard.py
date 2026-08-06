@@ -244,23 +244,21 @@ class SignPdfEditWizard(models.TransientModel):
         result_message = method()
         if self.template_id:
             self.page_count = self.template_id._get_page_count()
-        reopen_action = {
+        if result_message:
+            # Separate from the reopened action below (not chained via
+            # "next") - chaining a display_notification into a second
+            # doAction crashed the web client's action preprocessing here.
+            try:
+                self.env.user.notify_success(message=result_message)
+            except Exception:
+                _logger.info(result_message)
+        return {
             "type": "ir.actions.act_window",
             "name": _("Edit PDF"),
             "res_model": "sign.pdf.edit.wizard",
             "res_id": self.id,
             "view_mode": "form",
             "target": "new",
-        }
-        return {
-            "type": "ir.actions.client",
-            "tag": "display_notification",
-            "params": {
-                "title": _("Applied"),
-                "message": result_message or _("Change applied - preview updated below."),
-                "type": "success",
-                "next": reopen_action,
-            },
         }
 
     # ------------------------------------------------------------------

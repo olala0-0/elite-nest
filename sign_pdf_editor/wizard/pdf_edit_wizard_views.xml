@@ -11,14 +11,13 @@
                     <field name="operation" widget="radio" invisible="not template_id"/>
                 </group>
 
+                <div class="text-muted mb-2" invisible="not operation_help">
+                    <t t-esc="operation_help"/>
+                </div>
+
                 <div invisible="not template_id or operation not in ('add_text', 'add_image')">
                     <widget name="pdf_page_picker"/>
                 </div>
-
-                <group string="Diagnostic Info (share this with support if 'no PDF' errors persist)">
-                    <field name="debug_info" nolabel="1" widget="text"
-                           readonly="1"/>
-                </group>
 
                 <!-- ADD TEXT -->
                 <group string="Text" invisible="operation != 'add_text'">
@@ -26,7 +25,10 @@
                     <field name="text_page"/>
                     <field name="text_pos_x" help="Set automatically when you click the page preview above; edit here to fine-tune."/>
                     <field name="text_pos_y" help="Set automatically when you click the page preview above; edit here to fine-tune."/>
-                    <field name="text_font"/>
+                    <field name="text_font"
+                           help="Auto-suggested from the page's existing font (see 'Detected Font' below) - PyMuPDF can only draw with these three, so this is the closest match, not the exact original font."/>
+                    <field name="detected_font_name" readonly="1"
+                           invisible="not detected_font_name"/>
                     <field name="text_size"/>
                     <field name="text_color" widget="color"/>
                 </group>
@@ -84,11 +86,22 @@
                     review field positions afterwards.
                 </div>
 
+                <div class="mt-3">
+                    <button name="action_diagnose" type="object"
+                            string="Show diagnostic info" class="btn-link p-0"
+                            invisible="show_diagnostics"/>
+                    <button name="action_hide_diagnostics" type="object"
+                            string="Hide diagnostic info" class="btn-link p-0"
+                            invisible="not show_diagnostics"/>
+                </div>
+                <group string="Diagnostic Info (share this with support if 'no PDF' errors persist)"
+                       invisible="not show_diagnostics">
+                    <field name="debug_info" nolabel="1" widget="text" readonly="1"/>
+                </group>
+
                 <footer>
                     <button name="action_apply" type="object" string="Apply"
                             class="btn-primary"/>
-                    <button name="action_diagnose" type="object" string="Diagnose"
-                            class="btn-secondary"/>
                     <button string="Cancel" class="btn-secondary" special="cancel"/>
                 </footer>
             </form>

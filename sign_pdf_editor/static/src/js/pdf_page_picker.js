@@ -79,13 +79,23 @@ export class PdfPagePicker extends Component {
         this.state.loading = true;
         try {
             await loadJS(PDFJS_URL);
+            // The user may have switched away from Add Text/Add Image (or
+            // closed the wizard) while pdf.js was still loading - bail out
+            // rather than touching a canvas that's no longer on screen.
+            if (!this.isApplicable) {
+                return;
+            }
             if (window.pdfjsLib && window.pdfjsLib.GlobalWorkerOptions) {
                 window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_WORKER_URL;
             }
             const url = `/sign_pdf_editor/preview/${this._templateId}`;
             const loadingTask = window.pdfjsLib.getDocument(url);
-            this._pdfDoc = await loadingTask.promise;
-            this.state.pageCount = this._pdfDoc.numPages;
+            const pdfDoc = await loadingTask.promise;
+            if (!this.isApplicable) {
+                return;
+            }
+            this._pdfDoc = pdfDoc;
+            this.state.pageCount = pdfDoc.numPages;
             this._loadedForTemplateId = this._templateId;
         } catch (e) {
             this.state.error = (
@@ -108,13 +118,21 @@ export class PdfPagePicker extends Component {
         pageNum = Math.min(Math.max(parseInt(pageNum, 10) || 1, 1), this.state.pageCount);
         try {
             const page = await this._pdfDoc.getPage(pageNum);
+            // Re-check after the await: the operation may have changed
+            // (removing the canvas from the DOM) while getPage() was
+            // in flight.
+            if (!this.canvasRef.el) {
+                return;
+            }
             const viewport = page.getViewport({ scale: 1.3 });
             const canvas = this.canvasRef.el;
             canvas.width = viewport.width;
             canvas.height = viewport.height;
             const ctx = canvas.getContext("2d");
             await page.render({ canvasContext: ctx, viewport }).promise;
-            this.state.marker = null;
+            if (this.canvasRef.el) {
+                this.state.marker = null;
+            }
         } catch (e) {
             this.state.error = "Could not render page " + pageNum + ": " + (e && e.message ? e.message : e);
         }

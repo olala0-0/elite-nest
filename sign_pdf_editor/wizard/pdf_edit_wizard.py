@@ -13,6 +13,36 @@ FONT_MAP = {
     "courier": "cour",
 }
 
+# Best-fit mapping from a PDF's embedded/base font name to one of the three
+# fonts we can actually draw with (PyMuPDF's Base14 set). This is a name
+# heuristic, not real font matching - it won't reproduce the exact glyphs
+# of a custom/embedded font, just picks the visually closest of our three
+# options (serif / sans / monospace).
+FONT_NAME_HINTS = (
+    ("courier", "courier"), ("consol", "courier"), ("mono", "courier"),
+    ("times", "times"), ("georgia", "times"), ("garamond", "times"),
+    ("serif", "times"), ("cambria", "times"), ("minion", "times"),
+)
+
+# Plain strings, not _(): this dict is built at module import time, before
+# any translation context exists, so wrapping these in _() here would do
+# nothing useful anyway.
+OPERATION_HELP = {
+    "add_text": "Click the page below where you want the text to start, "
+                 "then type it in and press Apply.",
+    "add_image": "Click the page below where you want the top-left corner "
+                 "of the image, then upload it and press Apply.",
+    "watermark": "Applies a diagonal watermark across every page - "
+                 "no position needed.",
+    "rotate": "Rotates the pages you list by the chosen angle.",
+    "delete": "Permanently removes the pages you list from this PDF.",
+    "reorder": "Rearranges all pages into the order you specify.",
+    "merge": "Inserts another PDF's pages into this one, after the page "
+             "number you choose.",
+    "split": "Copies a page range out into a brand-new template - the "
+             "current template is left untouched.",
+}
+
 
 class SignPdfEditWizard(models.TransientModel):
     _name = "sign.pdf.edit.wizard"
@@ -21,6 +51,7 @@ class SignPdfEditWizard(models.TransientModel):
     template_id = fields.Many2one("sign.template", required=True, ondelete="cascade")
     page_count = fields.Integer(readonly=True)
     debug_info = fields.Text(readonly=True, string="Diagnostic Info")
+    show_diagnostics = fields.Boolean(default=False)
 
     operation = fields.Selection([
         ("add_text", "Add Text"),
@@ -32,6 +63,12 @@ class SignPdfEditWizard(models.TransientModel):
         ("merge", "Merge Another PDF"),
         ("split", "Split Pages Into New Template"),
     ], required=True, default="add_text")
+    operation_help = fields.Char(compute="_compute_operation_help")
+
+    @api.depends("operation")
+    def _compute_operation_help(self):
+        for wiz in self:
+            wiz.operation_help = OPERATION_HELP.get(wiz.operation, "")
 
     # --- Add Text ---
     text_value = fields.Text(string="Text")
@@ -47,6 +84,9 @@ class SignPdfEditWizard(models.TransientModel):
     ], default="helvetica")
     text_size = fields.Integer(string="Font Size", default=11)
     text_color = fields.Char(string="Color (hex)", default="#000000")
+    detected_font_name = fields.Char(readonly=True, string="Detected Font On Page",
+                                      help="Best-fit match, not the exact embedded font - "
+                                           "PyMuPDF can only draw with Helvetica/Times/Courier.")
 
     # --- Add Image ---
     image_data = fields.Binary(string="Image")
@@ -97,6 +137,52 @@ class SignPdfEditWizard(models.TransientModel):
                 continue
             wiz.page_count = wiz.template_id._get_page_count()
             wiz.debug_info = wiz.template_id._build_debug_info()
+            wiz._detect_font()
+
+    @api.onchange("text_page")
+    def _onchange_text_page(self):
+        for wiz in self:
+            wiz._detect_font()
+
+    def _detect_font(self):
+        """Best-effort: look at what font the target page already uses and
+        pre-select the closest of our three built-in fonts, so new text at
+        least leans the same direction (serif/sans/mono) as the surrounding
+        document instead of always defaulting to Helvetica."""
+        self.ensure_one()
+        self.detected_font_name = ""
+        if not self.template_id:
+            return
+        try:
+            import fitz
+        except ImportError:
+            return
+        datas = self.template_id._get_pdf_datas()
+        if not datas:
+            return
+        page_index = (self.text_page or 1) - 1
+        try:
+            doc = fitz.open(stream=base64.b64decode(datas), filetype="pdf")
+            if page_index < 0 or page_index >= doc.page_count:
+                doc.close()
+                return
+            page_fonts = doc[page_index].get_fonts(full=True)
+            doc.close()
+        except Exception:
+            return
+        if not page_fonts:
+            return
+        basefont = (page_fonts[0][3] or "").strip()
+        if not basefont:
+            return
+        self.detected_font_name = basefont
+        lower_name = basefont.lower()
+        matched = "helvetica"
+        for hint, choice in FONT_NAME_HINTS:
+            if hint in lower_name:
+                matched = choice
+                break
+        self.text_font = matched
 
     def _get_doc(self):
         try:
@@ -136,23 +222,18 @@ class SignPdfEditWizard(models.TransientModel):
         return pages
 
     def action_diagnose(self):
-        """Refresh the diagnostic info and show it as a plain notification -
-        not an error dialog, since finding the PDF successfully is the
-        normal, expected outcome."""
+        """Refresh the diagnostic info and reveal it inline - not needed for
+        normal use, only when something looks wrong and you want to see
+        exactly where this PDF is being read from/written to."""
         self.ensure_one()
         if not self.template_id:
             raise UserError(_("Please select a template first."))
-        info = self.template_id._build_debug_info()
-        self.debug_info = info
-        return {
-            "type": "ir.actions.client",
-            "tag": "display_notification",
-            "params": {
-                "title": _("Diagnostic Info"),
-                "message": info,
-                "sticky": True,
-            },
-        }
+        self.debug_info = self.template_id._build_debug_info()
+        self.show_diagnostics = True
+
+    def action_hide_diagnostics(self):
+        self.ensure_one()
+        self.show_diagnostics = False
 
     def action_apply(self):
         self.ensure_one()
@@ -160,13 +241,26 @@ class SignPdfEditWizard(models.TransientModel):
         method = getattr(self, method_name, None)
         if not method:
             raise UserError(_("Unknown operation."))
-        method()
-        return {
+        result_message = method()
+        if self.template_id:
+            self.page_count = self.template_id._get_page_count()
+        reopen_action = {
             "type": "ir.actions.act_window",
-            "res_model": "sign.template",
-            "res_id": self.template_id.id,
+            "name": _("Edit PDF"),
+            "res_model": "sign.pdf.edit.wizard",
+            "res_id": self.id,
             "view_mode": "form",
-            "target": "current",
+            "target": "new",
+        }
+        return {
+            "type": "ir.actions.client",
+            "tag": "display_notification",
+            "params": {
+                "title": _("Applied"),
+                "message": result_message or _("Change applied - preview updated below."),
+                "type": "success",
+                "next": reopen_action,
+            },
         }
 
     # ------------------------------------------------------------------
@@ -185,7 +279,12 @@ class SignPdfEditWizard(models.TransientModel):
         page = doc[page_index]
         rect = page.rect
         x = rect.width * (self.text_pos_x / 100.0)
-        y = rect.height * (self.text_pos_y / 100.0)
+        # insert_text's point is the text BASELINE, not the top-left corner -
+        # without this offset, text renders shifted upward by about a
+        # font-size from wherever you clicked, which is the "text doesn't
+        # land where I click" bug. 0.8x is a standard approximation of a
+        # font's ascent as a fraction of its em size.
+        y = rect.height * (self.text_pos_y / 100.0) + (self.text_size * 0.8)
         color_hex = (self.text_color or "#000000").lstrip("#")
         color = tuple(int(color_hex[i:i + 2], 16) / 255.0 for i in (0, 2, 4))
         page.insert_text(
@@ -311,16 +410,16 @@ class SignPdfEditWizard(models.TransientModel):
         out.seek(0)
         new_data = base64.b64encode(out.read())
 
-        new_template = self.env["sign.template"].create({
-            "name": self.split_new_name or "%s (split)" % self.template_id.name,
-        })
+        new_name = self.split_new_name or "%s (split)" % self.template_id.name
+        new_template = self.env["sign.template"].create({"name": new_name})
         self.env["ir.attachment"].create({
-            "name": (self.split_new_name or "%s (split)" % self.template_id.name) + ".pdf",
+            "name": new_name + ".pdf",
             "datas": new_data,
             "mimetype": "application/pdf",
             "res_model": "sign.template",
             "res_id": new_template.id,
         })
+        return _("Created new template '%s' - the current template was left unchanged.") % new_name
 
     def _warn_field_positions(self):
         """Page count/order changed - existing Sign fields may now sit on the

@@ -195,21 +195,33 @@ class RentContract(models.Model):
             invoice.payment_state, (invoice.payment_state or 'not_paid').replace('_', ' ').title()
         )
 
-    def _get_invoice_payment_matches(self, invoice):
-        """Return (payment, matched_amount, date) for each payment actually
-        reconciled against this invoice's receivable line.
+    def _get_invoice_paid_amount(self, invoice):
+        """Authoritative amount actually paid on one invoice: amount_total
+        minus amount_residual - the same core fields Odoo itself uses to
+        compute payment_state, so it's correct no matter how the payment
+        was reconciled (a registered payment, a bank statement match, a
+        write-off, ...). Two earlier attempts at deriving this by walking
+        the reconciliation graph directly (account.move._get_reconciled_
+        payments(), then account.move.line.matched_debit_ids/
+        matched_credit_ids + payment_id) both returned nothing on invoices
+        whose own payment_state clearly showed paid/in_payment on this
+        instance - amount_residual can't disagree with payment_state since
+        payment_state is computed from it."""
+        self.ensure_one()
+        return invoice.amount_total - invoice.amount_residual
 
-        Not using account.move._get_reconciled_payments(): that private
-        helper's exact name/behavior isn't guaranteed across Odoo versions,
-        and on this instance it was returning nothing even for invoices
-        whose payment_state clearly showed 'in_payment' - so Total Payments
-        stayed 0.00 and no payment ever appeared on a printed statement,
-        no matter how much a tenant had actually paid. This instead reads
-        the reconciliation directly off account.move.line.matched_debit_ids/
-        matched_credit_ids (core, stable accounting API), and uses each
-        partial reconcile's own matched amount rather than the payment's
-        full amount - so a payment split across several invoices in one
-        batch doesn't overstate what was applied to this specific invoice.
+    def _get_invoice_payment_matches(self, invoice):
+        """Best-effort per-payment breakdown (name/date/reference) for
+        display only - NOT the source of truth for how much was paid, see
+        _get_invoice_paid_amount() for that. Reads the reconciliation
+        directly off account.move.line.matched_debit_ids/matched_credit_ids
+        (core, stable accounting API), using each partial reconcile's own
+        matched amount rather than the payment's full amount, so a payment
+        split across several invoices in one batch doesn't overstate what
+        was applied to this specific invoice. May return nothing even for a
+        fully paid invoice if the reconciliation didn't go through a
+        standard account.payment record - the caller falls back to a single
+        summary row using _get_invoice_paid_amount() in that case.
         """
         receivable_lines = invoice.line_ids.filtered(
             lambda line: line.account_id.account_type in ('asset_receivable', 'liability_payable')
@@ -298,14 +310,38 @@ class RentContract(models.Model):
         # combined into one move), and looking payments up per-installment
         # would credit the same payment twice, once for each shared row.
         for invoice in posted_invoices:
-            for payment, matched_amount, pay_date in self._get_invoice_payment_matches(invoice):
+            paid_amount = self._get_invoice_paid_amount(invoice)
+            if paid_amount <= 0.005:
+                continue
+
+            matches = self._get_invoice_payment_matches(invoice)
+            matched_total = sum(m[1] for m in matches)
+
+            if matches and abs(matched_total - paid_amount) <= 0.01:
+                # Detailed breakdown accounts for the full paid amount - use
+                # it for the nicer per-payment name/date/reference.
+                for payment, matched_amount, pay_date in matches:
+                    raw_lines.append({
+                        'date': pay_date or invoice.invoice_date or fields.Date.today(),
+                        'description': f"Payment Received ({payment.journal_id.name or 'Receipt'})",
+                        'ref': payment.name or payment.ref or 'RCPT',
+                        'status': 'Paid',
+                        'debit': 0.0,
+                        'credit': matched_amount,
+                        'pending': False,
+                    })
+            else:
+                # Breakdown missing or doesn't add up (e.g. reconciled via a
+                # bank statement match with no account.payment record) -
+                # fall back to a single row using the authoritative amount
+                # instead of silently showing no payment at all.
                 raw_lines.append({
-                    'date': pay_date or invoice.invoice_date or fields.Date.today(),
-                    'description': f"Payment Received ({payment.journal_id.name or 'Receipt'})",
-                    'ref': payment.name or payment.ref or 'RCPT',
+                    'date': invoice.invoice_date_due or invoice.invoice_date or fields.Date.today(),
+                    'description': f"Payment Received (matched to {invoice.name})",
+                    'ref': invoice.name,
                     'status': 'Paid',
                     'debit': 0.0,
-                    'credit': matched_amount,
+                    'credit': paid_amount,
                     'pending': False,
                 })
 

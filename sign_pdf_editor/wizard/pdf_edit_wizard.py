@@ -280,18 +280,23 @@ class SignPdfEditWizard(models.TransientModel):
         y = rect.height * (self.text_pos_y / 100.0)
         color_hex = (self.text_color or "#000000").lstrip("#")
         color = tuple(int(color_hex[i:i + 2], 16) / 255.0 for i in (0, 2, 4))
-        # insert_textbox positions text from the TOP-LEFT of a box, unlike
-        # insert_text (which anchors on the baseline and needs manual ascent
-        # math to land where you'd expect) - this is what actually matches
-        # "start the text where I clicked". The box runs to the page's
-        # right/bottom edge so normal-length text always fits and wraps
-        # naturally instead of overflowing.
-        box = fitz.Rect(x, y, rect.width, rect.height)
+        fontname = FONT_MAP.get(self.text_font, "helv")
+        # insert_textbox anchors the TOP of the box at y0, but a click on the
+        # page picker naturally targets the line the text should sit ON (its
+        # baseline) - e.g. clicking the dotted "Owner's Name ___" line. Left
+        # uncorrected, every insertion renders roughly one ascender's-worth
+        # of space below the click, which reads as "the text lands one line
+        # down". Shift y0 up by this font's actual ascender (not a guessed
+        # constant - fitz.Font exposes the real metric per font) so the
+        # first line's baseline lands exactly on the clicked point instead.
+        ascender = fitz.Font(fontname).ascender
+        y0 = y - (self.text_size * ascender)
+        box = fitz.Rect(x, y0, rect.width, rect.height)
         page.insert_textbox(
             box,
             self.text_value,
             fontsize=self.text_size,
-            fontname=FONT_MAP.get(self.text_font, "helv"),
+            fontname=fontname,
             color=color,
             align=0,
         )

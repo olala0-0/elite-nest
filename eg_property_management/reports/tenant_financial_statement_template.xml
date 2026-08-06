@@ -84,9 +84,13 @@
 
                         <!-- 2. STATEMENT OF TRANSACTIONS -->
                         <div style="margin-bottom: 20px;">
-                            <h3 style="font-size: 14px; font-weight: 700; color: #374151; text-transform: uppercase; margin-bottom: 8px;">
+                            <h3 style="font-size: 14px; font-weight: 700; color: #374151; text-transform: uppercase; margin-bottom: 4px;">
                                 Statement of Transactions
                             </h3>
+                            <p style="font-size: 11px; color: #6B7280; margin: 0 0 8px 0;">
+                                "Running Balance" is the cumulative amount owed as of that row, not the amount of that single charge.
+                                Greyed/italic rows are scheduled but not yet confirmed and are not included in the totals below.
+                            </p>
                             <table style="width: 100%; font-size: 12px; border-collapse: collapse; border: 1px solid #D1D5DB;">
                                 <thead>
                                     <tr style="background-color: #1F2937; color: #FFFFFF; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">
@@ -96,7 +100,7 @@
                                         <th style="padding: 8px 10px; text-align: left;">Status</th>
                                         <th style="padding: 8px 10px; text-align: right;">Debit (<span t-field="o.currency_id.name"/>)</th>
                                         <th style="padding: 8px 10px; text-align: right;">Credit (<span t-field="o.currency_id.name"/>)</th>
-                                        <th style="padding: 8px 10px; text-align: right;">Balance (<span t-field="o.currency_id.name"/>)</th>
+                                        <th style="padding: 8px 10px; text-align: right;">Running Balance (<span t-field="o.currency_id.name"/>)</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -147,6 +151,10 @@
                                         <td style="padding: 8px 0 2px 0; text-align: right; font-weight: 700; color: #2563EB;">
                                             <span t-out="'{:,.2f}'.format(data['outstanding_balance'])"/> <span t-field="o.currency_id.name"/>
                                         </td>
+                                    </tr>
+                                    <tr t-if="data['total_pending_amount']" style="font-size: 11px; color: #6B7280;">
+                                        <td style="padding: 6px 0 0 0;">Upcoming Charges (Not Yet Confirmed)</td>
+                                        <td style="padding: 6px 0 0 0; text-align: right;"><span t-out="'{:,.2f}'.format(data['total_pending_amount'])"/></td>
                                     </tr>
                                 </table>
                             </div>

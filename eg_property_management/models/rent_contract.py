@@ -195,6 +195,36 @@ class RentContract(models.Model):
             invoice.payment_state, (invoice.payment_state or 'not_paid').replace('_', ' ').title()
         )
 
+    def _get_invoice_payment_matches(self, invoice):
+        """Return (payment, matched_amount, date) for each payment actually
+        reconciled against this invoice's receivable line.
+
+        Not using account.move._get_reconciled_payments(): that private
+        helper's exact name/behavior isn't guaranteed across Odoo versions,
+        and on this instance it was returning nothing even for invoices
+        whose payment_state clearly showed 'in_payment' - so Total Payments
+        stayed 0.00 and no payment ever appeared on a printed statement,
+        no matter how much a tenant had actually paid. This instead reads
+        the reconciliation directly off account.move.line.matched_debit_ids/
+        matched_credit_ids (core, stable accounting API), and uses each
+        partial reconcile's own matched amount rather than the payment's
+        full amount - so a payment split across several invoices in one
+        batch doesn't overstate what was applied to this specific invoice.
+        """
+        receivable_lines = invoice.line_ids.filtered(
+            lambda line: line.account_id.account_type in ('asset_receivable', 'liability_payable')
+        )
+        matches = []
+        for partial in receivable_lines.matched_debit_ids:
+            counterpart = partial.credit_move_id
+            if counterpart.payment_id:
+                matches.append((counterpart.payment_id, partial.amount, counterpart.payment_id.date))
+        for partial in receivable_lines.matched_credit_ids:
+            counterpart = partial.debit_move_id
+            if counterpart.payment_id:
+                matches.append((counterpart.payment_id, partial.amount, counterpart.payment_id.date))
+        return matches
+
     def get_tenant_financial_statement(self):
         """ Computes chronological Statement of Account data including opening balance,
         one row per charge (rent/deposit/maintenance/utility/penalty), matched payments,
@@ -221,9 +251,10 @@ class RentContract(models.Model):
             lambda inst: inst.payment_type != 'broker_bill'
         ).sorted(key=lambda inst: (inst.invoice_date or fields.Date.today(), inst.id))
 
-        seen_payments = set()
         confirmed_count = 0
         pending_count = 0
+        total_pending_amount = 0.0
+        posted_invoices = self.env['account.move']
 
         for inst in charge_installments:
             invoice = inst.invoice_id
@@ -231,24 +262,27 @@ class RentContract(models.Model):
             is_posted = bool(invoice and invoice.state == 'posted')
 
             if not is_posted:
-                # Not a confirmed charge yet - listed for visibility (this is
-                # the fix for the statement silently showing nothing/zero
-                # totals with no explanation) but excluded from totals/
-                # running balance, matching standard statement-of-account
-                # practice of only reflecting confirmed charges.
+                # Not a confirmed charge yet - still shown with its scheduled
+                # amount (this is the fix for a tenant seeing a blank "-" for
+                # every upcoming charge and having no way to know what they'll
+                # owe) but excluded from totals/running balance, matching
+                # standard statement-of-account practice of only reflecting
+                # confirmed charges in the running total.
                 pending_count += 1
+                total_pending_amount += inst.amount
                 raw_lines.append({
                     'date': inst.invoice_date,
                     'description': f"{inst.description or inst.payment_type.title()} (not yet confirmed)",
                     'ref': invoice.name if invoice and invoice.name and invoice.name != '/' else 'Draft',
                     'status': status,
-                    'debit': 0.0,
+                    'debit': inst.amount,
                     'credit': 0.0,
                     'pending': True,
                 })
                 continue
 
             confirmed_count += 1
+            posted_invoices |= invoice
             raw_lines.append({
                 'date': invoice.invoice_date or inst.invoice_date,
                 'description': inst.description or invoice.name,
@@ -259,21 +293,19 @@ class RentContract(models.Model):
                 'pending': False,
             })
 
-            reconciled_payments = self.env['account.payment']
-            if hasattr(invoice, '_get_reconciled_payments'):
-                reconciled_payments = invoice._get_reconciled_payments()
-
-            for payment in reconciled_payments:
-                if payment.id in seen_payments:
-                    continue
-                seen_payments.add(payment.id)
+        # One pass per unique invoice (not per installment) - several
+        # installments can share the same invoice (e.g. Rent + Deposit
+        # combined into one move), and looking payments up per-installment
+        # would credit the same payment twice, once for each shared row.
+        for invoice in posted_invoices:
+            for payment, matched_amount, pay_date in self._get_invoice_payment_matches(invoice):
                 raw_lines.append({
-                    'date': payment.date or fields.Date.today(),
+                    'date': pay_date or invoice.invoice_date or fields.Date.today(),
                     'description': f"Payment Received ({payment.journal_id.name or 'Receipt'})",
                     'ref': payment.name or payment.ref or 'RCPT',
                     'status': 'Paid',
                     'debit': 0.0,
-                    'credit': payment.amount,
+                    'credit': matched_amount,
                     'pending': False,
                 })
 
@@ -340,6 +372,7 @@ class RentContract(models.Model):
             'payment_count': self.payment_count,
             'confirmed_count': confirmed_count,
             'pending_count': pending_count,
+            'total_pending_amount': total_pending_amount,
             'deposit_configured': self.deposit or 0.0,
             'deposit_status': deposit_status,
             'deposit_received': deposit_received,

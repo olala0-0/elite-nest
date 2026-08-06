@@ -63,13 +63,21 @@
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td style="padding: 5px 0; font-weight: 600; color: #6B7280;">Number of Payments:</td>
+                                    <td style="padding: 5px 0; font-weight: 600; color: #6B7280;">Payments Scheduled:</td>
                                     <td style="padding: 5px 0; color: #111827;">
-                                        <span t-out="data['payment_count']"/>
-                                        (<span t-out="data['confirmed_count']"/> Confirmed<t t-if="data['pending_count']"> / <span t-out="data['pending_count']"/> Pending</t>)
+                                        <span t-out="data['payment_count']"/> (per payment term)
                                     </td>
-                                    <td style="padding: 5px 0;"/>
-                                    <td style="padding: 5px 0;"/>
+                                    <td style="padding: 5px 0; font-weight: 600; color: #6B7280;">Charges Confirmed / Pending:</td>
+                                    <td style="padding: 5px 0; color: #111827;">
+                                        <span t-out="data['confirmed_count']"/> Confirmed / <span t-out="data['pending_count']"/> Pending
+                                    </td>
+                                </tr>
+                                <tr t-if="(data['confirmed_count'] + data['pending_count']) &gt; data['payment_count']">
+                                    <td style="padding: 0 0 5px 0;" colspan="4">
+                                        <span style="color: #B91C1C; font-size: 11px;">
+                                            ⚠ Charges Confirmed + Pending (<t t-out="data['confirmed_count'] + data['pending_count']"/>) exceeds Payments Scheduled (<t t-out="data['payment_count']"/>) - this usually means duplicate installment records exist for this contract and should be reviewed.
+                                        </span>
+                                    </td>
                                 </tr>
                             </table>
                         </div>

@@ -67,8 +67,16 @@ class AccountMove(models.Model):
     def _sync_rent_installments(self):
         """ Automatically creates, edits, or deletes 'rent.installment' lines in the background
         to ensure manual Accounting invoices reflect flawlessly inside Rent Contract master sheets. """
-        # Skip automatic synchronization if we are already in the context of the Rent Contract's action_create_invoice wizard
-        if self.env.context.get('active_model') == 'rent.contract':
+        # Skip automatic synchronization when the invoice was already created by
+        # rent.contract's own installment-creation flow (action_create_invoice,
+        # penalty cron), which sets skip_sync_installment=True and creates its
+        # own precise rent.installment rows right after. This used to check
+        # active_model == 'rent.contract' instead, a context key those flows
+        # never actually set (it's populated by the web client for certain
+        # button/list contexts, not by a plain server-side create() call) - so
+        # the guard never matched and every such invoice got a second, phantom
+        # installment row auto-generated on top of the correct explicit ones.
+        if self.env.context.get('skip_sync_installment') or self.env.context.get('active_model') == 'rent.contract':
             return
         
         for move in self:

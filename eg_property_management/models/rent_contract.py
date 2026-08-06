@@ -5,6 +5,17 @@ from odoo import api, fields, models
 from odoo.exceptions import UserError, ValidationError
 from odoo.tools import float_round
 
+# account.move.payment_state values, spelled out for the printed statement -
+# the raw selection values ("in_payment", "not_paid") aren't fit to show a
+# tenant directly.
+PAYMENT_STATE_LABELS = {
+    'not_paid': 'Not Paid',
+    'in_payment': 'In Payment',
+    'paid': 'Paid',
+    'partial': 'Partially Paid',
+    'reversed': 'Reversed',
+}
+
 
 class RentContract(models.Model):
     _name = "rent.contract"
@@ -170,57 +181,88 @@ class RentContract(models.Model):
 
         return super(RentContract, self).create(vals)
 
+    def _invoice_status_label(self, invoice):
+        """Human-readable status for one charge's invoice, for the printed
+        statement - distinguishes "never invoiced" from "invoiced but still
+        draft" from the actual payment_state once posted."""
+        if not invoice:
+            return 'Not Invoiced'
+        if invoice.state == 'cancel':
+            return 'Cancelled'
+        if invoice.state != 'posted':
+            return 'Draft - Not Confirmed'
+        return PAYMENT_STATE_LABELS.get(
+            invoice.payment_state, (invoice.payment_state or 'not_paid').replace('_', ' ').title()
+        )
+
     def get_tenant_financial_statement(self):
         """ Computes chronological Statement of Account data including opening balance,
-        invoices, payments, running balances, totals, and security deposit details. """
+        one row per charge (rent/deposit/maintenance/utility/penalty), matched payments,
+        running balances, totals, payment counts, and security deposit status. """
         self.ensure_one()
-        
-        # Search posted customer invoices and credit notes linked to this contract
-        invoices = self.env['account.move'].search([
-            '|',
-            ('rent_contract_id', '=', self.id),
-            ('invoice_origin', '=', self.name),
-            ('state', '=', 'posted'),
-            ('move_type', 'in', ['out_invoice', 'out_refund'])
-        ], order='invoice_date asc, id asc')
 
-        raw_lines = []
-
-        # 1. Opening Balance entry
-        raw_lines.append({
+        raw_lines = [{
             'date': self.start_date or fields.Date.today(),
             'description': 'Opening Balance',
             'ref': '-',
+            'status': '-',
             'debit': 0.0,
             'credit': 0.0,
-        })
+            'pending': False,
+        }]
+
+        # One row per rent.installment - the same records already shown on
+        # the contract's "Rent Installments" tab. Reading the invoice's
+        # first line instead (the previous approach) silently dropped any
+        # Deposit/Maintenance amount that had been combined into the same
+        # invoice as Rent, since debit was taken from amount_total while
+        # the description only reflected invoice_line_ids[0].
+        charge_installments = self.rent_installment_ids.filtered(
+            lambda inst: inst.payment_type != 'broker_bill'
+        ).sorted(key=lambda inst: (inst.invoice_date or fields.Date.today(), inst.id))
 
         seen_payments = set()
+        confirmed_count = 0
+        pending_count = 0
 
-        for inv in invoices:
-            # Invoice Line Charge (Debit / Credit)
-            if inv.move_type == 'out_invoice':
-                debit_val = inv.amount_total
-                credit_val = 0.0
-                desc = inv.invoice_line_ids[0].name if inv.invoice_line_ids else f"Rent Charge - {inv.name}"
-            else:
-                debit_val = 0.0
-                credit_val = inv.amount_total
-                desc = f"Credit Note - {inv.name}"
+        for inst in charge_installments:
+            invoice = inst.invoice_id
+            status = self._invoice_status_label(invoice)
+            is_posted = bool(invoice and invoice.state == 'posted')
 
+            if not is_posted:
+                # Not a confirmed charge yet - listed for visibility (this is
+                # the fix for the statement silently showing nothing/zero
+                # totals with no explanation) but excluded from totals/
+                # running balance, matching standard statement-of-account
+                # practice of only reflecting confirmed charges.
+                pending_count += 1
+                raw_lines.append({
+                    'date': inst.invoice_date,
+                    'description': f"{inst.description or inst.payment_type.title()} (not yet confirmed)",
+                    'ref': invoice.name if invoice and invoice.name and invoice.name != '/' else 'Draft',
+                    'status': status,
+                    'debit': 0.0,
+                    'credit': 0.0,
+                    'pending': True,
+                })
+                continue
+
+            confirmed_count += 1
             raw_lines.append({
-                'date': inv.invoice_date or fields.Date.today(),
-                'description': desc,
-                'ref': inv.name or 'Draft',
-                'debit': debit_val,
-                'credit': credit_val,
+                'date': invoice.invoice_date or inst.invoice_date,
+                'description': inst.description or invoice.name,
+                'ref': invoice.name,
+                'status': status,
+                'debit': inst.amount,
+                'credit': 0.0,
+                'pending': False,
             })
 
-            # Check reconciled payments against this invoice
             reconciled_payments = self.env['account.payment']
-            if hasattr(inv, '_get_reconciled_payments'):
-                reconciled_payments = inv._get_reconciled_payments()
-            
+            if hasattr(invoice, '_get_reconciled_payments'):
+                reconciled_payments = invoice._get_reconciled_payments()
+
             for payment in reconciled_payments:
                 if payment.id in seen_payments:
                     continue
@@ -229,32 +271,80 @@ class RentContract(models.Model):
                     'date': payment.date or fields.Date.today(),
                     'description': f"Payment Received ({payment.journal_id.name or 'Receipt'})",
                     'ref': payment.name or payment.ref or 'RCPT',
+                    'status': 'Paid',
                     'debit': 0.0,
                     'credit': payment.amount,
+                    'pending': False,
                 })
+
+        # Credit notes aren't tracked via rent_installment_ids - pull them
+        # separately by contract reference, same as the previous logic.
+        refunds = self.env['account.move'].search([
+            '|',
+            ('rent_contract_id', '=', self.id),
+            ('invoice_origin', '=', self.name),
+            ('state', '=', 'posted'),
+            ('move_type', '=', 'out_refund'),
+        ], order='invoice_date asc, id asc')
+        for refund in refunds:
+            raw_lines.append({
+                'date': refund.invoice_date or fields.Date.today(),
+                'description': f"Credit Note - {refund.name}",
+                'ref': refund.name,
+                'status': 'Posted',
+                'debit': 0.0,
+                'credit': refund.amount_total,
+                'pending': False,
+            })
 
         # Sort all lines chronologically
         raw_lines.sort(key=lambda x: (x['date'] or fields.Date.today()))
 
-        # Calculate running balances and totals
+        # Calculate running balances and totals - pending rows don't affect
+        # either, they just carry the balance forward unchanged.
         running_balance = 0.0
         total_charges = 0.0
         total_payments = 0.0
 
         for line in raw_lines:
+            if line['pending']:
+                line['balance'] = running_balance
+                continue
             running_balance += (line['debit'] - line['credit'])
             line['balance'] = running_balance
             total_charges += line['debit']
             total_payments += line['credit']
+
+        # Security deposit: reflect what's actually been invoiced/paid, not
+        # just the amount configured on the contract - those can diverge,
+        # e.g. if the contract's deposit field was edited after the deposit
+        # invoice was already sent, or the deposit was never invoiced yet.
+        deposit_installment = self.rent_installment_ids.filtered(
+            lambda inst: inst.payment_type == 'deposit'
+        )[:1]
+        deposit_invoice = deposit_installment.invoice_id if deposit_installment else self.env['account.move']
+        deposit_status = (
+            self._invoice_status_label(deposit_invoice) if deposit_installment else 'Not Yet Invoiced'
+        )
+        deposit_received = (
+            deposit_installment.amount
+            if deposit_installment and deposit_invoice and deposit_invoice.state == 'posted'
+            else 0.0
+        )
 
         return {
             'lines': raw_lines,
             'total_charges': total_charges,
             'total_payments': total_payments,
             'outstanding_balance': running_balance,
-            'deposit_received': self.deposit or 0.0,
+            'payment_count': self.payment_count,
+            'confirmed_count': confirmed_count,
+            'pending_count': pending_count,
+            'deposit_configured': self.deposit or 0.0,
+            'deposit_status': deposit_status,
+            'deposit_received': deposit_received,
             'deposit_utilized': 0.0,
-            'balance_held': self.deposit or 0.0,
+            'balance_held': deposit_received,
         }
 
     @api.depends('start_date', 'end_date')

@@ -58,9 +58,18 @@
                                     </td>
                                     <td style="padding: 5px 0; font-weight: 600; color: #6B7280;">Statement Period:</td>
                                     <td style="padding: 5px 0; color: #111827;">
-                                        <span t-field="o.start_date" t-options="{'widget': 'date', 'format': 'dd-MMM-yyyy'}"/> – 
+                                        <span t-field="o.start_date" t-options="{'widget': 'date', 'format': 'dd-MMM-yyyy'}"/> –
                                         <span t-out="datetime.date.today().strftime('%d-%b-%Y')"/>
                                     </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 5px 0; font-weight: 600; color: #6B7280;">Number of Payments:</td>
+                                    <td style="padding: 5px 0; color: #111827;">
+                                        <span t-out="data['payment_count']"/>
+                                        (<span t-out="data['confirmed_count']"/> Confirmed<t t-if="data['pending_count']"> / <span t-out="data['pending_count']"/> Pending</t>)
+                                    </td>
+                                    <td style="padding: 5px 0;"/>
+                                    <td style="padding: 5px 0;"/>
                                 </tr>
                             </table>
                         </div>
@@ -76,6 +85,7 @@
                                         <th style="padding: 8px 10px; text-align: left;">Date</th>
                                         <th style="padding: 8px 10px; text-align: left;">Description</th>
                                         <th style="padding: 8px 10px; text-align: left;">Invoice No.</th>
+                                        <th style="padding: 8px 10px; text-align: left;">Status</th>
                                         <th style="padding: 8px 10px; text-align: right;">Debit (<span t-field="o.currency_id.name"/>)</th>
                                         <th style="padding: 8px 10px; text-align: right;">Credit (<span t-field="o.currency_id.name"/>)</th>
                                         <th style="padding: 8px 10px; text-align: right;">Balance (<span t-field="o.currency_id.name"/>)</th>
@@ -83,12 +93,13 @@
                                 </thead>
                                 <tbody>
                                     <t t-foreach="data['lines']" t-as="line">
-                                        <tr style="border-bottom: 1px solid #E5E7EB; color: #1F2937;">
+                                        <tr t-attf-style="border-bottom: 1px solid #E5E7EB; color: {{'#9CA3AF' if line['pending'] else '#1F2937'}}; font-style: {{'italic' if line['pending'] else 'normal'}};">
                                             <td style="padding: 7px 10px; white-space: nowrap;">
                                                 <span t-out="line['date']" t-options="{'widget': 'date', 'format': 'dd-MMM-yyyy'}"/>
                                             </td>
                                             <td style="padding: 7px 10px;"><span t-out="line['description']"/></td>
                                             <td style="padding: 7px 10px; color: #4B5563;"><span t-out="line['ref']"/></td>
+                                            <td style="padding: 7px 10px;"><span t-out="line['status']"/></td>
                                             <td style="padding: 7px 10px; text-align: right;">
                                                 <span t-if="line['debit'] &gt; 0" t-out="'{:,.2f}'.format(line['debit'])"/>
                                                 <span t-else="" style="color: #9CA3AF;">-</span>
@@ -149,12 +160,20 @@
                                     </thead>
                                     <tbody>
                                         <tr style="border-bottom: 1px solid #E5E7EB;">
+                                            <td style="padding: 5px 0;">Deposit Amount Due</td>
+                                            <td style="padding: 5px 0; text-align: right; font-weight: 600;"><span t-out="'{:,.2f}'.format(data['deposit_configured'])"/></td>
+                                        </tr>
+                                        <tr style="border-bottom: 1px solid #E5E7EB;">
+                                            <td style="padding: 5px 0;">Status</td>
+                                            <td style="padding: 5px 0; text-align: right;"><span t-out="data['deposit_status']"/></td>
+                                        </tr>
+                                        <tr style="border-bottom: 1px solid #E5E7EB;">
                                             <td style="padding: 5px 0;">Security Deposit Received</td>
                                             <td style="padding: 5px 0; text-align: right; font-weight: 600;"><span t-out="'{:,.2f}'.format(data['deposit_received'])"/></td>
                                         </tr>
                                         <tr style="border-bottom: 1px solid #E5E7EB;">
                                             <td style="padding: 5px 0;">Security Deposit Utilized</td>
-                                            <td style="padding: 5px 0; text-align: right; color: #6B7280;">-</td>
+                                            <td style="padding: 5px 0; text-align: right; color: #6B7280;"><span t-out="'{:,.2f}'.format(data['deposit_utilized'])"/></td>
                                         </tr>
                                         <tr style="font-weight: 700;">
                                             <td style="padding: 7px 0 0 0; color: #111827;">Balance Held</td>

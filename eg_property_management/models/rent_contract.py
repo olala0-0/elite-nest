@@ -1162,6 +1162,42 @@ class RentContract(models.Model):
                     'email_to': contract_id.tenant_id.email, }
                 self.env['mail.mail'].create(mail_values).send()
 
+    def action_renewal_notice_cron(self):
+        """Move-Out diagram step 1: send the renewal notice exactly 90 days
+        before a running contract's end date. Mirrors action_rent_due_
+        reminder_cron() exactly - same exact-date-match search (so it
+        fires once, not once per day, with no extra "already sent" field
+        needed), same message_post + mail.mail.create(...).send() pattern.
+        Only touches 'running' contracts, so anything already terminated,
+        cancelled, or expired is never matched."""
+        notice_days = 90
+        today = date.today()
+        target_date = today + timedelta(days=notice_days)
+        contracts = self.search([
+            ('state', '=', 'running'),
+            ('end_date', '=', target_date),
+        ])
+        for contract in contracts:
+            contract.message_post(
+                body=f"Renewal notice: this contract's end date ({contract.end_date}) is now "
+                     f"{notice_days} days away."
+            )
+            if contract.tenant_id.email:
+                mail_values = {
+                    'subject': f"Lease Renewal Notice - {contract.name}",
+                    'body_html': f"""
+                        <p>Dear {contract.tenant_id.name},</p>
+                        <p>Your lease for <b>{contract.property_id.name or 'your property'}</b> is due to
+                        expire on <b>{contract.end_date}</b> ({notice_days} days from today).</p>
+                        <p>Please let us know whether you'd like to renew or plan to move out, so we can
+                        prepare the next steps with you accordingly.</p>
+                        <p>Regards,<br/>{contract.company_id.name}</p>
+                    """,
+                    'email_to': contract.tenant_id.email,
+                }
+                self.env['mail.mail'].create(mail_values).send()
+        return True
+
     def action_contract_expiry_cron(self):
         today = date.today()
         expired_contracts_ids = self.search([('end_date', '<', today), ('state', '=', 'running')])

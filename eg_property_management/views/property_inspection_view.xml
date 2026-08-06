@@ -116,28 +116,11 @@
             </field>
         </record>
 
-        <record id="property_inspection_view_search" model="ir.ui.view">
-            <field name="name">property.inspection.search</field>
-            <field name="model">property.inspection</field>
-            <field name="arch" type="xml">
-                <search string="Property Inspections">
-                    <field name="name"/>
-                    <field name="property_id"/>
-                    <field name="tenant_id"/>
-                    <field name="rent_contract_id"/>
-                    <filter string="Pre-Move-In" name="filter_move_in" domain="[('inspection_type', '=', 'move_in')]"/>
-                    <filter string="Move-Out" name="filter_move_out" domain="[('inspection_type', '=', 'move_out')]"/>
-                    <separator/>
-                    <filter string="Draft" name="filter_draft" domain="[('state', '=', 'draft')]"/>
-                    <filter string="Done" name="filter_done" domain="[('state', '=', 'done')]"/>
-                    <group expand="0" string="Group By">
-                        <filter string="Type" name="group_type" context="{'group_by': 'inspection_type'}"/>
-                        <filter string="Status" name="group_state" context="{'group_by': 'state'}"/>
-                        <filter string="Property" name="group_property" context="{'group_by': 'property_id'}"/>
-                    </group>
-                </search>
-            </field>
-        </record>
+        <!-- Custom search view intentionally omitted for now (caused an
+             upgrade-time ParseError on the target instance whose exact
+             cause the error dialog didn't surface). Odoo falls back to an
+             auto-generated basic search bar without one. Revisit once the
+             base models are confirmed stable - see MOVE_IN_MOVE_OUT_PLAN.md. -->
 
         <record id="action_property_inspection" model="ir.actions.act_window">
             <field name="name">Property Inspections</field>

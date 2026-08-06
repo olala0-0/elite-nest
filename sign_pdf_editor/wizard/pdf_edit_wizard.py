@@ -277,20 +277,23 @@ class SignPdfEditWizard(models.TransientModel):
         page = doc[page_index]
         rect = page.rect
         x = rect.width * (self.text_pos_x / 100.0)
-        # insert_text's point is the text BASELINE, not the top-left corner -
-        # without this offset, text renders shifted upward by about a
-        # font-size from wherever you clicked, which is the "text doesn't
-        # land where I click" bug. 0.8x is a standard approximation of a
-        # font's ascent as a fraction of its em size.
-        y = rect.height * (self.text_pos_y / 100.0) + (self.text_size * 0.8)
+        y = rect.height * (self.text_pos_y / 100.0)
         color_hex = (self.text_color or "#000000").lstrip("#")
         color = tuple(int(color_hex[i:i + 2], 16) / 255.0 for i in (0, 2, 4))
-        page.insert_text(
-            (x, y),
+        # insert_textbox positions text from the TOP-LEFT of a box, unlike
+        # insert_text (which anchors on the baseline and needs manual ascent
+        # math to land where you'd expect) - this is what actually matches
+        # "start the text where I clicked". The box runs to the page's
+        # right/bottom edge so normal-length text always fits and wraps
+        # naturally instead of overflowing.
+        box = fitz.Rect(x, y, rect.width, rect.height)
+        page.insert_textbox(
+            box,
             self.text_value,
             fontsize=self.text_size,
             fontname=FONT_MAP.get(self.text_font, "helv"),
             color=color,
+            align=0,
         )
         self._save_doc(doc)
 
@@ -309,12 +312,24 @@ class SignPdfEditWizard(models.TransientModel):
         x0 = rect.width * (self.image_pos_x / 100.0)
         y0 = rect.height * (self.image_pos_y / 100.0)
         w = rect.width * (self.image_width / 100.0)
-        # keep aspect ratio using pixmap
-        pix = fitz.Pixmap(img_bytes)
-        aspect = pix.height / pix.width if pix.width else 1
+        # Pixmap() is only used to measure the aspect ratio, and supports a
+        # narrower set of formats than insert_image() itself - don't let a
+        # format it can't probe block the whole operation, just fall back
+        # to a square box for it.
+        try:
+            pix = fitz.Pixmap(img_bytes)
+            aspect = pix.height / pix.width if pix.width else 1
+        except Exception:
+            aspect = 1
         h = w * aspect
         image_rect = fitz.Rect(x0, y0, x0 + w, y0 + h)
-        page.insert_image(image_rect, stream=img_bytes)
+        try:
+            page.insert_image(image_rect, stream=img_bytes)
+        except Exception as e:
+            doc.close()
+            raise UserError(_(
+                "Could not insert this image (%s). Supported formats: PNG, JPEG, GIF, BMP, TIFF."
+            ) % e)
         self._save_doc(doc)
 
     def _apply_watermark(self):
@@ -322,14 +337,18 @@ class SignPdfEditWizard(models.TransientModel):
         text = self.watermark_text or "DRAFT"
         for page in doc:
             rect = page.rect
+            point = fitz.Point(rect.width * 0.2, rect.height * 0.5)
+            # insert_text's rotate= only accepts 0/90/180/270 (that's what
+            # raised "bad rotate value" here) - a true 45-degree angle needs
+            # morph=(pivot, matrix) with an actual rotation matrix instead.
             page.insert_text(
-                (rect.width * 0.2, rect.height * 0.5),
+                point,
                 text,
                 fontsize=self.watermark_size,
                 fontname="helv",
                 color=(0.6, 0.6, 0.6),
-                rotate=45,
                 fill_opacity=self.watermark_opacity,
+                morph=(point, fitz.Matrix(45)),
             )
         self._save_doc(doc)
 

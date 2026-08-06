@@ -5,10 +5,11 @@
             <field name="model">rent.contract.moveout.deduction</field>
             <field name="arch" type="xml">
                 <list string="Deductions" editable="bottom">
-                    <field name="charge_category"/>
-                    <field name="description"/>
+                    <field name="charge_category" readonly="installment_id"/>
+                    <field name="description" readonly="installment_id"/>
                     <field name="inspection_line_id" readonly="1" column_invisible="1"/>
-                    <field name="amount"/>
+                    <field name="amount" readonly="installment_id"/>
+                    <field name="installment_id" readonly="1" column_invisible="1"/>
                     <field name="currency_id" column_invisible="1"/>
                 </list>
             </field>
@@ -96,10 +97,24 @@
                                 </group>
                             </page>
                             <page string="Deposit Settlement">
-                                <button name="action_pull_deductions_from_inspection"
-                                        string="Pull Deductions from Final Inspection" type="object"
-                                        class="btn-secondary"/>
+                                <div class="mb-3">
+                                    <button name="action_pull_deductions_from_inspection"
+                                            string="Pull Deductions from Final Inspection" type="object"
+                                            class="btn-secondary"/>
+                                    <button name="action_finalize_deductions"
+                                            string="Finalize Deductions" type="object"
+                                            class="btn-primary"
+                                            invisible="state != 'approved' or deduction_invoice_id or refund_move_id"/>
+                                </div>
                                 <field name="deduction_line_ids"/>
+                                <group>
+                                    <group>
+                                        <field name="deduction_invoice_id" readonly="1"/>
+                                    </group>
+                                    <group>
+                                        <field name="refund_move_id" readonly="1"/>
+                                    </group>
+                                </group>
                             </page>
                             <page string="Approval">
                                 <group>

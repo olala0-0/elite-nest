@@ -66,6 +66,11 @@ class RentContractMoveOut(models.Model):
     approved_date = fields.Datetime(string='Approved On', readonly=True)
     deduction_transfer_done = fields.Boolean(string='Deduction Transfer Done', readonly=True)
 
+    deduction_invoice_id = fields.Many2one(comodel_name='account.move', string='Deduction Invoice',
+                                           readonly=True, copy=False)
+    refund_move_id = fields.Many2one(comodel_name='account.move', string='Deposit Refund Credit Note',
+                                     readonly=True, copy=False)
+
     deposit_received = fields.Monetary(string='Deposit Received', currency_field='currency_id',
                                        compute='_compute_deposit_figures')
     total_deduction_amount = fields.Monetary(string='Total Deductions', currency_field='currency_id',
@@ -74,9 +79,11 @@ class RentContractMoveOut(models.Model):
         string='Deposit Release / (Shortfall)', currency_field='currency_id',
         compute='_compute_deposit_figures',
         help="Deposit Received minus Total Deductions. Positive = refund "
-             "due to tenant. Negative = tenant still owes a shortfall. "
-             "Purely informational in this phase - no invoice or credit "
-             "note is created from this figure yet (Phase 3).")
+             "due to tenant, Negative = tenant still owes a shortfall on "
+             "top of the deposit. Recalculates live from the deduction "
+             "lines below until Finalize Deductions turns it into real "
+             "accounting documents (Deduction Invoice / Refund Credit "
+             "Note), after which those documents are the source of truth.")
 
     state = fields.Selection(
         [('draft', 'Draft'), ('clearance_pending', 'Clearance Pending'), ('inspection_done', 'Inspection Done'),
@@ -131,6 +138,106 @@ class RentContractMoveOut(models.Model):
                 'description': f"{line.area + ' - ' if line.area else ''}{line.name} ({line.condition})",
                 'amount': line.estimated_cost,
             })
+
+    def action_finalize_deductions(self):
+        """Turns the approved deduction lines into real accounting
+        documents, reusing the exact same building blocks
+        action_create_invoice() already uses for rent/deposit/maintenance:
+        _prepare_invoice_line(), the same income-account resolution, and
+        the same "create as draft, a human posts it in Accounting" pattern
+        used everywhere else in this module - nothing here auto-posts.
+
+        1. One consolidated draft customer invoice for every deduction line
+           not yet invoiced (Penalty / Dilapidation / Shortfall Rent), each
+           also recorded as its own rent.installment so it shows up as its
+           own row on the tenant statement, exactly like rent/maintenance
+           charges already do.
+        2. If Deposit Received exceeds Total Deductions, a draft refund
+           credit note (out_refund) for the surplus - the tenant statement
+           already renders any posted out_refund linked to this contract,
+           so once someone posts this credit note in Accounting it appears
+           there automatically, no separate "move-out report" needed.
+           If deductions exceed the deposit, no refund is created; the
+           tenant simply owes the deduction invoice above, same as any
+           other invoice, reconciled against the deposit through normal
+           Accounting AR management.
+
+        One-time action: raises if this Move-Out has already been
+        finalized, rather than silently creating a second invoice and
+        losing track of the first one - if a deduction needs correcting
+        after finalizing, fix it in Accounting directly (standard invoice/
+        credit note correction), not by re-running this."""
+        self.ensure_one()
+        if self.state != 'approved':
+            raise UserError("The deposit release must be approved before finalizing deductions.")
+        if self.deduction_invoice_id or self.refund_move_id:
+            raise UserError("This Move-Out has already been finalized.")
+
+        contract = self.rent_contract_id
+        if not contract.tenant_id:
+            raise UserError("Contract has no Tenant/Customer set.")
+
+        lines_to_invoice = self.deduction_line_ids.filtered(lambda line: not line.installment_id and line.amount)
+        if lines_to_invoice:
+            income_account_id = self.env['account.account'].search([('account_type', '=', 'income')], limit=1)
+            if not income_account_id:
+                raise UserError("No income account found. Please configure at least one income account in Accounting.")
+
+            invoice_settings = contract._get_invoice_settings()
+            product_by_category = {
+                'penalty': invoice_settings['penalty_product'],
+                'dilapidation': invoice_settings['penalty_product'],
+                'shortfall_rent': invoice_settings['rent_product'],
+            }
+            invoice_lines = [
+                contract._prepare_invoice_line(
+                    product_by_category.get(line.charge_category), line.description, line.amount, income_account_id,
+                )
+                for line in lines_to_invoice
+            ]
+            invoice_id = self.env['account.move'].with_context(skip_sync_installment=True).create({
+                'move_type': 'out_invoice',
+                'partner_id': contract.tenant_id.id,
+                'invoice_origin': contract.name,
+                'invoice_date': fields.Date.today(),
+                'invoice_date_due': fields.Date.today(),
+                'currency_id': contract.currency_id.id,
+                'property_id': contract.property_id.id,
+                'rent_contract_id': contract.id,
+                'invoice_line_ids': invoice_lines,
+            })
+            self.deduction_invoice_id = invoice_id.id
+            for line in lines_to_invoice:
+                installment_id = self.env['rent.installment'].create({
+                    'rent_contract_id': contract.id,
+                    'invoice_date': fields.Date.today(),
+                    'payment_type': line.charge_category,
+                    'description': line.description,
+                    'amount': line.amount,
+                    'currency_id': contract.currency_id.id,
+                    'invoice_id': invoice_id.id,
+                })
+                line.installment_id = installment_id.id
+
+        if not self.refund_move_id:
+            surplus = self.deposit_received - self.total_deduction_amount
+            if surplus > 0.005:
+                income_account_id = self.env['account.account'].search([('account_type', '=', 'income')], limit=1)
+                if not income_account_id:
+                    raise UserError("No income account found. Please configure at least one income account in Accounting.")
+                refund_id = self.env['account.move'].with_context(skip_sync_installment=True).create({
+                    'move_type': 'out_refund',
+                    'partner_id': contract.tenant_id.id,
+                    'invoice_origin': contract.name,
+                    'invoice_date': fields.Date.today(),
+                    'currency_id': contract.currency_id.id,
+                    'property_id': contract.property_id.id,
+                    'rent_contract_id': contract.id,
+                    'invoice_line_ids': [contract._prepare_invoice_line(
+                        False, "Security Deposit Refund - Move-Out Settlement", surplus, income_account_id,
+                    )],
+                })
+                self.refund_move_id = refund_id.id
 
     def action_start_clearance(self):
         for rec in self:
@@ -200,9 +307,16 @@ class RentContractMoveOutDeduction(models.Model):
         [('penalty', 'Penalty Charges'), ('dilapidation', 'Dilapidation'), ('shortfall_rent', 'Shortfall Rent')],
         string='Category', required=True, default='dilapidation',
         help="Matches the accounting design's Early Termination categories "
-             "(Penalty / Dilapidation / Shortfall Rent), so Phase 3 can "
-             "route each line to the correct Dr/Cr entry without guessing.")
+             "(Penalty / Dilapidation / Shortfall Rent), so Finalize "
+             "Deductions can route each line to the correct Dr/Cr entry "
+             "without guessing.")
     description = fields.Char(string='Description', required=True)
     amount = fields.Monetary(string='Amount', currency_field='currency_id')
     currency_id = fields.Many2one(related='moveout_id.currency_id', string='Currency',
                                   store=True, readonly=True)
+    installment_id = fields.Many2one(comodel_name='rent.installment', string='Installment',
+                                     readonly=True, copy=False,
+                                     help="Set once Finalize Deductions has invoiced this line. "
+                                          "Locks the line from further edits so the deduction "
+                                          "shown here can never drift from what was actually "
+                                          "invoiced.")

@@ -200,6 +200,37 @@
                             </div>
                         </t>
 
+                        <!-- 5. DEPOSIT SETTLEMENT (rendered only once a Move-Out
+                             deposit settlement has actually been finalized and
+                             posted for this contract) -->
+                        <t t-if="data['deduction_lines']">
+                            <div style="background-color: #F9FAFB; border: 1px solid #D1D5DB; border-radius: 6px; padding: 14px; margin-top: 10px;">
+                                <h3 style="font-size: 13px; font-weight: 700; color: #374151; text-transform: uppercase; margin-top: 0; margin-bottom: 8px; border-bottom: 1px solid #E5E7EB; padding-bottom: 5px;">
+                                    Deposit Settlement (Move-Out)
+                                </h3>
+                                <table style="width: 100%; font-size: 13px; color: #1F2937;">
+                                    <thead>
+                                        <tr style="color: #6B7280; font-size: 11px; text-transform: uppercase;">
+                                            <th style="text-align: left; padding-bottom: 4px;">Category</th>
+                                            <th style="text-align: left; padding-bottom: 4px;">Description</th>
+                                            <th style="text-align: right; padding-bottom: 4px;">Amount (<span t-field="o.currency_id.name"/>)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr t-foreach="data['deduction_lines']" t-as="deduction" style="border-bottom: 1px solid #E5E7EB;">
+                                            <td style="padding: 5px 0;"><span t-out="deduction['category']"/></td>
+                                            <td style="padding: 5px 0;"><span t-out="deduction['description']"/></td>
+                                            <td style="padding: 5px 0; text-align: right;"><span t-out="'{:,.2f}'.format(deduction['amount'])"/></td>
+                                        </tr>
+                                        <tr style="font-weight: 700;">
+                                            <td colspan="2" style="padding: 7px 0 0 0; color: #111827;">Deposit Refund to Tenant</td>
+                                            <td style="padding: 7px 0 0 0; text-align: right; color: #059669;"><span t-out="'{:,.2f}'.format(data['deposit_refund_amount'])"/></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </t>
+
                     </div>
                 </t>
             </t>

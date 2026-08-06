@@ -260,11 +260,26 @@ class RentContract(models.Model):
             if deposit_installment and deposit_invoice and deposit_invoice.state == 'posted'
             else 0.0
         )
+
+        # How much of the deposit has actually been consumed by a finalized
+        # Move-Out deposit settlement (rent.contract.moveout.action_
+        # finalize_deductions()). Capped at deposit_received: what's owed
+        # beyond the deposit is a separate AR matter for Accounting to
+        # reconcile, not part of "how much of THIS deposit was used."
+        moveout = self.env['rent.contract.moveout'].search(
+            [('rent_contract_id', '=', self.id)], limit=1
+        )
+        deposit_utilized = 0.0
+        if moveout and moveout.deduction_invoice_id and moveout.deduction_invoice_id.state == 'posted':
+            deposit_utilized = min(moveout.deduction_invoice_id.amount_total, deposit_received)
+
         return {
             'deposit_installment': deposit_installment,
             'deposit_invoice': deposit_invoice,
             'deposit_status': deposit_status,
             'deposit_received': deposit_received,
+            'deposit_utilized': deposit_utilized,
+            'moveout': moveout,
         }
 
     def get_tenant_financial_statement(self):
@@ -416,6 +431,23 @@ class RentContract(models.Model):
         deposit_summary = self._get_deposit_summary()
         deposit_status = deposit_summary['deposit_status']
         deposit_received = deposit_summary['deposit_received']
+        deposit_utilized = deposit_summary['deposit_utilized']
+
+        # Itemized Move-Out deductions, for a "Deposit Settlement" section
+        # on the printed statement - empty list (section hidden) unless a
+        # Move-Out has actually been finalized for this contract.
+        deduction_lines = []
+        deposit_refund_amount = 0.0
+        moveout = deposit_summary['moveout']
+        if moveout and moveout.deduction_invoice_id and moveout.deduction_invoice_id.state == 'posted':
+            for line in moveout.deduction_line_ids:
+                deduction_lines.append({
+                    'category': dict(line._fields['charge_category'].selection).get(line.charge_category),
+                    'description': line.description,
+                    'amount': line.amount,
+                })
+            if moveout.refund_move_id and moveout.refund_move_id.state == 'posted':
+                deposit_refund_amount = moveout.refund_move_id.amount_total
 
         return {
             'lines': raw_lines,
@@ -429,8 +461,10 @@ class RentContract(models.Model):
             'deposit_configured': self.deposit or 0.0,
             'deposit_status': deposit_status,
             'deposit_received': deposit_received,
-            'deposit_utilized': 0.0,
-            'balance_held': deposit_received,
+            'deposit_utilized': deposit_utilized,
+            'balance_held': deposit_received - deposit_utilized,
+            'deduction_lines': deduction_lines,
+            'deposit_refund_amount': deposit_refund_amount,
         }
 
     @api.depends('start_date', 'end_date')

@@ -91,6 +91,10 @@
                                     <field name="noc_filename" invisible="1"/>
                                     <button name="action_issue_noc" string="Issue NOC" type="object"
                                             class="btn-secondary" invisible="noc_issued"/>
+                                    <button name="%(action_report_moveout_noc)d" string="Print NOC" type="action"
+                                            class="btn-secondary" invisible="not noc_issued"/>
+                                    <button name="action_send_noc_email" string="Send NOC to Tenant" type="object"
+                                            class="btn-secondary" invisible="not noc_issued"/>
                                 </group>
                                 <group string="Key Handover">
                                     <field name="key_handover_date"/>

@@ -1,3 +1,5 @@
+import base64
+
 from odoo import api, fields, models
 from odoo.exceptions import UserError
 
@@ -250,6 +252,39 @@ class RentContractMoveOut(models.Model):
     def action_issue_noc(self):
         for rec in self:
             rec.write({'noc_issued': True, 'noc_date': fields.Date.today()})
+
+    def action_send_noc_email(self):
+        """Emails the tenant the NOC as a PDF attachment, reusing the same
+        mail.mail.create(...).send() pattern already used elsewhere in this
+        module. Separate from action_issue_noc() (which just marks the NOC
+        official) so re-sending doesn't re-issue it, and issuing it doesn't
+        force an email before the document is ready to send."""
+        for rec in self:
+            if not rec.noc_issued:
+                raise UserError("Issue the NOC before sending it.")
+            if not rec.tenant_id.email:
+                raise UserError(f"{rec.tenant_id.name or 'The tenant'} has no email address on file.")
+            pdf_content, _report_type = self.env['ir.actions.report']._render_qweb_pdf(
+                'eg_property_management.action_report_moveout_noc', res_ids=rec.ids
+            )
+            mail_values = {
+                'subject': f"Move-Out NOC - {rec.rent_contract_id.name}",
+                'body_html': f"""
+                    <p>Dear {rec.tenant_id.name},</p>
+                    <p>Please find attached your Move-Out No Objection Certificate (NOC) for
+                    <b>{rec.property_id.name or 'your property'}</b>.</p>
+                    <p>Regards,<br/>{rec.company_id.name}</p>
+                """,
+                'email_to': rec.tenant_id.email,
+                'attachment_ids': [(0, 0, {
+                    'name': f"Move-Out NOC - {rec.rent_contract_id.name}.pdf",
+                    'type': 'binary',
+                    'datas': base64.b64encode(pdf_content),
+                    'res_model': 'rent.contract.moveout',
+                    'res_id': rec.id,
+                })],
+            }
+            self.env['mail.mail'].create(mail_values).send()
 
     def action_submit_finance_review(self):
         for rec in self:

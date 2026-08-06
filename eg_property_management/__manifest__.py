@@ -44,7 +44,13 @@
         "views/helpdesk_ticket_view.xml",
         "views/account_move_view.xml",
         "reports/tenant_financial_statement_report.xml",
-        "reports/tenant_financial_statement_template.xml"
+        "reports/tenant_financial_statement_template.xml",
+        "reports/rent_contract_movein_permit_report.xml",
+        "reports/rent_contract_movein_permit_template.xml",
+        "reports/rent_contract_moveout_noc_report.xml",
+        "reports/rent_contract_moveout_noc_template.xml",
+        "reports/property_inspection_report.xml",
+        "reports/property_inspection_template.xml"
     ],
     "demo": [
         "data/project_demo_data.xml",

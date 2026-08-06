@@ -1,3 +1,5 @@
+import base64
+
 from odoo import api, fields, models
 
 
@@ -93,7 +95,36 @@ class PropertyInspection(models.Model):
             rec.state = 'in_progress'
 
     def action_share_report(self):
+        """Emails the tenant the inspection report PDF, then marks it
+        shared - reusing the mail.mail.create(...).send() pattern already
+        used elsewhere in this module. Best-effort on the email: if the
+        tenant has no address on file, this still marks the report shared
+        (matches the original Phase 0 behavior of this button, which only
+        ever flipped the state - not sending shouldn't block the workflow
+        for a report that was, say, handed over in person instead)."""
         for rec in self:
+            if rec.tenant_id.email:
+                pdf_content, _report_type = self.env['ir.actions.report']._render_qweb_pdf(
+                    'eg_property_management.action_report_property_inspection', res_ids=rec.ids
+                )
+                mail_values = {
+                    'subject': f"Inspection Report - {rec.name}",
+                    'body_html': f"""
+                        <p>Dear {rec.tenant_id.name},</p>
+                        <p>Please find attached the inspection report for
+                        <b>{rec.property_id.name or 'your property'}</b>.</p>
+                        <p>Regards,<br/>{rec.company_id.name}</p>
+                    """,
+                    'email_to': rec.tenant_id.email,
+                    'attachment_ids': [(0, 0, {
+                        'name': f"Inspection Report - {rec.name}.pdf",
+                        'type': 'binary',
+                        'datas': base64.b64encode(pdf_content),
+                        'res_model': 'property.inspection',
+                        'res_id': rec.id,
+                    })],
+                }
+                self.env['mail.mail'].create(mail_values).send()
             rec.write({'state': 'report_shared', 'report_shared_date': fields.Datetime.now()})
 
     def action_tenant_acknowledge(self):

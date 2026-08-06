@@ -1,4 +1,17 @@
 from odoo import fields, models
+from odoo.exceptions import UserError
+
+WELCOME_PACKAGE_ITEMS = [
+    "Vehicle Registration Form",
+    "Pet Registration Form",
+    "Invoices for all Payments",
+    "Ejari Registration Certificate",
+    "La Perla Guide",
+    "Logic Utilities User Guidelines",
+    "General Community Rules",
+    "Management Contact Details",
+    "All Information About the Building",
+]
 
 
 class RentContractMoveIn(models.Model):
@@ -74,7 +87,35 @@ class RentContractMoveIn(models.Model):
             rec.write({'move_in_permit_issued': True, 'move_in_permit_date': fields.Date.today()})
 
     def action_mark_welcome_email_sent(self):
+        """Sends the welcome email, then records that it was sent. Reuses
+        the same mail.mail.create(...).send() pattern already used by
+        rent.contract.action_rent_due_reminder_cron() - the only existing
+        email-sending convention in this module - rather than introducing
+        a new one. The email lists the Welcome Package items from the
+        client's workflow diagram as a checklist; it does not attach the
+        actual documents (vehicle/pet forms, Ejari certificate, community
+        guide, etc.) since those are client-specific files this module
+        doesn't hold - whoever sends it should attach them manually via
+        the standard Odoo mail composer if this button's plain send isn't
+        enough for a given tenant."""
         for rec in self:
+            if not rec.tenant_id.email:
+                raise UserError(f"{rec.tenant_id.name or 'The tenant'} has no email address on file.")
+            items_html = "".join(f"<li>{item}</li>" for item in WELCOME_PACKAGE_ITEMS)
+            mail_values = {
+                'subject': f"Welcome to {rec.property_id.name or 'your new home'} - {rec.rent_contract_id.name}",
+                'body_html': f"""
+                    <p>Dear {rec.tenant_id.name},</p>
+                    <p>Welcome! We're delighted to have you move into
+                    <b>{rec.property_id.name or 'your new property'}</b>.</p>
+                    <p>Your welcome package includes the following (please contact us if any item is
+                    missing or you need a fresh copy):</p>
+                    <ul>{items_html}</ul>
+                    <p>Regards,<br/>{rec.company_id.name}</p>
+                """,
+                'email_to': rec.tenant_id.email,
+            }
+            self.env['mail.mail'].create(mail_values).send()
             rec.write({'welcome_email_sent': True, 'welcome_email_date': fields.Date.today()})
 
     def action_mark_payment_verified(self):

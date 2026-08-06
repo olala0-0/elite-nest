@@ -18,6 +18,8 @@
                                 class="btn-primary" invisible="state != 'handed_over'"/>
                         <button name="action_reset_draft" string="Reset to Draft" type="object"
                                 invisible="state == 'draft'"/>
+                        <button name="%(action_report_movein_permit)d" string="Print Move-In Permit" type="action"
+                                class="btn-secondary" invisible="not move_in_permit_issued"/>
                         <field name="state" widget="statusbar"
                                statusbar_visible="draft,inspection_done,contract_signed,payment_verified,handed_over,settled"/>
                     </header>
@@ -60,7 +62,7 @@
                         <div class="oe_button_box" name="secondary_actions">
                             <button name="action_issue_move_in_permit" string="Issue Move-In Permit" type="object"
                                     class="btn-secondary" invisible="move_in_permit_issued"/>
-                            <button name="action_mark_welcome_email_sent" string="Mark Welcome Email Sent"
+                            <button name="action_mark_welcome_email_sent" string="Send Welcome Email"
                                     type="object" class="btn-secondary" invisible="welcome_email_sent"/>
                         </div>
                     </sheet>

@@ -56,6 +56,8 @@
                                 class="btn-primary" invisible="state != 'tenant_acknowledged'"/>
                         <button name="action_reset_draft" string="Reset to Draft" type="object"
                                 invisible="state == 'draft'"/>
+                        <button name="%(action_report_property_inspection)d" string="Print Inspection Report"
+                                type="action" class="btn-secondary" invisible="state == 'draft'"/>
                         <field name="state" widget="statusbar"
                                statusbar_visible="draft,in_progress,report_shared,tenant_acknowledged,done"/>
                     </header>

@@ -40,6 +40,8 @@
                                 invisible="state in ['draft','cancel','terminate','expire']"/>
                         <button name="action_state_terminate" string="Terminate Contract" type="object" class="btn-secondary"
                                 invisible="state in ['draft','cancel','terminate','expire']"/>
+                        <button name="action_open_moveout" string="Start Move-Out Process" type="object" class="btn-secondary"
+                                invisible="state in ['draft','cancel','terminate','expire']"/>
                         <button name="action_state_cancel" string="Cancel" type="object" class="btn-secondary"
                                 invisible="state in ['draft','cancel','terminate','expire']"/>
                         <button name="action_create_broker_bill" string="Create Broker Bill" type="object"

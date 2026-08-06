@@ -237,6 +237,36 @@ class RentContract(models.Model):
                 matches.append((counterpart.payment_id, partial.amount, counterpart.payment_id.date))
         return matches
 
+    def _get_deposit_summary(self):
+        """Single source of truth for what's actually been invoiced/paid
+        for the security deposit - reflects real invoice state, not just
+        the amount configured on the contract (those can diverge, e.g. if
+        the contract's deposit field was edited after the deposit invoice
+        was already sent, or the deposit was never invoiced yet). Shared
+        between the tenant statement (get_tenant_financial_statement) and
+        the Move-Out deposit settlement (rent.contract.moveout) so both
+        always agree - extracted from what was previously inline-only
+        logic in the statement, with no change in behavior."""
+        self.ensure_one()
+        deposit_installment = self.rent_installment_ids.filtered(
+            lambda inst: inst.payment_type == 'deposit'
+        )[:1]
+        deposit_invoice = deposit_installment.invoice_id if deposit_installment else self.env['account.move']
+        deposit_status = (
+            self._invoice_status_label(deposit_invoice) if deposit_installment else 'Not Yet Invoiced'
+        )
+        deposit_received = (
+            deposit_installment.amount
+            if deposit_installment and deposit_invoice and deposit_invoice.state == 'posted'
+            else 0.0
+        )
+        return {
+            'deposit_installment': deposit_installment,
+            'deposit_invoice': deposit_invoice,
+            'deposit_status': deposit_status,
+            'deposit_received': deposit_received,
+        }
+
     def get_tenant_financial_statement(self):
         """ Computes chronological Statement of Account data including opening balance,
         one row per charge (rent/deposit/maintenance/utility/penalty), matched payments,
@@ -383,22 +413,9 @@ class RentContract(models.Model):
             total_charges += line['debit']
             total_payments += line['credit']
 
-        # Security deposit: reflect what's actually been invoiced/paid, not
-        # just the amount configured on the contract - those can diverge,
-        # e.g. if the contract's deposit field was edited after the deposit
-        # invoice was already sent, or the deposit was never invoiced yet.
-        deposit_installment = self.rent_installment_ids.filtered(
-            lambda inst: inst.payment_type == 'deposit'
-        )[:1]
-        deposit_invoice = deposit_installment.invoice_id if deposit_installment else self.env['account.move']
-        deposit_status = (
-            self._invoice_status_label(deposit_invoice) if deposit_installment else 'Not Yet Invoiced'
-        )
-        deposit_received = (
-            deposit_installment.amount
-            if deposit_installment and deposit_invoice and deposit_invoice.state == 'posted'
-            else 0.0
-        )
+        deposit_summary = self._get_deposit_summary()
+        deposit_status = deposit_summary['deposit_status']
+        deposit_received = deposit_summary['deposit_received']
 
         return {
             'lines': raw_lines,
@@ -1166,6 +1183,38 @@ class RentContract(models.Model):
             'type': 'ir.actions.act_window',
             'res_model': 'rent.contract.movein',
             'res_id': movein.id,
+            'view_mode': 'form',
+            'target': 'current',
+        }
+
+    moveout_id = fields.Many2one(comodel_name='rent.contract.moveout', string='Move-Out Record',
+                                 compute='_compute_moveout_id')
+
+    def _compute_moveout_id(self):
+        for rec in self:
+            rec.moveout_id = self.env['rent.contract.moveout'].search(
+                [('rent_contract_id', '=', rec.id)], limit=1
+            )
+
+    def action_open_moveout(self):
+        """Header-button target for 'Start Move-Out Process'. Creates the
+        Move-Out record on first click, otherwise just opens the existing
+        one. Deliberately does NOT touch the contract's state or the
+        property's availability - those only change when the Move-Out
+        record itself reaches 'settled' (rent.contract.moveout.action_
+        settle()), which is the only place that calls action_state_
+        terminate(). action_state_terminate() itself is completely
+        unchanged and still callable directly for the quick manual path."""
+        self.ensure_one()
+        if self.state != 'running':
+            raise UserError("Only a running contract can start the Move-Out process.")
+        moveout = self.moveout_id
+        if not moveout:
+            moveout = self.env['rent.contract.moveout'].create({'rent_contract_id': self.id})
+        return {
+            'type': 'ir.actions.act_window',
+            'res_model': 'rent.contract.moveout',
+            'res_id': moveout.id,
             'view_mode': 'form',
             'target': 'current',
         }

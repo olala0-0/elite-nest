@@ -1,0 +1,150 @@
+<odoo>
+    <data>
+        <record id="rent_contract_moveout_deduction_view_list" model="ir.ui.view">
+            <field name="name">rent.contract.moveout.deduction.list</field>
+            <field name="model">rent.contract.moveout.deduction</field>
+            <field name="arch" type="xml">
+                <list string="Deductions" editable="bottom">
+                    <field name="charge_category"/>
+                    <field name="description"/>
+                    <field name="inspection_line_id" readonly="1" column_invisible="1"/>
+                    <field name="amount"/>
+                    <field name="currency_id" column_invisible="1"/>
+                </list>
+            </field>
+        </record>
+
+        <record id="rent_contract_moveout_view_form" model="ir.ui.view">
+            <field name="name">rent.contract.moveout.form</field>
+            <field name="model">rent.contract.moveout</field>
+            <field name="arch" type="xml">
+                <form string="Move-Out">
+                    <header>
+                        <button name="action_start_clearance" string="Start Clearance" type="object"
+                                class="btn-primary" invisible="state != 'draft'"/>
+                        <button name="action_mark_inspection_done" string="Mark Inspection Done" type="object"
+                                class="btn-primary" invisible="state != 'clearance_pending'"/>
+                        <button name="action_submit_finance_review" string="Submit for Finance Review" type="object"
+                                class="btn-primary" invisible="state != 'inspection_done'"/>
+                        <button name="action_approve" string="Approve Deposit Release" type="object"
+                                class="btn-primary" groups="base.group_system"
+                                invisible="state != 'finance_review'"/>
+                        <button name="action_settle" string="Settle Move-Out" type="object"
+                                class="btn-primary" invisible="state != 'approved'"/>
+                        <button name="action_reset_draft" string="Reset to Draft" type="object"
+                                invisible="state == 'draft'"/>
+                        <field name="state" widget="statusbar"
+                               statusbar_visible="draft,clearance_pending,inspection_done,finance_review,approved,settled"/>
+                    </header>
+                    <sheet>
+                        <div class="oe_button_box" name="button_box">
+                            <button type="object" class="oe_stat_button" icon="fa-clipboard"
+                                    name="action_create_or_open_inspection" string="Final Inspection">
+                            </button>
+                        </div>
+                        <group>
+                            <group>
+                                <field name="rent_contract_id" readonly="1"/>
+                                <field name="property_id" readonly="1"/>
+                                <field name="tenant_id" readonly="1"/>
+                                <field name="currency_id" invisible="1"/>
+                            </group>
+                            <group>
+                                <field name="deposit_received"/>
+                                <field name="total_deduction_amount"/>
+                                <field name="deposit_release_amount"/>
+                            </group>
+                        </group>
+                        <notebook>
+                            <page string="Clearance">
+                                <group string="Renewal / Notice">
+                                    <field name="renewal_notice_date"/>
+                                    <field name="process_shared_date"/>
+                                </group>
+                                <group string="Utilities Clearance">
+                                    <group>
+                                        <field name="dewa_clearance_received"/>
+                                        <field name="dewa_clearance_date"/>
+                                        <field name="dewa_clearance_file" filename="dewa_clearance_filename"/>
+                                        <field name="dewa_clearance_filename" invisible="1"/>
+                                    </group>
+                                    <group>
+                                        <field name="logic_utilities_clearance_received"/>
+                                        <field name="logic_utilities_clearance_date"/>
+                                        <field name="logic_utilities_clearance_file"
+                                               filename="logic_utilities_clearance_filename"/>
+                                        <field name="logic_utilities_clearance_filename" invisible="1"/>
+                                    </group>
+                                    <group>
+                                        <field name="lootah_gas_clearance_received"/>
+                                        <field name="lootah_gas_clearance_date"/>
+                                        <field name="lootah_gas_clearance_file"
+                                               filename="lootah_gas_clearance_filename"/>
+                                        <field name="lootah_gas_clearance_filename" invisible="1"/>
+                                    </group>
+                                </group>
+                                <group string="NOC">
+                                    <field name="noc_issued" readonly="1"/>
+                                    <field name="noc_date" readonly="1"/>
+                                    <field name="noc_document" filename="noc_filename"/>
+                                    <field name="noc_filename" invisible="1"/>
+                                    <button name="action_issue_noc" string="Issue NOC" type="object"
+                                            class="btn-secondary" invisible="noc_issued"/>
+                                </group>
+                                <group string="Key Handover">
+                                    <field name="key_handover_date"/>
+                                </group>
+                            </page>
+                            <page string="Deposit Settlement">
+                                <button name="action_pull_deductions_from_inspection"
+                                        string="Pull Deductions from Final Inspection" type="object"
+                                        class="btn-secondary"/>
+                                <field name="deduction_line_ids"/>
+                            </page>
+                            <page string="Approval">
+                                <group>
+                                    <group>
+                                        <field name="finance_reviewed_by" readonly="1"/>
+                                        <field name="finance_reviewed_date" readonly="1"/>
+                                    </group>
+                                    <group>
+                                        <field name="approved_by" readonly="1"/>
+                                        <field name="approved_date" readonly="1"/>
+                                        <field name="deduction_transfer_done" readonly="1"/>
+                                        <button name="action_mark_deduction_transfer_done"
+                                                string="Mark Deduction Transfer Done" type="object"
+                                                class="btn-secondary"
+                                                invisible="state != 'approved' or deduction_transfer_done"/>
+                                    </group>
+                                </group>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="rent_contract_moveout_view_list" model="ir.ui.view">
+            <field name="name">rent.contract.moveout.list</field>
+            <field name="model">rent.contract.moveout</field>
+            <field name="arch" type="xml">
+                <list string="Move-Out Records">
+                    <field name="rent_contract_id"/>
+                    <field name="property_id"/>
+                    <field name="tenant_id"/>
+                    <field name="deposit_release_amount"/>
+                    <field name="state" widget="badge" decoration-success="state == 'settled'"/>
+                </list>
+            </field>
+        </record>
+
+        <record id="action_rent_contract_moveout" model="ir.actions.act_window">
+            <field name="name">Move-Out Records</field>
+            <field name="res_model">rent.contract.moveout</field>
+            <field name="view_mode">list,form</field>
+        </record>
+
+        <menuitem id="rent_contract_moveout_menu" name="Move-Out Records" parent="property_management_menu"
+                  action="action_rent_contract_moveout" sequence="67"/>
+    </data>
+</odoo>

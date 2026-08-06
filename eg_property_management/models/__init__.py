@@ -25,4 +25,5 @@ from . import res_config_settings
 from . import helpdesk_ticket
 from . import property_inspection
 from . import rent_contract_movein
+from . import rent_contract_moveout
 # from . import

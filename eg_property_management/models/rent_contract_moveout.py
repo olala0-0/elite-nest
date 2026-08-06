@@ -1,0 +1,208 @@
+from odoo import api, fields, models
+from odoo.exceptions import UserError
+
+
+class RentContractMoveOut(models.Model):
+    _name = 'rent.contract.moveout'
+    _description = 'Rent Contract Move-Out'
+    _inherit = ['mail.thread', 'mail.activity.mixin']
+
+    rent_contract_id = fields.Many2one(comodel_name='rent.contract', string='Rent Contract',
+                                       required=True, ondelete='cascade')
+    property_id = fields.Many2one(related='rent_contract_id.property_id', string='Property',
+                                  store=True, readonly=True)
+    tenant_id = fields.Many2one(related='rent_contract_id.tenant_id', string='Tenant',
+                                store=True, readonly=True)
+    company_id = fields.Many2one(related='rent_contract_id.company_id', string='Company',
+                                 store=True, readonly=True)
+    currency_id = fields.Many2one(related='rent_contract_id.currency_id', string='Currency',
+                                  store=True, readonly=True)
+
+    # Step 1-2: Renewal notice / Tenant decision. "No" branch is the
+    # existing rent.contract.extend.wizard - this record only exists for
+    # the "Yes, moving out" branch.
+    renewal_notice_date = fields.Date(string='Renewal Notice Sent On')
+
+    # Step 3
+    process_shared_date = fields.Date(string='Move-Out Process Shared On')
+
+    # Step 4: Utilities clearance - the three named clearances from the
+    # diagram, plus a free attachment slot each.
+    dewa_clearance_received = fields.Boolean(string='DEWA Clearance Received')
+    dewa_clearance_date = fields.Date(string='DEWA Clearance Date')
+    dewa_clearance_file = fields.Binary(string='DEWA Clearance Document')
+    dewa_clearance_filename = fields.Char(string='DEWA Clearance Filename')
+
+    logic_utilities_clearance_received = fields.Boolean(string='Logic Utilities Clearance Received')
+    logic_utilities_clearance_date = fields.Date(string='Logic Utilities Clearance Date')
+    logic_utilities_clearance_file = fields.Binary(string='Logic Utilities Clearance Document')
+    logic_utilities_clearance_filename = fields.Char(string='Logic Utilities Clearance Filename')
+
+    lootah_gas_clearance_received = fields.Boolean(string='Lootah Gas Clearance Received')
+    lootah_gas_clearance_date = fields.Date(string='Lootah Gas Clearance Date')
+    lootah_gas_clearance_file = fields.Binary(string='Lootah Gas Clearance Document')
+    lootah_gas_clearance_filename = fields.Char(string='Lootah Gas Clearance Filename')
+
+    # Step 5
+    noc_issued = fields.Boolean(string='Move-Out NOC Issued', readonly=True)
+    noc_date = fields.Date(string='NOC Issue Date', readonly=True)
+    noc_document = fields.Binary(string='NOC Document')
+    noc_filename = fields.Char(string='NOC Filename')
+
+    # Step 6
+    key_handover_date = fields.Date(string='Key Handover Date')
+
+    # Steps 7-10
+    final_inspection_id = fields.Many2one(
+        comodel_name='property.inspection', string='Final Inspection', copy=False,
+        domain="[('inspection_type', '=', 'move_out')]")
+
+    # Steps 11-14
+    deduction_line_ids = fields.One2many(comodel_name='rent.contract.moveout.deduction',
+                                         inverse_name='moveout_id', string='Deductions')
+    finance_reviewed_by = fields.Many2one(comodel_name='res.users', string='Finance Reviewed By', readonly=True)
+    finance_reviewed_date = fields.Datetime(string='Finance Reviewed On', readonly=True)
+    approved_by = fields.Many2one(comodel_name='res.users', string='Approved By', readonly=True)
+    approved_date = fields.Datetime(string='Approved On', readonly=True)
+    deduction_transfer_done = fields.Boolean(string='Deduction Transfer Done', readonly=True)
+
+    deposit_received = fields.Monetary(string='Deposit Received', currency_field='currency_id',
+                                       compute='_compute_deposit_figures')
+    total_deduction_amount = fields.Monetary(string='Total Deductions', currency_field='currency_id',
+                                             compute='_compute_deposit_figures')
+    deposit_release_amount = fields.Monetary(
+        string='Deposit Release / (Shortfall)', currency_field='currency_id',
+        compute='_compute_deposit_figures',
+        help="Deposit Received minus Total Deductions. Positive = refund "
+             "due to tenant. Negative = tenant still owes a shortfall. "
+             "Purely informational in this phase - no invoice or credit "
+             "note is created from this figure yet (Phase 3).")
+
+    state = fields.Selection(
+        [('draft', 'Draft'), ('clearance_pending', 'Clearance Pending'), ('inspection_done', 'Inspection Done'),
+         ('finance_review', 'Finance Review'), ('approved', 'Approved'), ('settled', 'Settled')],
+        string='Status', default='draft', tracking=True)
+
+    @api.depends('deduction_line_ids.amount', 'rent_contract_id')
+    def _compute_deposit_figures(self):
+        for rec in self:
+            deposit_received = 0.0
+            if rec.rent_contract_id:
+                deposit_received = rec.rent_contract_id._get_deposit_summary()['deposit_received']
+            total_deductions = sum(rec.deduction_line_ids.mapped('amount'))
+            rec.deposit_received = deposit_received
+            rec.total_deduction_amount = total_deductions
+            rec.deposit_release_amount = deposit_received - total_deductions
+
+    def action_create_or_open_inspection(self):
+        self.ensure_one()
+        if not self.final_inspection_id:
+            self.final_inspection_id = self.env['property.inspection'].create({
+                'rent_contract_id': self.rent_contract_id.id,
+                'property_id': self.property_id.id,
+                'tenant_id': self.tenant_id.id,
+                'inspection_type': 'move_out',
+            })
+        return {
+            'type': 'ir.actions.act_window',
+            'res_model': 'property.inspection',
+            'res_id': self.final_inspection_id.id,
+            'view_mode': 'form',
+            'target': 'current',
+        }
+
+    def action_pull_deductions_from_inspection(self):
+        """Populate deduction lines from every checklist line on the Final
+        Inspection that isn't OK. Safe to click more than once - only adds
+        lines for inspection lines that don't already have one, so it never
+        duplicates or overwrites a deduction Finance already edited by hand."""
+        self.ensure_one()
+        if not self.final_inspection_id:
+            raise UserError("Run the Final Inspection first.")
+        existing_source_lines = self.deduction_line_ids.mapped('inspection_line_id')
+        new_lines = self.final_inspection_id.line_ids.filtered(
+            lambda line: line.condition != 'ok' and line not in existing_source_lines
+        )
+        for line in new_lines:
+            self.env['rent.contract.moveout.deduction'].create({
+                'moveout_id': self.id,
+                'inspection_line_id': line.id,
+                'charge_category': 'dilapidation',
+                'description': f"{line.area + ' - ' if line.area else ''}{line.name} ({line.condition})",
+                'amount': line.estimated_cost,
+            })
+
+    def action_start_clearance(self):
+        for rec in self:
+            rec.state = 'clearance_pending'
+
+    def action_mark_inspection_done(self):
+        for rec in self:
+            rec.state = 'inspection_done'
+
+    def action_issue_noc(self):
+        for rec in self:
+            rec.write({'noc_issued': True, 'noc_date': fields.Date.today()})
+
+    def action_submit_finance_review(self):
+        for rec in self:
+            rec.write({
+                'state': 'finance_review',
+                'finance_reviewed_by': self.env.user.id,
+                'finance_reviewed_date': fields.Datetime.now(),
+            })
+
+    def action_approve(self):
+        """Step 12 (diagram names a specific person - "Ms. Gawhar" - as a
+        stand-in for "the admin approves"; see MOVE_IN_MOVE_OUT_PLAN.md
+        section 8.3). Gated on Odoo's built-in Administrator group, not a
+        named person or a new custom field/group."""
+        for rec in self:
+            if not rec.env.user.has_group('base.group_system'):
+                raise UserError("Only an Administrator can approve the deposit release.")
+            rec.write({
+                'state': 'approved',
+                'approved_by': rec.env.user.id,
+                'approved_date': fields.Datetime.now(),
+            })
+
+    def action_mark_deduction_transfer_done(self):
+        for rec in self:
+            rec.deduction_transfer_done = True
+
+    def action_settle(self):
+        """Step 15. The only place that frees the property: calls the
+        contract's existing action_state_terminate(), unchanged, exactly as
+        if someone had clicked "Terminate Contract" by hand. Everything
+        before this point is informational/tracking only - clicking through
+        earlier steps never touches the contract or the property."""
+        for rec in self:
+            if rec.state != 'approved':
+                raise UserError("The deposit release must be approved before settling the Move-Out.")
+            rec.rent_contract_id.action_state_terminate()
+            rec.state = 'settled'
+
+    def action_reset_draft(self):
+        for rec in self:
+            rec.state = 'draft'
+
+
+class RentContractMoveOutDeduction(models.Model):
+    _name = 'rent.contract.moveout.deduction'
+    _description = 'Rent Contract Move-Out Deduction'
+    _order = 'id'
+
+    moveout_id = fields.Many2one(comodel_name='rent.contract.moveout', string='Move-Out',
+                                 required=True, ondelete='cascade')
+    inspection_line_id = fields.Many2one(comodel_name='property.inspection.line',
+                                         string='Source Inspection Line', readonly=True)
+    charge_category = fields.Selection(
+        [('penalty', 'Penalty Charges'), ('dilapidation', 'Dilapidation'), ('shortfall_rent', 'Shortfall Rent')],
+        string='Category', required=True, default='dilapidation',
+        help="Matches the accounting design's Early Termination categories "
+             "(Penalty / Dilapidation / Shortfall Rent), so Phase 3 can "
+             "route each line to the correct Dr/Cr entry without guessing.")
+    description = fields.Char(string='Description', required=True)
+    amount = fields.Monetary(string='Amount', currency_field='currency_id')
+    currency_id = fields.Many2one(related='moveout_id.currency_id', string='Currency',
+                                  store=True, readonly=True)

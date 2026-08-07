@@ -41,7 +41,10 @@
                         <button name="action_state_terminate" string="Terminate Contract" type="object" class="btn-secondary"
                                 invisible="state in ['draft','cancel','terminate','expire']"/>
                         <button name="action_open_moveout" string="Start Move-Out Process" type="object" class="btn-secondary"
-                                invisible="state in ['draft','cancel','terminate','expire']"/>
+                                invisible="state in ['draft','cancel','terminate','expire'] or moveout_id"/>
+                        <button name="action_open_moveout" string="Move-Out In Progress" type="object" class="btn-warning"
+                                invisible="state in ['draft','cancel','terminate','expire'] or not moveout_id"/>
+                        <field name="moveout_state" invisible="state in ['draft','cancel','terminate','expire'] or not moveout_id"/>
                         <button name="action_state_cancel" string="Cancel" type="object" class="btn-secondary"
                                 invisible="state in ['draft','cancel','terminate','expire']"/>
                         <button name="action_create_broker_bill" string="Create Broker Bill" type="object"
@@ -61,6 +64,9 @@
                             </button>
                             <button type="object" class="oe_stat_button" icon="fa-sign-in"
                                     name="action_open_movein" string="Move-In">
+                            </button>
+                            <button type="object" class="oe_stat_button" icon="fa-sign-out"
+                                    name="action_open_moveout" string="Move-Out" invisible="not moveout_id">
                             </button>
                         </div>
                         <h1>

@@ -1259,6 +1259,7 @@ class RentContract(models.Model):
 
     moveout_id = fields.Many2one(comodel_name='rent.contract.moveout', string='Move-Out Record',
                                  compute='_compute_moveout_id')
+    moveout_state = fields.Selection(related='moveout_id.state', string='Move-Out Status', readonly=True)
 
     def _compute_moveout_id(self):
         for rec in self:

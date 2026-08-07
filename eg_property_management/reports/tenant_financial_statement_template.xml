@@ -101,6 +101,7 @@
                                         <th style="padding: 8px 10px; text-align: right;">Debit (<span t-field="o.currency_id.name"/>)</th>
                                         <th style="padding: 8px 10px; text-align: right;">Credit (<span t-field="o.currency_id.name"/>)</th>
                                         <th style="padding: 8px 10px; text-align: right;">Running Balance (<span t-field="o.currency_id.name"/>)</th>
+                                        <th style="padding: 8px 10px; text-align: left;">Company</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -123,6 +124,7 @@
                                             <td style="padding: 7px 10px; text-align: right; font-weight: 600; color: #111827;">
                                                 <span t-out="'{:,.2f}'.format(line['balance'])"/>
                                             </td>
+                                            <td style="padding: 7px 10px; color: #4B5563;"><span t-out="line['company']"/></td>
                                         </tr>
                                     </t>
                                 </tbody>

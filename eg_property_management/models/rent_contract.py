@@ -297,6 +297,7 @@ class RentContract(models.Model):
             'debit': 0.0,
             'credit': 0.0,
             'pending': False,
+            'company': self.company_id.name,
         }]
 
         # One row per rent.installment - the same records already shown on
@@ -336,6 +337,7 @@ class RentContract(models.Model):
                     'debit': inst.amount,
                     'credit': 0.0,
                     'pending': True,
+                    'company': invoice.company_id.name if invoice else self.company_id.name,
                 })
                 continue
 
@@ -349,6 +351,7 @@ class RentContract(models.Model):
                 'debit': inst.amount,
                 'credit': 0.0,
                 'pending': False,
+                'company': invoice.company_id.name,
             })
 
         # One pass per unique invoice (not per installment) - several
@@ -375,6 +378,7 @@ class RentContract(models.Model):
                         'debit': 0.0,
                         'credit': matched_amount,
                         'pending': False,
+                        'company': payment.company_id.name or invoice.company_id.name,
                     })
             else:
                 # Breakdown missing or doesn't add up (e.g. reconciled via a
@@ -389,6 +393,7 @@ class RentContract(models.Model):
                     'debit': 0.0,
                     'credit': paid_amount,
                     'pending': False,
+                    'company': invoice.company_id.name,
                 })
 
         # Credit notes aren't tracked via rent_installment_ids - pull them
@@ -409,6 +414,7 @@ class RentContract(models.Model):
                 'debit': 0.0,
                 'credit': refund.amount_total,
                 'pending': False,
+                'company': refund.company_id.name,
             })
 
         # Sort all lines chronologically

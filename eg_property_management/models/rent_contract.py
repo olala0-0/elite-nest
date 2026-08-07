@@ -1261,8 +1261,9 @@ class RentContract(models.Model):
     moveout_id = fields.Many2one(comodel_name='rent.contract.moveout', string='Move-Out Record',
                                  compute='_compute_moveout_id')
     moveout_state = fields.Selection(
-        [('draft', 'Draft'), ('clearance_pending', 'Clearance Pending'), ('inspection_done', 'Inspection Done'),
-         ('finance_review', 'Finance Review'), ('approved', 'Approved'), ('settled', 'Settled')],
+        [('draft', 'Move-Out: Draft'), ('clearance_pending', 'Move-Out: Clearance Pending'),
+         ('inspection_done', 'Move-Out: Inspection Done'), ('finance_review', 'Move-Out: Finance Review'),
+         ('approved', 'Move-Out: Approved'), ('settled', 'Move-Out: Settled')],
         string='Move-Out Status', compute='_compute_moveout_state')
 
     def _compute_moveout_state(self):
@@ -1275,25 +1276,40 @@ class RentContract(models.Model):
                 [('rent_contract_id', '=', rec.id)], limit=1
             )
 
-    def action_open_moveout(self):
-        """Smart-button / header-button target for Move-Out. Creates the
-        Move-Out record on first click and moves the contract's own state
-        to 'move_out' (a distinct statusbar step, visible without opening
-        the record) - later clicks just reopen the same record without
-        touching state again. The property itself stays marked occupied
-        ('rent') the whole time; only Settle (rent.contract.moveout.
-        action_settle(), the sole caller of action_state_terminate()) frees
-        it up, exactly as before. action_state_terminate()/action_state_
-        cancel() remain directly callable at any point as the quick manual
-        override - this method never blocks or replaces them."""
+    def action_start_moveout(self):
+        """Header-button target for 'Start Move-Out Process'. Creates the
+        Move-Out record and moves the contract's own state to 'move_out'
+        (a distinct statusbar step) but deliberately returns nothing, so
+        the user stays on the contract form instead of being navigated
+        away - this button is a status change, not a navigation action.
+        To actually open the Move-Out record, use the "Move-Out" smart
+        button (action_open_moveout) once it exists."""
         self.ensure_one()
-        if self.state not in ('running', 'move_out'):
+        if self.state != 'running':
             raise UserError("Only a running contract can start the Move-Out process.")
+        if not self.moveout_id:
+            self.env['rent.contract.moveout'].create({'rent_contract_id': self.id})
+        self.state = 'move_out'
+
+    def action_open_moveout(self):
+        """Smart-button target: opens the contract's existing Move-Out
+        record. Only ever visible once one exists (action_start_moveout()
+        already created it), but still creates one on the rare chance it's
+        called first - so it's never a dead end. Never touches the
+        contract's own state itself; action_start_moveout() already
+        handled that. The property stays marked occupied ('rent') the
+        whole time; only Settle (rent.contract.moveout.action_settle(),
+        the sole caller of action_state_terminate()) frees it up.
+        action_state_terminate()/action_state_cancel() remain directly
+        callable at any point as the quick manual override."""
+        self.ensure_one()
         moveout = self.moveout_id
         if not moveout:
+            if self.state not in ('running', 'move_out'):
+                raise UserError("Only a running contract can start the Move-Out process.")
             moveout = self.env['rent.contract.moveout'].create({'rent_contract_id': self.id})
-        if self.state == 'running':
-            self.state = 'move_out'
+            if self.state == 'running':
+                self.state = 'move_out'
         return {
             'type': 'ir.actions.act_window',
             'res_model': 'rent.contract.moveout',

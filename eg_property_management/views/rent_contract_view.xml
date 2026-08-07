@@ -40,11 +40,11 @@
                                 invisible="state in ['draft','cancel','terminate','expire']"/>
                         <button name="action_state_terminate" string="Terminate Contract" type="object" class="btn-secondary"
                                 invisible="state in ['draft','cancel','terminate','expire']"/>
-                        <button name="action_open_moveout" string="Start Move-Out Process" type="object" class="btn-secondary"
+                        <button name="action_start_moveout" string="Start Move-Out Process" type="object" class="btn-secondary"
                                 invisible="state in ['draft','cancel','terminate','expire'] or moveout_id"/>
-                        <button name="action_open_moveout" string="Move-Out In Progress" type="object" class="btn-warning"
-                                invisible="state in ['draft','cancel','terminate','expire'] or not moveout_id"/>
-                        <field name="moveout_state" invisible="state in ['draft','cancel','terminate','expire'] or not moveout_id"/>
+                        <field name="moveout_state" widget="badge" decoration-warning="moveout_state != 'settled'"
+                               decoration-success="moveout_state == 'settled'"
+                               invisible="state in ['draft','cancel','terminate','expire'] or not moveout_id"/>
                         <button name="action_state_cancel" string="Cancel" type="object" class="btn-secondary"
                                 invisible="state in ['draft','cancel','terminate','expire']"/>
                         <button name="action_create_broker_bill" string="Create Broker Bill" type="object"

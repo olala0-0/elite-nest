@@ -155,7 +155,8 @@ class RentContract(models.Model):
                                   store=True)
 
     state = fields.Selection(
-        [('draft', 'Draft'), ('running', 'Running'), ('cancel', 'Cancel'), ('terminate', 'Terminate'), ('expire', 'Expire'), ],
+        [('draft', 'Draft'), ('running', 'Running'), ('move_out', 'Move-Out Process'), ('cancel', 'Cancel'),
+         ('terminate', 'Terminate'), ('expire', 'Expire'), ],
         string="Status", default='draft', tracking=True)
 
     invoice_count = fields.Integer(string="Invoices", compute="_compute_invoice_count")
@@ -538,7 +539,7 @@ class RentContract(models.Model):
             existing_contract = self.search([
                 ('id', '!=', rec.id),
                 ('property_id', '=', rec.property_id.id),
-                ('state', '=', 'running'),
+                ('state', 'in', ('running', 'move_out')),
             ], limit=1)
             if existing_contract:
                 raise UserError(
@@ -1143,7 +1144,7 @@ class RentContract(models.Model):
         reminder_days = 7
         upcoming_installment_ids = self.env['rent.installment'].search([
             ('invoice_date', '=', today - timedelta(days=reminder_days)), ('invoice_id', '!=', False),
-            ('invoice_id.payment_state', '!=', 'paid'), ('rent_contract_id.state', '=', 'running'), ])
+            ('invoice_id.payment_state', '!=', 'paid'), ('rent_contract_id.state', 'in', ('running', 'move_out')), ])
         for installment_id in upcoming_installment_ids:
             contract_id = installment_id.rent_contract_id
             contract_id.message_post(
@@ -1212,7 +1213,7 @@ class RentContract(models.Model):
     def action_auto_create_invoice_cron(self):
         today = fields.Date.today()
         contract_ids = self.search(
-            [('state', '=', 'running'), ('contract_type', '=', 'auto'), ('start_date', '<=', today),
+            [('state', 'in', ('running', 'move_out')), ('contract_type', '=', 'auto'), ('start_date', '<=', today),
              ('end_date', '>=', today), ])
 
         for contract_id in contract_ids:
@@ -1275,20 +1276,24 @@ class RentContract(models.Model):
             )
 
     def action_open_moveout(self):
-        """Header-button target for 'Start Move-Out Process'. Creates the
-        Move-Out record on first click, otherwise just opens the existing
-        one. Deliberately does NOT touch the contract's state or the
-        property's availability - those only change when the Move-Out
-        record itself reaches 'settled' (rent.contract.moveout.action_
-        settle()), which is the only place that calls action_state_
-        terminate(). action_state_terminate() itself is completely
-        unchanged and still callable directly for the quick manual path."""
+        """Smart-button / header-button target for Move-Out. Creates the
+        Move-Out record on first click and moves the contract's own state
+        to 'move_out' (a distinct statusbar step, visible without opening
+        the record) - later clicks just reopen the same record without
+        touching state again. The property itself stays marked occupied
+        ('rent') the whole time; only Settle (rent.contract.moveout.
+        action_settle(), the sole caller of action_state_terminate()) frees
+        it up, exactly as before. action_state_terminate()/action_state_
+        cancel() remain directly callable at any point as the quick manual
+        override - this method never blocks or replaces them."""
         self.ensure_one()
-        if self.state != 'running':
+        if self.state not in ('running', 'move_out'):
             raise UserError("Only a running contract can start the Move-Out process.")
         moveout = self.moveout_id
         if not moveout:
             moveout = self.env['rent.contract.moveout'].create({'rent_contract_id': self.id})
+        if self.state == 'running':
+            self.state = 'move_out'
         return {
             'type': 'ir.actions.act_window',
             'res_model': 'rent.contract.moveout',

@@ -325,8 +325,15 @@ class RentContractMoveOut(models.Model):
             rec.state = 'settled'
 
     def action_reset_draft(self):
+        """Aborting/restarting a Move-Out also returns the contract's own
+        state to 'running' (only if it's currently 'move_out' - never
+        overwrites a state the contract reached some other way), so the
+        contract doesn't sit indefinitely on the 'Move-Out Process'
+        statusbar step with nothing actually in progress."""
         for rec in self:
             rec.state = 'draft'
+            if rec.rent_contract_id.state == 'move_out':
+                rec.rent_contract_id.state = 'running'
 
 
 class RentContractMoveOutDeduction(models.Model):

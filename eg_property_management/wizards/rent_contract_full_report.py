@@ -25,7 +25,7 @@ class RentContractFulkReport(models.TransientModel):
                    'Start Date', 'End Date', 'Payment Term', 'Rent', 'Security Deposit', 'Broker Commission',
                    'Total Amount', 'Paid Amount', 'Remaining Amount', 'Status']
         contract_groups_ids = {'All Contracts': self.rent_contract_ids,
-                               'Running Contracts': self.rent_contract_ids.filtered(lambda c: c.state == 'running'),
+                               'Running Contracts': self.rent_contract_ids.filtered(lambda c: c.state in ('running', 'move_out')),
                                'Terminated Contracts': self.rent_contract_ids.filtered(lambda c: c.state == 'terminate'),
                                'Expired Contracts': self.rent_contract_ids.filtered(lambda c: c.state == 'expire'), }
 

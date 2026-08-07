@@ -163,7 +163,7 @@ class PropertyDetails(models.Model):
     def _get_active_rent_contract(self):
         self.ensure_one()
         return self.env["rent.contract"].search(
-            [("property_id", "=", self.id), ("state", "=", "running")], limit=1
+            [("property_id", "=", self.id), ("state", "in", ("running", "move_out"))], limit=1
         )
 
     def _get_active_sale_contract(self):

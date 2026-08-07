@@ -39,7 +39,7 @@ class AccountMove(models.Model):
                     # Search for an active running contract first using tenant_id
                     contract = self.env['rent.contract'].sudo().search([
                         ('tenant_id', '=', partner_id),
-                        ('state', '=', 'running')
+                        ('state', 'in', ('running', 'move_out'))
                     ], limit=1)
                     # Fallback to any contract for this tenant if none is currently 'running'
                     if not contract:
@@ -123,7 +123,7 @@ class AccountMove(models.Model):
             # Search active running contracts matching selected customer
             contract = self.env['rent.contract'].search([
                 ('tenant_id', '=', self.partner_id.id),
-                ('state', '=', 'running')
+                ('state', 'in', ('running', 'move_out'))
             ], limit=1)
             if not contract:
                 contract = self.env['rent.contract'].search([

@@ -1259,7 +1259,14 @@ class RentContract(models.Model):
 
     moveout_id = fields.Many2one(comodel_name='rent.contract.moveout', string='Move-Out Record',
                                  compute='_compute_moveout_id')
-    moveout_state = fields.Selection(related='moveout_id.state', string='Move-Out Status', readonly=True)
+    moveout_state = fields.Selection(
+        [('draft', 'Draft'), ('clearance_pending', 'Clearance Pending'), ('inspection_done', 'Inspection Done'),
+         ('finance_review', 'Finance Review'), ('approved', 'Approved'), ('settled', 'Settled')],
+        string='Move-Out Status', compute='_compute_moveout_state')
+
+    def _compute_moveout_state(self):
+        for rec in self:
+            rec.moveout_state = rec.moveout_id.state
 
     def _compute_moveout_id(self):
         for rec in self:

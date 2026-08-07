@@ -88,7 +88,7 @@ class RentContractMoveOut(models.Model):
              "Note), after which those documents are the source of truth.")
 
     state = fields.Selection(
-        [('draft', 'Draft'), ('clearance_pending', 'Clearance Pending'), ('inspection_done', 'Inspection Done'),
+        [('draft', 'Draft'), ('clearance_pending', 'Clearance Pending'), ('inspection_done', 'Final Inspection'),
          ('finance_review', 'Finance Review'), ('approved', 'Approved'), ('settled', 'Settled')],
         string='Status', default='draft', tracking=True)
 

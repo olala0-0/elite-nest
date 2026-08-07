@@ -23,7 +23,7 @@
                     <header>
                         <button name="action_start_clearance" string="Start Clearance" type="object"
                                 class="btn-primary" invisible="state != 'draft'"/>
-                        <button name="action_mark_inspection_done" string="Mark Inspection Done" type="object"
+                        <button name="action_mark_inspection_done" string="Start Inspection" type="object"
                                 class="btn-primary" invisible="state != 'clearance_pending'"/>
                         <button name="action_submit_finance_review" string="Submit for Finance Review" type="object"
                                 class="btn-primary" invisible="state != 'inspection_done'"/>
@@ -64,23 +64,32 @@
                                 </group>
                                 <group string="Utilities Clearance">
                                     <group>
-                                        <field name="dewa_clearance_received"/>
-                                        <field name="dewa_clearance_date"/>
-                                        <field name="dewa_clearance_file" filename="dewa_clearance_filename"/>
+                                        <field name="dewa_clearance_received"
+                                               readonly="state not in ('draft', 'clearance_pending')"/>
+                                        <field name="dewa_clearance_date"
+                                               readonly="state not in ('draft', 'clearance_pending')"/>
+                                        <field name="dewa_clearance_file" filename="dewa_clearance_filename"
+                                               readonly="state not in ('draft', 'clearance_pending')"/>
                                         <field name="dewa_clearance_filename" invisible="1"/>
                                     </group>
                                     <group>
-                                        <field name="logic_utilities_clearance_received"/>
-                                        <field name="logic_utilities_clearance_date"/>
+                                        <field name="logic_utilities_clearance_received"
+                                               readonly="state not in ('draft', 'clearance_pending')"/>
+                                        <field name="logic_utilities_clearance_date"
+                                               readonly="state not in ('draft', 'clearance_pending')"/>
                                         <field name="logic_utilities_clearance_file"
-                                               filename="logic_utilities_clearance_filename"/>
+                                               filename="logic_utilities_clearance_filename"
+                                               readonly="state not in ('draft', 'clearance_pending')"/>
                                         <field name="logic_utilities_clearance_filename" invisible="1"/>
                                     </group>
                                     <group>
-                                        <field name="lootah_gas_clearance_received"/>
-                                        <field name="lootah_gas_clearance_date"/>
+                                        <field name="lootah_gas_clearance_received"
+                                               readonly="state not in ('draft', 'clearance_pending')"/>
+                                        <field name="lootah_gas_clearance_date"
+                                               readonly="state not in ('draft', 'clearance_pending')"/>
                                         <field name="lootah_gas_clearance_file"
-                                               filename="lootah_gas_clearance_filename"/>
+                                               filename="lootah_gas_clearance_filename"
+                                               readonly="state not in ('draft', 'clearance_pending')"/>
                                         <field name="lootah_gas_clearance_filename" invisible="1"/>
                                     </group>
                                 </group>

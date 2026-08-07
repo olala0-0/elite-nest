@@ -1262,7 +1262,7 @@ class RentContract(models.Model):
                                  compute='_compute_moveout_id')
     moveout_state = fields.Selection(
         [('draft', 'Move-Out: Draft'), ('clearance_pending', 'Move-Out: Clearance Pending'),
-         ('inspection_done', 'Move-Out: Inspection Done'), ('finance_review', 'Move-Out: Finance Review'),
+         ('inspection_done', 'Move-Out: Final Inspection'), ('finance_review', 'Move-Out: Finance Review'),
          ('approved', 'Move-Out: Approved'), ('settled', 'Move-Out: Settled')],
         string='Move-Out Status', compute='_compute_moveout_state')
 

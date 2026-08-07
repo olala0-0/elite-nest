@@ -132,8 +132,20 @@ class PropertyInspection(models.Model):
             rec.write({'state': 'tenant_acknowledged', 'tenant_ack_date': fields.Datetime.now()})
 
     def action_done(self):
+        """Completing a Move-Out's Final Inspection automatically submits
+        that Move-Out for Finance Review - saves the extra manual click on
+        the Move-Out record, and keeps the two flows in sync. Only fires
+        if a Move-Out is actually waiting on this exact inspection (state
+        == 'inspection_done'); harmless no-op for Pre-Move-In inspections
+        or a Move-Out that's already moved past that stage some other way."""
         for rec in self:
             rec.state = 'done'
+            if rec.inspection_type == 'move_out':
+                moveout = self.env['rent.contract.moveout'].search(
+                    [('final_inspection_id', '=', rec.id), ('state', '=', 'inspection_done')], limit=1
+                )
+                if moveout:
+                    moveout.action_submit_finance_review()
 
     def action_reset_draft(self):
         for rec in self:

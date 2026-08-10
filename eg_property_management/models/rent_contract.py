@@ -383,14 +383,15 @@ class RentContract(models.Model):
                 # owe) but excluded from totals/running balance, matching
                 # standard statement-of-account practice of only reflecting
                 # confirmed charges in the running total.
+                pending_amount = self._amount_with_tax(invoice, inst.amount)
                 pending_count += 1
-                total_pending_amount += inst.amount
+                total_pending_amount += pending_amount
                 raw_lines.append({
                     'date': inst.invoice_date,
                     'description': f"{inst.description or inst.payment_type.title()} (not yet confirmed)",
                     'ref': invoice.name if invoice and invoice.name and invoice.name != '/' else 'Draft',
                     'status': status,
-                    'debit': inst.amount,
+                    'debit': pending_amount,
                     'credit': 0.0,
                     'pending': True,
                     'company': invoice.company_id.name if invoice else self.company_id.name,
@@ -404,7 +405,7 @@ class RentContract(models.Model):
                 'description': inst.description or invoice.name,
                 'ref': invoice.name,
                 'status': status,
-                'debit': inst.amount,
+                'debit': self._amount_with_tax(invoice, inst.amount),
                 'credit': 0.0,
                 'pending': False,
                 'company': invoice.company_id.name,
@@ -769,6 +770,19 @@ class RentContract(models.Model):
         if self.charge_type == 'area_wise':
             maint_amount *= (self.total_area or 0.0)
         return maint_amount
+
+    @staticmethod
+    def _amount_with_tax(invoice, base_amount):
+        """Scale a tax-excluded installment amount up to its tax-inclusive
+        equivalent using that invoice's own tax ratio (amount_total /
+        amount_untaxed) - correct even if an invoice mixes products with
+        different tax rates, and a no-op (ratio 1) when there's no invoice
+        or no tax on it. Used so the printed tenant statement shows the
+        same final total the tenant is actually billed, not the pre-tax
+        price_unit stored on the installment."""
+        if not invoice or not invoice.amount_untaxed:
+            return base_amount
+        return base_amount * (invoice.amount_total / invoice.amount_untaxed)
 
     @staticmethod
     def _prepare_invoice_line(product, description, amount, account_id):

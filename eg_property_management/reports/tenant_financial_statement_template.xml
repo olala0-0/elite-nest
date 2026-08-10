@@ -42,9 +42,9 @@
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td style="padding: 5px 0; font-weight: 600; color: #6B7280;">Property:</td>
-                                    <td style="padding: 5px 0; color: #111827;">
-                                        <span t-out="o.property_id.display_name or o.property_id.name"/>
+                                    <td style="padding: 5px 0; font-weight: 600; color: #6B7280;">Unit No.:</td>
+                                    <td style="padding: 5px 0; color: #2563EB; font-weight: 700;">
+                                        <span t-field="o.property_id.name"/>
                                     </td>
                                     <td style="padding: 5px 0; font-weight: 600; color: #6B7280;">Tenant ID:</td>
                                     <td style="padding: 5px 0; color: #111827;">
@@ -52,25 +52,23 @@
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td style="padding: 5px 0; font-weight: 600; color: #6B7280;">Unit No.:</td>
-                                    <td style="padding: 5px 0; color: #2563EB; font-weight: 700;">
-                                        <span t-field="o.property_id.name"/>
-                                    </td>
                                     <td style="padding: 5px 0; font-weight: 600; color: #6B7280;">Statement Period:</td>
                                     <td style="padding: 5px 0; color: #111827;">
                                         <span t-field="o.start_date" t-options="{'widget': 'date', 'format': 'dd-MMM-yyyy'}"/> –
                                         <span t-out="datetime.date.today().strftime('%d-%b-%Y')"/>
                                     </td>
-                                </tr>
-                                <tr>
                                     <td style="padding: 5px 0; font-weight: 600; color: #6B7280;">Payments Scheduled:</td>
                                     <td style="padding: 5px 0; color: #111827;">
                                         <span t-out="data['payment_count']"/> (per payment term)
                                     </td>
+                                </tr>
+                                <tr>
                                     <td style="padding: 5px 0; font-weight: 600; color: #6B7280;">Charges Confirmed / Pending:</td>
                                     <td style="padding: 5px 0; color: #111827;">
                                         <span t-out="data['confirmed_count']"/> Confirmed / <span t-out="data['pending_count']"/> Pending
                                     </td>
+                                    <td style="padding: 5px 0;"/>
+                                    <td style="padding: 5px 0;"/>
                                 </tr>
                                 <tr t-if="(data['confirmed_count'] + data['pending_count']) &gt; data['payment_count']">
                                     <td style="padding: 0 0 5px 0;" colspan="4">

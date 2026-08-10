@@ -16,6 +16,16 @@ PAYMENT_STATE_LABELS = {
     'reversed': 'Reversed',
 }
 
+# (contract field name, display label) for the four one-time charges shown
+# in the tenant statement's Security Deposit box - field name doubles as
+# the matching rent.installment.payment_type (see rent_installment.py).
+ONE_TIME_CHARGE_FIELDS = [
+    ('ejari_fee', 'Ejari Fee'),
+    ('admin_charge', 'Admin Charge'),
+    ('commission', 'Commission'),
+    ('parking_fee', 'Parking Fee'),
+]
+
 
 class RentContract(models.Model):
     _name = "rent.contract"
@@ -308,6 +318,27 @@ class RentContract(models.Model):
             'moveout': moveout,
         }
 
+    def _get_one_time_charges_summary(self):
+        """Amount Due / Status for each of the four one-time contract
+        charges (Ejari Fee, Admin Charge, Commission, Parking Fee) that
+        actually have a value set - skipped entirely if 0, matching the
+        same silent-skip rule used when these are added to the first
+        invoice in action_create_invoice(). Shown in the tenant statement
+        alongside Security Deposit rather than as its own box."""
+        self.ensure_one()
+        summary = []
+        for field_name, label in ONE_TIME_CHARGE_FIELDS:
+            amount = self[field_name]
+            if not amount:
+                continue
+            installment = self.rent_installment_ids.filtered(
+                lambda inst, pt=field_name: inst.payment_type == pt
+            )[:1]
+            invoice = installment.invoice_id if installment else self.env['account.move']
+            status = self._invoice_status_label(invoice) if installment else 'Not Yet Invoiced'
+            summary.append({'label': label, 'amount': amount, 'status': status})
+        return summary
+
     def get_tenant_financial_statement(self):
         """ Computes chronological Statement of Account data including opening balance,
         one row per charge (rent/deposit/maintenance/utility/penalty), matched payments,
@@ -464,6 +495,7 @@ class RentContract(models.Model):
         deposit_status = deposit_summary['deposit_status']
         deposit_received = deposit_summary['deposit_received']
         deposit_utilized = deposit_summary['deposit_utilized']
+        one_time_charges = self._get_one_time_charges_summary()
 
         # Itemized Move-Out deductions, for a "Deposit Settlement" section
         # on the printed statement - empty list (section hidden) unless a
@@ -495,6 +527,7 @@ class RentContract(models.Model):
             'deposit_received': deposit_received,
             'deposit_utilized': deposit_utilized,
             'balance_held': deposit_received - deposit_utilized,
+            'one_time_charges': one_time_charges,
             'deduction_lines': deduction_lines,
             'deposit_refund_amount': deposit_refund_amount,
         }

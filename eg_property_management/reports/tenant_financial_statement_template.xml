@@ -163,8 +163,10 @@
                         </div>
                         <div style="clear: both;"/>
 
-                        <!-- 4. SECURITY DEPOSIT (Optional, rendered only if deposit exists) -->
-                        <t t-if="o.deposit and o.deposit &gt; 0">
+                        <!-- 4. SECURITY DEPOSIT (Optional, rendered if a deposit is
+                             configured or any one-time charge (Ejari Fee, Admin
+                             Charge, Commission, Parking Fee) has a value) -->
+                        <t t-if="(o.deposit and o.deposit &gt; 0) or data['one_time_charges']">
                             <div style="background-color: #F9FAFB; border: 1px solid #D1D5DB; border-radius: 6px; padding: 14px; margin-top: 10px;">
                                 <h3 style="font-size: 13px; font-weight: 700; color: #374151; text-transform: uppercase; margin-top: 0; margin-bottom: 8px; border-bottom: 1px solid #E5E7EB; padding-bottom: 5px;">
                                     Security Deposit (Optional)
@@ -177,26 +179,40 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <tr style="border-bottom: 1px solid #E5E7EB;">
-                                            <td style="padding: 5px 0;">Deposit Amount Due</td>
-                                            <td style="padding: 5px 0; text-align: right; font-weight: 600;"><span t-out="'{:,.2f}'.format(data['deposit_configured'])"/></td>
-                                        </tr>
-                                        <tr style="border-bottom: 1px solid #E5E7EB;">
-                                            <td style="padding: 5px 0;">Status</td>
-                                            <td style="padding: 5px 0; text-align: right;"><span t-out="data['deposit_status']"/></td>
-                                        </tr>
-                                        <tr style="border-bottom: 1px solid #E5E7EB;">
-                                            <td style="padding: 5px 0;">Security Deposit Received</td>
-                                            <td style="padding: 5px 0; text-align: right; font-weight: 600;"><span t-out="'{:,.2f}'.format(data['deposit_received'])"/></td>
-                                        </tr>
-                                        <tr style="border-bottom: 1px solid #E5E7EB;">
-                                            <td style="padding: 5px 0;">Security Deposit Utilized</td>
-                                            <td style="padding: 5px 0; text-align: right; color: #6B7280;"><span t-out="'{:,.2f}'.format(data['deposit_utilized'])"/></td>
-                                        </tr>
-                                        <tr style="font-weight: 700;">
-                                            <td style="padding: 7px 0 0 0; color: #111827;">Balance Held</td>
-                                            <td style="padding: 7px 0 0 0; text-align: right; color: #059669;"><span t-out="'{:,.2f}'.format(data['balance_held'])"/></td>
-                                        </tr>
+                                        <t t-if="o.deposit and o.deposit &gt; 0">
+                                            <tr style="border-bottom: 1px solid #E5E7EB;">
+                                                <td style="padding: 5px 0;">Deposit Amount Due</td>
+                                                <td style="padding: 5px 0; text-align: right; font-weight: 600;"><span t-out="'{:,.2f}'.format(data['deposit_configured'])"/></td>
+                                            </tr>
+                                            <tr style="border-bottom: 1px solid #E5E7EB;">
+                                                <td style="padding: 5px 0;">Status</td>
+                                                <td style="padding: 5px 0; text-align: right;"><span t-out="data['deposit_status']"/></td>
+                                            </tr>
+                                        </t>
+                                        <t t-foreach="data['one_time_charges']" t-as="charge">
+                                            <tr style="border-bottom: 1px solid #E5E7EB;">
+                                                <td style="padding: 5px 0;"><span t-out="charge['label']"/> Amount Due</td>
+                                                <td style="padding: 5px 0; text-align: right; font-weight: 600;"><span t-out="'{:,.2f}'.format(charge['amount'])"/></td>
+                                            </tr>
+                                            <tr style="border-bottom: 1px solid #E5E7EB;">
+                                                <td style="padding: 5px 0;"><span t-out="charge['label']"/> Status</td>
+                                                <td style="padding: 5px 0; text-align: right;"><span t-out="charge['status']"/></td>
+                                            </tr>
+                                        </t>
+                                        <t t-if="o.deposit and o.deposit &gt; 0">
+                                            <tr style="border-bottom: 1px solid #E5E7EB;">
+                                                <td style="padding: 5px 0;">Security Deposit Received</td>
+                                                <td style="padding: 5px 0; text-align: right; font-weight: 600;"><span t-out="'{:,.2f}'.format(data['deposit_received'])"/></td>
+                                            </tr>
+                                            <tr style="border-bottom: 1px solid #E5E7EB;">
+                                                <td style="padding: 5px 0;">Security Deposit Utilized</td>
+                                                <td style="padding: 5px 0; text-align: right; color: #6B7280;"><span t-out="'{:,.2f}'.format(data['deposit_utilized'])"/></td>
+                                            </tr>
+                                            <tr style="font-weight: 700;">
+                                                <td style="padding: 7px 0 0 0; color: #111827;">Balance Held</td>
+                                                <td style="padding: 7px 0 0 0; text-align: right; color: #059669;"><span t-out="'{:,.2f}'.format(data['balance_held'])"/></td>
+                                            </tr>
+                                        </t>
                                     </tbody>
                                 </table>
                             </div>

@@ -99,6 +99,31 @@ class RentContract(models.Model):
     deposit_item_id = fields.Many2one(comodel_name="product.product", string="Deposit Item", )
     deposit_invoice_id = fields.Many2one(comodel_name='account.move', string="Deposit Invoice", readonly=True, )
 
+    # One-time charges (Ejari Fee / Admin Charge / Commission / Parking Fee) -
+    # each follows the exact Security Deposit pattern above: a configured
+    # amount, an optional per-contract product override, and a readonly
+    # invoice-reference field that both prevents billing it twice and lets
+    # other logic (reports, statements) find which invoice carried it.
+    ejari_fee = fields.Monetary(string="Ejari Fee", currency_field="currency_id")
+    ejari_fee_item_id = fields.Many2one(comodel_name="product.product", string="Ejari Fee Item")
+    ejari_fee_invoice_id = fields.Many2one(comodel_name='account.move', string="Ejari Fee Invoice", readonly=True)
+
+    admin_charge = fields.Monetary(string="Admin Charge", currency_field="currency_id")
+    admin_charge_item_id = fields.Many2one(comodel_name="product.product", string="Admin Charge Item")
+    admin_charge_invoice_id = fields.Many2one(comodel_name='account.move', string="Admin Charge Invoice", readonly=True)
+
+    commission = fields.Monetary(
+        string="Commission", currency_field="currency_id",
+        help="Tenant-facing commission charge, billed once like the Security "
+             "Deposit. Not related to Broker Commission (broker_commission), "
+             "which is a separate vendor bill paid out to the broker.")
+    commission_item_id = fields.Many2one(comodel_name="product.product", string="Commission Item")
+    commission_invoice_id = fields.Many2one(comodel_name='account.move', string="Commission Invoice", readonly=True)
+
+    parking_fee = fields.Monetary(string="Parking Fee", currency_field="currency_id")
+    parking_fee_item_id = fields.Many2one(comodel_name="product.product", string="Parking Fee Item")
+    parking_fee_invoice_id = fields.Many2one(comodel_name='account.move', string="Parking Fee Invoice", readonly=True)
+
     lead_id = fields.Many2one(comodel_name='crm.lead', string="Source Lead")
 
     penalty_type = fields.Selection([('fixed', 'Fixed'), ('percent', 'Percent')], string="Penalty Type",
@@ -597,6 +622,53 @@ class RentContract(models.Model):
                 'eg_property_management.penalty_invoice_description',
                 'Penalty',
             ),
+            'ejari_fee_product': _get_product(
+                'eg_property_management.ejari_fee_invoice_product_id',
+                self.ejari_fee_item_id,
+            ),
+            'ejari_fee_description': param_obj.get_param(
+                'eg_property_management.ejari_fee_invoice_description',
+                'Ejari Fee',
+            ),
+            'admin_charge_product': _get_product(
+                'eg_property_management.admin_charge_invoice_product_id',
+                self.admin_charge_item_id,
+            ),
+            'admin_charge_description': param_obj.get_param(
+                'eg_property_management.admin_charge_invoice_description',
+                'Admin Charge',
+            ),
+            'commission_product': _get_product(
+                'eg_property_management.commission_invoice_product_id',
+                self.commission_item_id,
+            ),
+            'commission_description': param_obj.get_param(
+                'eg_property_management.commission_invoice_description',
+                'Commission',
+            ),
+            'parking_fee_product': _get_product(
+                'eg_property_management.parking_fee_invoice_product_id',
+                self.parking_fee_item_id,
+            ),
+            'parking_fee_description': param_obj.get_param(
+                'eg_property_management.parking_fee_invoice_description',
+                'Parking Fee',
+            ),
+            # Dilapidation/Shortfall Rent previously reused the Penalty/Rent
+            # products (a known simplification from when Move-Out deposit
+            # settlement was first built) - now have their own, so they show
+            # up as their own line/product on invoices and reports instead
+            # of being counted as Penalty or Rent revenue.
+            'dilapidation_product': _get_product('eg_property_management.dilapidation_invoice_product_id'),
+            'dilapidation_description': param_obj.get_param(
+                'eg_property_management.dilapidation_invoice_description',
+                'Dilapidation',
+            ),
+            'shortfall_rent_product': _get_product('eg_property_management.shortfall_rent_invoice_product_id'),
+            'shortfall_rent_description': param_obj.get_param(
+                'eg_property_management.shortfall_rent_invoice_description',
+                'Shortfall Rent',
+            ),
         }
 
     def _get_next_rent_invoice_date(self):
@@ -734,6 +806,10 @@ class RentContract(models.Model):
             invoice_lines = []
             installments = []
             deposit_added = False
+            ejari_fee_added = False
+            admin_charge_added = False
+            commission_added = False
+            parking_fee_added = False
 
             rent_amount = rent_amount_map.get(due_date, 0.0)
             if due_date <= self.end_date and rent_amount:
@@ -772,6 +848,82 @@ class RentContract(models.Model):
                     'currency_id': self.currency_id.id,
                 })
                 deposit_added = True
+
+            if due_date == first_batch_due_date and self.ejari_fee and self.ejari_fee > 0 and not self.ejari_fee_invoice_id:
+                invoice_lines.append(
+                    self._prepare_invoice_line(
+                        invoice_settings['ejari_fee_product'],
+                        invoice_settings['ejari_fee_description'],
+                        self.ejari_fee,
+                        income_account_id,
+                    )
+                )
+                installments.append({
+                    'rent_contract_id': self.id,
+                    'invoice_date': self.start_date,
+                    'payment_type': 'ejari_fee',
+                    'description': invoice_settings['ejari_fee_description'],
+                    'amount': self.ejari_fee,
+                    'currency_id': self.currency_id.id,
+                })
+                ejari_fee_added = True
+
+            if due_date == first_batch_due_date and self.admin_charge and self.admin_charge > 0 and not self.admin_charge_invoice_id:
+                invoice_lines.append(
+                    self._prepare_invoice_line(
+                        invoice_settings['admin_charge_product'],
+                        invoice_settings['admin_charge_description'],
+                        self.admin_charge,
+                        income_account_id,
+                    )
+                )
+                installments.append({
+                    'rent_contract_id': self.id,
+                    'invoice_date': self.start_date,
+                    'payment_type': 'admin_charge',
+                    'description': invoice_settings['admin_charge_description'],
+                    'amount': self.admin_charge,
+                    'currency_id': self.currency_id.id,
+                })
+                admin_charge_added = True
+
+            if due_date == first_batch_due_date and self.commission and self.commission > 0 and not self.commission_invoice_id:
+                invoice_lines.append(
+                    self._prepare_invoice_line(
+                        invoice_settings['commission_product'],
+                        invoice_settings['commission_description'],
+                        self.commission,
+                        income_account_id,
+                    )
+                )
+                installments.append({
+                    'rent_contract_id': self.id,
+                    'invoice_date': self.start_date,
+                    'payment_type': 'commission',
+                    'description': invoice_settings['commission_description'],
+                    'amount': self.commission,
+                    'currency_id': self.currency_id.id,
+                })
+                commission_added = True
+
+            if due_date == first_batch_due_date and self.parking_fee and self.parking_fee > 0 and not self.parking_fee_invoice_id:
+                invoice_lines.append(
+                    self._prepare_invoice_line(
+                        invoice_settings['parking_fee_product'],
+                        invoice_settings['parking_fee_description'],
+                        self.parking_fee,
+                        income_account_id,
+                    )
+                )
+                installments.append({
+                    'rent_contract_id': self.id,
+                    'invoice_date': self.start_date,
+                    'payment_type': 'parking_fee',
+                    'description': invoice_settings['parking_fee_description'],
+                    'amount': self.parking_fee,
+                    'currency_id': self.currency_id.id,
+                })
+                parking_fee_added = True
 
             maint_amount = self._get_maintenance_charge_amount()
             if maint_amount > 0:
@@ -890,6 +1042,14 @@ class RentContract(models.Model):
 
             if deposit_added and not self.deposit_invoice_id:
                 self.deposit_invoice_id = invoice_id.id
+            if ejari_fee_added and not self.ejari_fee_invoice_id:
+                self.ejari_fee_invoice_id = invoice_id.id
+            if admin_charge_added and not self.admin_charge_invoice_id:
+                self.admin_charge_invoice_id = invoice_id.id
+            if commission_added and not self.commission_invoice_id:
+                self.commission_invoice_id = invoice_id.id
+            if parking_fee_added and not self.parking_fee_invoice_id:
+                self.parking_fee_invoice_id = invoice_id.id
             invoice_ids |= invoice_id
 
         if not invoice_ids:

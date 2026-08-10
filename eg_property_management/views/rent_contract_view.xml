@@ -89,6 +89,16 @@
                                 <field name="contract_type" required="1" readonly="state in ('running', 'move_out')"/>
                             </group>
                         </group>
+                        <group string="One-Time Charges">
+                            <group>
+                                <field name="ejari_fee" readonly="state in ('running', 'move_out')"/>
+                                <field name="admin_charge" readonly="state in ('running', 'move_out')"/>
+                            </group>
+                            <group>
+                                <field name="commission" readonly="state in ('running', 'move_out')"/>
+                                <field name="parking_fee" readonly="state in ('running', 'move_out')"/>
+                            </group>
+                        </group>
                         <hr style="border: 1px solid #000;"/>
                         <group>
                             <group>

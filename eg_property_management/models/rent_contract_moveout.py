@@ -188,8 +188,8 @@ class RentContractMoveOut(models.Model):
             invoice_settings = contract._get_invoice_settings()
             product_by_category = {
                 'penalty': invoice_settings['penalty_product'],
-                'dilapidation': invoice_settings['penalty_product'],
-                'shortfall_rent': invoice_settings['rent_product'],
+                'dilapidation': invoice_settings['dilapidation_product'],
+                'shortfall_rent': invoice_settings['shortfall_rent_product'],
             }
             invoice_lines = [
                 contract._prepare_invoice_line(

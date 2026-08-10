@@ -40,3 +40,57 @@ class ResConfigSettings(models.TransientModel):
         string="Penalty Invoice Description",
         config_parameter="eg_property_management.penalty_invoice_description",
     )
+    ejari_fee_invoice_product_id = fields.Many2one(
+        comodel_name="product.product",
+        string="Ejari Fee Invoice Product",
+        config_parameter="eg_property_management.ejari_fee_invoice_product_id",
+    )
+    ejari_fee_invoice_description = fields.Char(
+        string="Ejari Fee Invoice Description",
+        config_parameter="eg_property_management.ejari_fee_invoice_description",
+    )
+    admin_charge_invoice_product_id = fields.Many2one(
+        comodel_name="product.product",
+        string="Admin Charge Invoice Product",
+        config_parameter="eg_property_management.admin_charge_invoice_product_id",
+    )
+    admin_charge_invoice_description = fields.Char(
+        string="Admin Charge Invoice Description",
+        config_parameter="eg_property_management.admin_charge_invoice_description",
+    )
+    commission_invoice_product_id = fields.Many2one(
+        comodel_name="product.product",
+        string="Commission Invoice Product",
+        config_parameter="eg_property_management.commission_invoice_product_id",
+    )
+    commission_invoice_description = fields.Char(
+        string="Commission Invoice Description",
+        config_parameter="eg_property_management.commission_invoice_description",
+    )
+    parking_fee_invoice_product_id = fields.Many2one(
+        comodel_name="product.product",
+        string="Parking Fee Invoice Product",
+        config_parameter="eg_property_management.parking_fee_invoice_product_id",
+    )
+    parking_fee_invoice_description = fields.Char(
+        string="Parking Fee Invoice Description",
+        config_parameter="eg_property_management.parking_fee_invoice_description",
+    )
+    dilapidation_invoice_product_id = fields.Many2one(
+        comodel_name="product.product",
+        string="Dilapidation Invoice Product",
+        config_parameter="eg_property_management.dilapidation_invoice_product_id",
+    )
+    dilapidation_invoice_description = fields.Char(
+        string="Dilapidation Invoice Description",
+        config_parameter="eg_property_management.dilapidation_invoice_description",
+    )
+    shortfall_rent_invoice_product_id = fields.Many2one(
+        comodel_name="product.product",
+        string="Shortfall Rent Invoice Product",
+        config_parameter="eg_property_management.shortfall_rent_invoice_product_id",
+    )
+    shortfall_rent_invoice_description = fields.Char(
+        string="Shortfall Rent Invoice Description",
+        config_parameter="eg_property_management.shortfall_rent_invoice_description",
+    )

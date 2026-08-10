@@ -59,6 +59,84 @@
                                 </div>
                             </div>
                         </setting>
+                        <setting string="Ejari Fee Invoice Defaults"
+                                 help="Default product and description used for the one-time Ejari Fee charge, billed once on the first invoice if set on the contract.">
+                            <div class="content-group">
+                                <div class="row mt16">
+                                    <label for="ejari_fee_invoice_product_id" class="col-lg-3 o_light_label"/>
+                                    <field name="ejari_fee_invoice_product_id"/>
+                                </div>
+                                <div class="row mt16">
+                                    <label for="ejari_fee_invoice_description" class="col-lg-3 o_light_label"/>
+                                    <field name="ejari_fee_invoice_description"/>
+                                </div>
+                            </div>
+                        </setting>
+                        <setting string="Admin Charge Invoice Defaults"
+                                 help="Default product and description used for the one-time Admin Charge, billed once on the first invoice if set on the contract.">
+                            <div class="content-group">
+                                <div class="row mt16">
+                                    <label for="admin_charge_invoice_product_id" class="col-lg-3 o_light_label"/>
+                                    <field name="admin_charge_invoice_product_id"/>
+                                </div>
+                                <div class="row mt16">
+                                    <label for="admin_charge_invoice_description" class="col-lg-3 o_light_label"/>
+                                    <field name="admin_charge_invoice_description"/>
+                                </div>
+                            </div>
+                        </setting>
+                        <setting string="Commission Invoice Defaults"
+                                 help="Default product and description used for the one-time tenant Commission charge, billed once on the first invoice if set on the contract. Not related to Broker Commission.">
+                            <div class="content-group">
+                                <div class="row mt16">
+                                    <label for="commission_invoice_product_id" class="col-lg-3 o_light_label"/>
+                                    <field name="commission_invoice_product_id"/>
+                                </div>
+                                <div class="row mt16">
+                                    <label for="commission_invoice_description" class="col-lg-3 o_light_label"/>
+                                    <field name="commission_invoice_description"/>
+                                </div>
+                            </div>
+                        </setting>
+                        <setting string="Parking Fee Invoice Defaults"
+                                 help="Default product and description used for the one-time Parking Fee charge, billed once on the first invoice if set on the contract.">
+                            <div class="content-group">
+                                <div class="row mt16">
+                                    <label for="parking_fee_invoice_product_id" class="col-lg-3 o_light_label"/>
+                                    <field name="parking_fee_invoice_product_id"/>
+                                </div>
+                                <div class="row mt16">
+                                    <label for="parking_fee_invoice_description" class="col-lg-3 o_light_label"/>
+                                    <field name="parking_fee_invoice_description"/>
+                                </div>
+                            </div>
+                        </setting>
+                        <setting string="Dilapidation Invoice Defaults"
+                                 help="Default product and description used for Dilapidation charges billed through Move-Out deposit settlement.">
+                            <div class="content-group">
+                                <div class="row mt16">
+                                    <label for="dilapidation_invoice_product_id" class="col-lg-3 o_light_label"/>
+                                    <field name="dilapidation_invoice_product_id"/>
+                                </div>
+                                <div class="row mt16">
+                                    <label for="dilapidation_invoice_description" class="col-lg-3 o_light_label"/>
+                                    <field name="dilapidation_invoice_description"/>
+                                </div>
+                            </div>
+                        </setting>
+                        <setting string="Shortfall Rent Invoice Defaults"
+                                 help="Default product and description used for Shortfall Rent charges billed through Move-Out deposit settlement.">
+                            <div class="content-group">
+                                <div class="row mt16">
+                                    <label for="shortfall_rent_invoice_product_id" class="col-lg-3 o_light_label"/>
+                                    <field name="shortfall_rent_invoice_product_id"/>
+                                </div>
+                                <div class="row mt16">
+                                    <label for="shortfall_rent_invoice_description" class="col-lg-3 o_light_label"/>
+                                    <field name="shortfall_rent_invoice_description"/>
+                                </div>
+                            </div>
+                        </setting>
                     </block>
                 </xpath>
             </field>

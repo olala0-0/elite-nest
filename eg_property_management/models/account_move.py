@@ -83,11 +83,11 @@ class AccountMove(models.Model):
             if move.move_type == 'out_invoice' and move.rent_contract_id:
                 # Sum the price subtotal from lines to bypass uncomputed draft totals
                 amount = sum(move.invoice_line_ids.mapped('price_subtotal'))
-                
+
                 existing_installments = self.env['rent.installment'].sudo().search([
                     ('invoice_id', '=', move.id)
                 ])
-                
+
                 if existing_installments:
                     # Update the existing installment entry with the modified invoice details
                     if len(existing_installments) == 1:
@@ -97,12 +97,25 @@ class AccountMove(models.Model):
                             'currency_id': move.currency_id.id,
                         })
                 else:
-                    # Automatically generate a new installment ledger line for this manual invoice
+                    # Only label this "Rent" if it's actually filling one of the
+                    # contract's still-open scheduled due dates - otherwise it's
+                    # some other ad hoc charge an accountant billed directly from
+                    # Accounting, and tagging it 'rent' would silently make it
+                    # look like a second, duplicate rent payment for a period
+                    # that's already been (or never was meant to be) invoiced.
+                    invoice_date = move.invoice_date or fields.Date.today()
+                    contract = move.rent_contract_id.sudo()
+                    is_scheduled_rent = invoice_date in contract._get_pending_rent_due_dates()
+                    payment_type = 'rent' if is_scheduled_rent else 'other'
+                    default_description = (
+                        f"Rent payment for {move.property_id.name or 'Unit'}" if is_scheduled_rent
+                        else f"Manual charge for {move.property_id.name or 'Unit'}"
+                    )
                     self.env['rent.installment'].sudo().create({
                         'rent_contract_id': move.rent_contract_id.id,
-                        'invoice_date': move.invoice_date or fields.Date.today(),
-                        'payment_type': 'rent',
-                        'description': move.invoice_line_ids[0].name if move.invoice_line_ids else f"Rent payment for {move.property_id.name or 'Unit'}",
+                        'invoice_date': invoice_date,
+                        'payment_type': payment_type,
+                        'description': move.invoice_line_ids[0].name if move.invoice_line_ids else default_description,
                         'amount': amount,
                         'currency_id': move.currency_id.id,
                         'invoice_id': move.id,

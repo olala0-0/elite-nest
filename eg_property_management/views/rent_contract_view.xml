@@ -114,6 +114,7 @@
                                 <field name="property_id" required="1"
                                        domain="[('property_for','=','rent'), ('state','!=','rent')]"/>
                                 <field name="residential_type_id" string="Residential Type" readonly="1"/>
+                                <field name="dewa_premises_no" readonly="1"/>
                                 <label for="street" string="Address"/>
                                 <div class="o_address_format">
                                     <field name="street" placeholder="Street..." class="o_address_street"/>
@@ -139,6 +140,7 @@
                                 <field name="tenant_id" required="1"/>
                                 <field name="tenant_phone"/>
                                 <field name="tenant_email"/>
+                                <field name="tenant_country_id"/>
                             </group>
                             <group>
                                 <field name="landlord_id" required="1"/>

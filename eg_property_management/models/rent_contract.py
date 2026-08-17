@@ -66,6 +66,12 @@ class RentContract(models.Model):
 
     total_area = fields.Float(string="Total Area")
     usable_area = fields.Float(string="Usable Area")
+    dewa_premises_no = fields.Char(
+        related="property_id.x_studio_dewa_premises_no",
+        string="DEWA Premises No.",
+        store=True,
+        readonly=True,
+    )
 
     property_id = fields.Many2one(comodel_name="property.detail", string="Property")
     property_type = fields.Selection(
@@ -94,6 +100,13 @@ class RentContract(models.Model):
     tenant_id = fields.Many2one(comodel_name="res.partner", string="Tenant / Customer")
     tenant_phone = fields.Char(related="tenant_id.phone", string="Phone", readonly=True)
     tenant_email = fields.Char(related="tenant_id.email", string="Email", readonly=True)
+    tenant_country_id = fields.Many2one(
+        comodel_name="res.country",
+        related="tenant_id.country_id",
+        string="Customer Country",
+        store=True,
+        readonly=False,
+    )
 
     landlord_id = fields.Many2one(comodel_name="res.partner", string="Landlord")
     landlord_phone = fields.Char(related="landlord_id.phone", string="Phone", readonly=True)

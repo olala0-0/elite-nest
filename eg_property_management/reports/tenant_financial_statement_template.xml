@@ -46,9 +46,9 @@
                                     <td style="padding: 5px 0; color: #2563EB; font-weight: 700;">
                                         <span t-field="o.property_id.name"/>
                                     </td>
-                                    <td style="padding: 5px 0; font-weight: 600; color: #6B7280;">Tenant ID:</td>
+                                    <td style="padding: 5px 0; font-weight: 600; color: #6B7280;">Total Rent:</td>
                                     <td style="padding: 5px 0; color: #111827;">
-                                        <span t-out="o.tenant_id.ref or ('TEN-%05d' % o.tenant_id.id)"/>
+                                        <span t-out="'{:,.2f} {}'.format(o.rent, o.currency_id.name)"/>
                                     </td>
                                 </tr>
                                 <tr>

@@ -1,0 +1,69 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<odoo>
+  <record id="split_sales_invoice_9ad05e2e-ccf3-490d-ad73-b459e64574f7" model="ir.actions.server" context="{'studio': True}">
+    <field name="binding_model_id" ref="account.model_account_move"/>
+    <field name="code"><![CDATA[# 1. Identify lines to move
+lines_to_move = record.invoice_line_ids.filtered(lambda l: l.x_studio_target_company)
+
+if not lines_to_move:
+    raise UserError("Please select a 'Target Company' on the invoice lines first.")
+
+for target_co in lines_to_move.mapped('x_studio_target_company'):
+    co_lines = lines_to_move.filtered(lambda l: l.x_studio_target_company == target_co)
+    
+    # 2. Find the correct Journal in the Target Company
+    target_journal = env['account.journal'].search([
+        ('type', '=', 'sale'),
+        ('company_id', '=', target_co.id)
+    ], limit=1)
+    
+    # 3. NEW: Find Company B's Bank Account (Partner Bank)
+    # This ensures the "Other Info" tab shows Company B's bank, not Company A's
+    target_bank = env['res.partner.bank'].search([
+        ('company_id', '=', target_co.id)
+    ], limit=1)
+
+    new_invoice_lines = []
+    for line in co_lines:
+        target_account = env['account.account'].with_company(target_co).search([
+            ('code', '=', line.account_id.code)
+        ], limit=1)
+
+        if not target_account:
+            raise UserError(f"Account Code {line.account_id.code} not found in {target_co.name}.")
+
+        new_invoice_lines.append((0, 0, {
+            'product_id': line.product_id.id,
+            'name': line.name,
+            'quantity': line.quantity,
+            'price_unit': line.price_unit,
+            'account_id': target_account.id,
+        }))
+    
+    # 4. Create the Invoice with FORCED Company B defaults
+    new_invoice = env['account.move'].with_company(target_co).sudo().create({
+        'move_type': 'out_invoice',
+        'company_id': target_co.id,
+        'journal_id': target_journal.id,
+        'partner_id': record.partner_id.id,
+        'invoice_date': record.invoice_date,
+        'partner_bank_id': target_bank.id if target_bank else False, # Forces Co B Bank
+        'invoice_line_ids': new_invoice_lines,
+    })
+    
+    # 5. Remove lines from the original invoice
+    record.write({'invoice_line_ids': [(2, line.id) for line in co_lines]})
+    
+    record.message_post(body=f"Split successful! Created {new_invoice.name or 'Draft'} in {target_co.name}")]]></field>
+    <field name="model_id" ref="account.model_account_move"/>
+    <field name="state">code</field>
+    <field name="name">Split Sales Invoice</field>
+  </record>
+  <record id="create_record_for_ma_ad534d91-9a3c-4060-afbf-05efe58d1403" model="ir.actions.server" context="{'studio': True}">
+    <field name="binding_model_id" ref="helpdesk.model_helpdesk_ticket"/>
+    <field name="model_id" ref="helpdesk.model_helpdesk_ticket"/>
+    <field name="state">code</field>
+    <field name="name">Create Record for maintinance</field>
+    <field name="value"><![CDATA[Maintenance Request]]></field>
+  </record>
+</odoo>

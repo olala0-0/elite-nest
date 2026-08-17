@@ -1,0 +1,33 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<odoo>
+  <record id="asset_management_ass_26442eaf-df80-4bdc-b021-858918a3f243" model="ir.ui.menu" context="{'studio': True}">
+    <field name="action" ref="asset_category_c31e3b70-f31b-410e-ae3b-c5e826a2c953"/>
+    <field name="name">Asset Category</field>
+    <field name="parent_id" ref="asset_management.asset_configuration"/>
+    <field name="sequence">6</field>
+  </record>
+  <record id="asset_management_roo_f9d87f52-a895-4016-ac49-103d87a2de41" model="ir.ui.menu" context="{'studio': True}">
+    <field name="action" ref="room_area_7fa01fd5-ba27-486d-9456-5bdb9c9c4b32"/>
+    <field name="name">Room / Area</field>
+    <field name="parent_id" ref="asset_management.asset_configuration"/>
+    <field name="sequence">5</field>
+  </record>
+  <record id="asset_management_lev_7653639c-62fa-4102-851e-fab64621601a" model="ir.ui.menu" context="{'studio': True}">
+    <field name="action" ref="level_6b3c7b1d-d49b-473f-87c1-d10507f51307"/>
+    <field name="name">Level</field>
+    <field name="parent_id" ref="asset_management.asset_configuration"/>
+    <field name="sequence">4</field>
+  </record>
+  <record id="asset_management_blo_c7bbcb97-ce5a-4769-929c-5bbbe8afaedf" model="ir.ui.menu" context="{'studio': True}">
+    <field name="action" ref="block_0fe87511-2d8c-4906-8cba-1dac31c7ba98"/>
+    <field name="name">Block</field>
+    <field name="parent_id" ref="asset_management.asset_configuration"/>
+    <field name="sequence">3</field>
+  </record>
+  <record id="asset_management_fm__86e0f357-a203-4fac-a4af-cb05ba4846f8" model="ir.ui.menu" context="{'studio': True}">
+    <field name="action" ref="fm_vendor_d9474f19-6550-4547-a29a-ef89d4d55f3f"/>
+    <field name="name">FM vendor</field>
+    <field name="parent_id" ref="asset_management.menu_asset_root"/>
+    <field name="sequence">3</field>
+  </record>
+</odoo>

@@ -5,6 +5,27 @@ from odoo import api, fields, models
 from odoo.exceptions import UserError, ValidationError
 from odoo.tools import float_round
 
+# account.move.payment_state values, spelled out for the printed statement -
+# the raw selection values ("in_payment", "not_paid") aren't fit to show a
+# tenant directly.
+PAYMENT_STATE_LABELS = {
+    'not_paid': 'Not Paid',
+    'in_payment': 'In Payment',
+    'paid': 'Paid',
+    'partial': 'Partially Paid',
+    'reversed': 'Reversed',
+}
+
+# (contract field name, display label) for the four one-time charges shown
+# in the tenant statement's Security Deposit box - field name doubles as
+# the matching rent.installment.payment_type (see rent_installment.py).
+ONE_TIME_CHARGE_FIELDS = [
+    ('ejari_fee', 'Ejari Fee'),
+    ('admin_charge', 'Admin Charge'),
+    ('commission', 'Commission'),
+    ('parking_fee', 'Parking Fee'),
+]
+
 
 class RentContract(models.Model):
     _name = "rent.contract"
@@ -45,6 +66,12 @@ class RentContract(models.Model):
 
     total_area = fields.Float(string="Total Area")
     usable_area = fields.Float(string="Usable Area")
+    dewa_premises_no = fields.Char(
+        related="property_id.x_studio_dewa_premises_no",
+        string="DEWA Premises No.",
+        store=True,
+        readonly=True,
+    )
 
     property_id = fields.Many2one(comodel_name="property.detail", string="Property")
     property_type = fields.Selection(
@@ -73,6 +100,13 @@ class RentContract(models.Model):
     tenant_id = fields.Many2one(comodel_name="res.partner", string="Tenant / Customer")
     tenant_phone = fields.Char(related="tenant_id.phone", string="Phone", readonly=True)
     tenant_email = fields.Char(related="tenant_id.email", string="Email", readonly=True)
+    tenant_country_id = fields.Many2one(
+        comodel_name="res.country",
+        related="tenant_id.country_id",
+        string="Customer Country",
+        store=True,
+        readonly=False,
+    )
 
     landlord_id = fields.Many2one(comodel_name="res.partner", string="Landlord")
     landlord_phone = fields.Char(related="landlord_id.phone", string="Phone", readonly=True)
@@ -87,6 +121,31 @@ class RentContract(models.Model):
     installment_item_id = fields.Many2one(comodel_name="product.product", string="Installment Item", )
     deposit_item_id = fields.Many2one(comodel_name="product.product", string="Deposit Item", )
     deposit_invoice_id = fields.Many2one(comodel_name='account.move', string="Deposit Invoice", readonly=True, )
+
+    # One-time charges (Ejari Fee / Admin Charge / Commission / Parking Fee) -
+    # each follows the exact Security Deposit pattern above: a configured
+    # amount, an optional per-contract product override, and a readonly
+    # invoice-reference field that both prevents billing it twice and lets
+    # other logic (reports, statements) find which invoice carried it.
+    ejari_fee = fields.Monetary(string="Ejari Fee", currency_field="currency_id")
+    ejari_fee_item_id = fields.Many2one(comodel_name="product.product", string="Ejari Fee Item")
+    ejari_fee_invoice_id = fields.Many2one(comodel_name='account.move', string="Ejari Fee Invoice", readonly=True)
+
+    admin_charge = fields.Monetary(string="Admin Charge", currency_field="currency_id")
+    admin_charge_item_id = fields.Many2one(comodel_name="product.product", string="Admin Charge Item")
+    admin_charge_invoice_id = fields.Many2one(comodel_name='account.move', string="Admin Charge Invoice", readonly=True)
+
+    commission = fields.Monetary(
+        string="Commission", currency_field="currency_id",
+        help="Tenant-facing commission charge, billed once like the Security "
+             "Deposit. Not related to Broker Commission (broker_commission), "
+             "which is a separate vendor bill paid out to the broker.")
+    commission_item_id = fields.Many2one(comodel_name="product.product", string="Commission Item")
+    commission_invoice_id = fields.Many2one(comodel_name='account.move', string="Commission Invoice", readonly=True)
+
+    parking_fee = fields.Monetary(string="Parking Fee", currency_field="currency_id")
+    parking_fee_item_id = fields.Many2one(comodel_name="product.product", string="Parking Fee Item")
+    parking_fee_invoice_id = fields.Many2one(comodel_name='account.move', string="Parking Fee Invoice", readonly=True)
 
     lead_id = fields.Many2one(comodel_name='crm.lead', string="Source Lead")
 
@@ -144,7 +203,8 @@ class RentContract(models.Model):
                                   store=True)
 
     state = fields.Selection(
-        [('draft', 'Draft'), ('running', 'Running'), ('cancel', 'Cancel'), ('close', 'Close'), ('expire', 'Expire'), ],
+        [('draft', 'Draft'), ('running', 'Running'), ('move_out', 'Move-Out Process'), ('cancel', 'Cancel'),
+         ('terminate', 'Terminate'), ('expire', 'Expire'), ],
         string="Status", default='draft', tracking=True)
 
     invoice_count = fields.Integer(string="Invoices", compute="_compute_invoice_count")
@@ -154,10 +214,7 @@ class RentContract(models.Model):
         """ Overridden to dynamically swap the 'RC/' sequence prefix 
         with the actual name of the Property/Unit (e.g., 'LPB-103/11027'). """
         for val in vals:
-            # Generate the next number from sequence (returns e.g., 'RC/11027')
             seq = self.env['ir.sequence'].next_by_code('rent.contract') or '/'
-            
-            # Retrieve the selected property/unit prefix
             property_id = val.get('property_id')
             if property_id:
                 property_rec = self.env['property.detail'].browse(property_id)
@@ -165,17 +222,331 @@ class RentContract(models.Model):
             else:
                 prefix = 'RC'
             
-            # Swap out 'RC/' with the unit name
             if seq.startswith('RC/'):
                 val['name'] = seq.replace('RC/', f"{prefix}/")
             else:
                 val['name'] = f"{prefix}/{seq}"
 
-            # Set default invoice start date
             if not val.get('invoice_start_date'):
                 val['invoice_start_date'] = val.get('start_date') or fields.Date.today()
 
         return super(RentContract, self).create(vals)
+
+    def _invoice_status_label(self, invoice):
+        """Human-readable status for one charge's invoice, for the printed
+        statement - distinguishes "never invoiced" from "invoiced but still
+        draft" from the actual payment_state once posted."""
+        if not invoice:
+            return 'Not Invoiced'
+        if invoice.state == 'cancel':
+            return 'Cancelled'
+        if invoice.state != 'posted':
+            return 'Draft - Not Confirmed'
+        return PAYMENT_STATE_LABELS.get(
+            invoice.payment_state, (invoice.payment_state or 'not_paid').replace('_', ' ').title()
+        )
+
+    def _get_invoice_paid_amount(self, invoice):
+        """Authoritative amount actually paid on one invoice: amount_total
+        minus amount_residual - the same core fields Odoo itself uses to
+        compute payment_state, so it's correct no matter how the payment
+        was reconciled (a registered payment, a bank statement match, a
+        write-off, ...). Two earlier attempts at deriving this by walking
+        the reconciliation graph directly (account.move._get_reconciled_
+        payments(), then account.move.line.matched_debit_ids/
+        matched_credit_ids + payment_id) both returned nothing on invoices
+        whose own payment_state clearly showed paid/in_payment on this
+        instance - amount_residual can't disagree with payment_state since
+        payment_state is computed from it."""
+        self.ensure_one()
+        return invoice.amount_total - invoice.amount_residual
+
+    def _get_invoice_payment_matches(self, invoice):
+        """Best-effort per-payment breakdown (name/date/reference) for
+        display only - NOT the source of truth for how much was paid, see
+        _get_invoice_paid_amount() for that. Reads the reconciliation
+        directly off account.move.line.matched_debit_ids/matched_credit_ids
+        (core, stable accounting API), using each partial reconcile's own
+        matched amount rather than the payment's full amount, so a payment
+        split across several invoices in one batch doesn't overstate what
+        was applied to this specific invoice. May return nothing even for a
+        fully paid invoice if the reconciliation didn't go through a
+        standard account.payment record - the caller falls back to a single
+        summary row using _get_invoice_paid_amount() in that case.
+        """
+        receivable_lines = invoice.line_ids.filtered(
+            lambda line: line.account_id.account_type in ('asset_receivable', 'liability_payable')
+        )
+        matches = []
+        for partial in receivable_lines.matched_debit_ids:
+            counterpart = partial.credit_move_id
+            if counterpart.payment_id:
+                matches.append((counterpart.payment_id, partial.amount, counterpart.payment_id.date))
+        for partial in receivable_lines.matched_credit_ids:
+            counterpart = partial.debit_move_id
+            if counterpart.payment_id:
+                matches.append((counterpart.payment_id, partial.amount, counterpart.payment_id.date))
+        return matches
+
+    def _get_deposit_summary(self):
+        """Single source of truth for what's actually been invoiced/paid
+        for the security deposit - reflects real invoice state, not just
+        the amount configured on the contract (those can diverge, e.g. if
+        the contract's deposit field was edited after the deposit invoice
+        was already sent, or the deposit was never invoiced yet). Shared
+        between the tenant statement (get_tenant_financial_statement) and
+        the Move-Out deposit settlement (rent.contract.moveout) so both
+        always agree - extracted from what was previously inline-only
+        logic in the statement, with no change in behavior."""
+        self.ensure_one()
+        deposit_installment = self.rent_installment_ids.filtered(
+            lambda inst: inst.payment_type == 'deposit'
+        )[:1]
+        deposit_invoice = deposit_installment.invoice_id if deposit_installment else self.env['account.move']
+        deposit_status = (
+            self._invoice_status_label(deposit_invoice) if deposit_installment else 'Not Yet Invoiced'
+        )
+        deposit_received = (
+            deposit_installment.amount
+            if deposit_installment and deposit_invoice and deposit_invoice.state == 'posted'
+            else 0.0
+        )
+
+        # How much of the deposit has actually been consumed by a finalized
+        # Move-Out deposit settlement (rent.contract.moveout.action_
+        # finalize_deductions()). Capped at deposit_received: what's owed
+        # beyond the deposit is a separate AR matter for Accounting to
+        # reconcile, not part of "how much of THIS deposit was used."
+        moveout = self.env['rent.contract.moveout'].search(
+            [('rent_contract_id', '=', self.id)], limit=1
+        )
+        deposit_utilized = 0.0
+        if moveout and moveout.deduction_invoice_id and moveout.deduction_invoice_id.state == 'posted':
+            deposit_utilized = min(moveout.deduction_invoice_id.amount_total, deposit_received)
+
+        return {
+            'deposit_installment': deposit_installment,
+            'deposit_invoice': deposit_invoice,
+            'deposit_status': deposit_status,
+            'deposit_received': deposit_received,
+            'deposit_utilized': deposit_utilized,
+            'moveout': moveout,
+        }
+
+    def _get_one_time_charges_summary(self):
+        """Amount Due / Status for each of the four one-time contract
+        charges (Ejari Fee, Admin Charge, Commission, Parking Fee) that
+        actually have a value set - skipped entirely if 0, matching the
+        same silent-skip rule used when these are added to the first
+        invoice in action_create_invoice(). Shown in the tenant statement
+        alongside Security Deposit rather than as its own box."""
+        self.ensure_one()
+        summary = []
+        for field_name, label in ONE_TIME_CHARGE_FIELDS:
+            amount = self[field_name]
+            if not amount:
+                continue
+            installment = self.rent_installment_ids.filtered(
+                lambda inst, pt=field_name: inst.payment_type == pt
+            )[:1]
+            invoice = installment.invoice_id if installment else self.env['account.move']
+            status = self._invoice_status_label(invoice) if installment else 'Not Yet Invoiced'
+            summary.append({'label': label, 'amount': amount, 'status': status})
+        return summary
+
+    def get_tenant_financial_statement(self):
+        """ Computes chronological Statement of Account data including opening balance,
+        one row per charge (rent/deposit/maintenance/utility/penalty), matched payments,
+        running balances, totals, payment counts, and security deposit status. """
+        self.ensure_one()
+
+        raw_lines = [{
+            'date': self.start_date or fields.Date.today(),
+            'description': 'Opening Balance',
+            'ref': '-',
+            'status': '-',
+            'debit': 0.0,
+            'credit': 0.0,
+            'pending': False,
+            'company': self.company_id.name,
+        }]
+
+        # One row per rent.installment - the same records already shown on
+        # the contract's "Rent Installments" tab. Reading the invoice's
+        # first line instead (the previous approach) silently dropped any
+        # Deposit/Maintenance amount that had been combined into the same
+        # invoice as Rent, since debit was taken from amount_total while
+        # the description only reflected invoice_line_ids[0].
+        charge_installments = self.rent_installment_ids.filtered(
+            lambda inst: inst.payment_type != 'broker_bill'
+        ).sorted(key=lambda inst: (inst.invoice_date or fields.Date.today(), inst.id))
+
+        confirmed_count = 0
+        pending_count = 0
+        total_pending_amount = 0.0
+        posted_invoices = self.env['account.move']
+
+        for inst in charge_installments:
+            invoice = inst.invoice_id
+            status = self._invoice_status_label(invoice)
+            is_posted = bool(invoice and invoice.state == 'posted')
+
+            if not is_posted:
+                # Not a confirmed charge yet - still shown with its scheduled
+                # amount (this is the fix for a tenant seeing a blank "-" for
+                # every upcoming charge and having no way to know what they'll
+                # owe) but excluded from totals/running balance, matching
+                # standard statement-of-account practice of only reflecting
+                # confirmed charges in the running total.
+                pending_amount = self._amount_with_tax(invoice, inst.amount)
+                pending_count += 1
+                total_pending_amount += pending_amount
+                raw_lines.append({
+                    'date': inst.invoice_date,
+                    'description': f"{inst.description or inst.payment_type.title()} (not yet confirmed)",
+                    'ref': invoice.name if invoice and invoice.name and invoice.name != '/' else 'Draft',
+                    'status': status,
+                    'debit': pending_amount,
+                    'credit': 0.0,
+                    'pending': True,
+                    'company': invoice.company_id.name if invoice else self.company_id.name,
+                })
+                continue
+
+            confirmed_count += 1
+            posted_invoices |= invoice
+            raw_lines.append({
+                'date': invoice.invoice_date or inst.invoice_date,
+                'description': inst.description or invoice.name,
+                'ref': invoice.name,
+                'status': status,
+                'debit': self._amount_with_tax(invoice, inst.amount),
+                'credit': 0.0,
+                'pending': False,
+                'company': invoice.company_id.name,
+            })
+
+        # One pass per unique invoice (not per installment) - several
+        # installments can share the same invoice (e.g. Rent + Deposit
+        # combined into one move), and looking payments up per-installment
+        # would credit the same payment twice, once for each shared row.
+        for invoice in posted_invoices:
+            paid_amount = self._get_invoice_paid_amount(invoice)
+            if paid_amount <= 0.005:
+                continue
+
+            matches = self._get_invoice_payment_matches(invoice)
+            matched_total = sum(m[1] for m in matches)
+
+            if matches and abs(matched_total - paid_amount) <= 0.01:
+                # Detailed breakdown accounts for the full paid amount - use
+                # it for the nicer per-payment name/date/reference.
+                for payment, matched_amount, pay_date in matches:
+                    raw_lines.append({
+                        'date': pay_date or invoice.invoice_date or fields.Date.today(),
+                        'description': f"Payment Received ({payment.journal_id.name or 'Receipt'})",
+                        'ref': payment.name or payment.ref or 'RCPT',
+                        'status': 'Paid',
+                        'debit': 0.0,
+                        'credit': matched_amount,
+                        'pending': False,
+                        'company': payment.company_id.name or invoice.company_id.name,
+                    })
+            else:
+                # Breakdown missing or doesn't add up (e.g. reconciled via a
+                # bank statement match with no account.payment record) -
+                # fall back to a single row using the authoritative amount
+                # instead of silently showing no payment at all.
+                raw_lines.append({
+                    'date': invoice.invoice_date_due or invoice.invoice_date or fields.Date.today(),
+                    'description': f"Payment Received (matched to {invoice.name})",
+                    'ref': invoice.name,
+                    'status': 'Paid',
+                    'debit': 0.0,
+                    'credit': paid_amount,
+                    'pending': False,
+                    'company': invoice.company_id.name,
+                })
+
+        # Credit notes aren't tracked via rent_installment_ids - pull them
+        # separately by contract reference, same as the previous logic.
+        refunds = self.env['account.move'].search([
+            '|',
+            ('rent_contract_id', '=', self.id),
+            ('invoice_origin', '=', self.name),
+            ('state', '=', 'posted'),
+            ('move_type', '=', 'out_refund'),
+        ], order='invoice_date asc, id asc')
+        for refund in refunds:
+            raw_lines.append({
+                'date': refund.invoice_date or fields.Date.today(),
+                'description': f"Credit Note - {refund.name}",
+                'ref': refund.name,
+                'status': 'Posted',
+                'debit': 0.0,
+                'credit': refund.amount_total,
+                'pending': False,
+                'company': refund.company_id.name,
+            })
+
+        # Sort all lines chronologically
+        raw_lines.sort(key=lambda x: (x['date'] or fields.Date.today()))
+
+        # Calculate running balances and totals - pending rows don't affect
+        # either, they just carry the balance forward unchanged.
+        running_balance = 0.0
+        total_charges = 0.0
+        total_payments = 0.0
+
+        for line in raw_lines:
+            if line['pending']:
+                line['balance'] = running_balance
+                continue
+            running_balance += (line['debit'] - line['credit'])
+            line['balance'] = running_balance
+            total_charges += line['debit']
+            total_payments += line['credit']
+
+        deposit_summary = self._get_deposit_summary()
+        deposit_status = deposit_summary['deposit_status']
+        deposit_received = deposit_summary['deposit_received']
+        deposit_utilized = deposit_summary['deposit_utilized']
+        one_time_charges = self._get_one_time_charges_summary()
+
+        # Itemized Move-Out deductions, for a "Deposit Settlement" section
+        # on the printed statement - empty list (section hidden) unless a
+        # Move-Out has actually been finalized for this contract.
+        deduction_lines = []
+        deposit_refund_amount = 0.0
+        moveout = deposit_summary['moveout']
+        if moveout and moveout.deduction_invoice_id and moveout.deduction_invoice_id.state == 'posted':
+            for line in moveout.deduction_line_ids:
+                deduction_lines.append({
+                    'category': dict(line._fields['charge_category'].selection).get(line.charge_category),
+                    'description': line.description,
+                    'amount': line.amount,
+                })
+            if moveout.refund_move_id and moveout.refund_move_id.state == 'posted':
+                deposit_refund_amount = moveout.refund_move_id.amount_total
+
+        return {
+            'lines': raw_lines,
+            'total_charges': total_charges,
+            'total_payments': total_payments,
+            'outstanding_balance': running_balance,
+            'payment_count': self.payment_count,
+            'confirmed_count': confirmed_count,
+            'pending_count': pending_count,
+            'total_pending_amount': total_pending_amount,
+            'deposit_configured': self.deposit or 0.0,
+            'deposit_status': deposit_status,
+            'deposit_received': deposit_received,
+            'deposit_utilized': deposit_utilized,
+            'balance_held': deposit_received - deposit_utilized,
+            'one_time_charges': one_time_charges,
+            'deduction_lines': deduction_lines,
+            'deposit_refund_amount': deposit_refund_amount,
+        }
 
     @api.depends('start_date', 'end_date')
     def _compute_duration(self):
@@ -243,17 +614,18 @@ class RentContract(models.Model):
     @api.constrains('property_id', 'state')
     def _check_running_contract_per_unit(self):
         for rec in self:
-            if rec.state != 'running' or not rec.property_id:
+            if not rec.property_id:
                 continue
             existing_contract = self.search([
                 ('id', '!=', rec.id),
                 ('property_id', '=', rec.property_id.id),
-                ('state', '=', 'running'),
+                ('state', 'in', ('running', 'move_out')),
             ], limit=1)
             if existing_contract:
                 raise UserError(
                     f"Unit '{rec.property_id.display_name}' already has an active running contract "
-                    f"('{existing_contract.name}'). Please close, cancel, or expire it before starting a new one."
+                    f"('{existing_contract.name}'). Please terminate, cancel, or expire it before creating "
+                    f"or starting another contract for this unit."
                 )
 
     def _get_invoice_settings(self):
@@ -298,6 +670,53 @@ class RentContract(models.Model):
             'penalty_description': param_obj.get_param(
                 'eg_property_management.penalty_invoice_description',
                 'Penalty',
+            ),
+            'ejari_fee_product': _get_product(
+                'eg_property_management.ejari_fee_invoice_product_id',
+                self.ejari_fee_item_id,
+            ),
+            'ejari_fee_description': param_obj.get_param(
+                'eg_property_management.ejari_fee_invoice_description',
+                'Ejari Fee',
+            ),
+            'admin_charge_product': _get_product(
+                'eg_property_management.admin_charge_invoice_product_id',
+                self.admin_charge_item_id,
+            ),
+            'admin_charge_description': param_obj.get_param(
+                'eg_property_management.admin_charge_invoice_description',
+                'Admin Charge',
+            ),
+            'commission_product': _get_product(
+                'eg_property_management.commission_invoice_product_id',
+                self.commission_item_id,
+            ),
+            'commission_description': param_obj.get_param(
+                'eg_property_management.commission_invoice_description',
+                'Commission',
+            ),
+            'parking_fee_product': _get_product(
+                'eg_property_management.parking_fee_invoice_product_id',
+                self.parking_fee_item_id,
+            ),
+            'parking_fee_description': param_obj.get_param(
+                'eg_property_management.parking_fee_invoice_description',
+                'Parking Fee',
+            ),
+            # Dilapidation/Shortfall Rent previously reused the Penalty/Rent
+            # products (a known simplification from when Move-Out deposit
+            # settlement was first built) - now have their own, so they show
+            # up as their own line/product on invoices and reports instead
+            # of being counted as Penalty or Rent revenue.
+            'dilapidation_product': _get_product('eg_property_management.dilapidation_invoice_product_id'),
+            'dilapidation_description': param_obj.get_param(
+                'eg_property_management.dilapidation_invoice_description',
+                'Dilapidation',
+            ),
+            'shortfall_rent_product': _get_product('eg_property_management.shortfall_rent_invoice_product_id'),
+            'shortfall_rent_description': param_obj.get_param(
+                'eg_property_management.shortfall_rent_invoice_description',
+                'Shortfall Rent',
             ),
         }
 
@@ -368,6 +787,19 @@ class RentContract(models.Model):
         return maint_amount
 
     @staticmethod
+    def _amount_with_tax(invoice, base_amount):
+        """Scale a tax-excluded installment amount up to its tax-inclusive
+        equivalent using that invoice's own tax ratio (amount_total /
+        amount_untaxed) - correct even if an invoice mixes products with
+        different tax rates, and a no-op (ratio 1) when there's no invoice
+        or no tax on it. Used so the printed tenant statement shows the
+        same final total the tenant is actually billed, not the pre-tax
+        price_unit stored on the installment."""
+        if not invoice or not invoice.amount_untaxed:
+            return base_amount
+        return base_amount * (invoice.amount_total / invoice.amount_untaxed)
+
+    @staticmethod
     def _prepare_invoice_line(product, description, amount, account_id):
         return (0, 0, {
             'product_id': product.id if product else False,
@@ -394,9 +826,9 @@ class RentContract(models.Model):
             rec.state = 'running'
             rec.property_id.state = 'rent'
 
-    def action_state_close(self):
+    def action_state_terminate(self):
         for rec in self:
-            rec.state = 'close'
+            rec.state = 'terminate'
             rec.property_id.state = 'on_rent'
 
     def action_state_cancel(self):
@@ -436,6 +868,10 @@ class RentContract(models.Model):
             invoice_lines = []
             installments = []
             deposit_added = False
+            ejari_fee_added = False
+            admin_charge_added = False
+            commission_added = False
+            parking_fee_added = False
 
             rent_amount = rent_amount_map.get(due_date, 0.0)
             if due_date <= self.end_date and rent_amount:
@@ -474,6 +910,82 @@ class RentContract(models.Model):
                     'currency_id': self.currency_id.id,
                 })
                 deposit_added = True
+
+            if due_date == first_batch_due_date and self.ejari_fee and self.ejari_fee > 0 and not self.ejari_fee_invoice_id:
+                invoice_lines.append(
+                    self._prepare_invoice_line(
+                        invoice_settings['ejari_fee_product'],
+                        invoice_settings['ejari_fee_description'],
+                        self.ejari_fee,
+                        income_account_id,
+                    )
+                )
+                installments.append({
+                    'rent_contract_id': self.id,
+                    'invoice_date': self.start_date,
+                    'payment_type': 'ejari_fee',
+                    'description': invoice_settings['ejari_fee_description'],
+                    'amount': self.ejari_fee,
+                    'currency_id': self.currency_id.id,
+                })
+                ejari_fee_added = True
+
+            if due_date == first_batch_due_date and self.admin_charge and self.admin_charge > 0 and not self.admin_charge_invoice_id:
+                invoice_lines.append(
+                    self._prepare_invoice_line(
+                        invoice_settings['admin_charge_product'],
+                        invoice_settings['admin_charge_description'],
+                        self.admin_charge,
+                        income_account_id,
+                    )
+                )
+                installments.append({
+                    'rent_contract_id': self.id,
+                    'invoice_date': self.start_date,
+                    'payment_type': 'admin_charge',
+                    'description': invoice_settings['admin_charge_description'],
+                    'amount': self.admin_charge,
+                    'currency_id': self.currency_id.id,
+                })
+                admin_charge_added = True
+
+            if due_date == first_batch_due_date and self.commission and self.commission > 0 and not self.commission_invoice_id:
+                invoice_lines.append(
+                    self._prepare_invoice_line(
+                        invoice_settings['commission_product'],
+                        invoice_settings['commission_description'],
+                        self.commission,
+                        income_account_id,
+                    )
+                )
+                installments.append({
+                    'rent_contract_id': self.id,
+                    'invoice_date': self.start_date,
+                    'payment_type': 'commission',
+                    'description': invoice_settings['commission_description'],
+                    'amount': self.commission,
+                    'currency_id': self.currency_id.id,
+                })
+                commission_added = True
+
+            if due_date == first_batch_due_date and self.parking_fee and self.parking_fee > 0 and not self.parking_fee_invoice_id:
+                invoice_lines.append(
+                    self._prepare_invoice_line(
+                        invoice_settings['parking_fee_product'],
+                        invoice_settings['parking_fee_description'],
+                        self.parking_fee,
+                        income_account_id,
+                    )
+                )
+                installments.append({
+                    'rent_contract_id': self.id,
+                    'invoice_date': self.start_date,
+                    'payment_type': 'parking_fee',
+                    'description': invoice_settings['parking_fee_description'],
+                    'amount': self.parking_fee,
+                    'currency_id': self.currency_id.id,
+                })
+                parking_fee_added = True
 
             maint_amount = self._get_maintenance_charge_amount()
             if maint_amount > 0:
@@ -524,7 +1036,7 @@ class RentContract(models.Model):
                         })
 
             for service_id in self.utility_service_ids:
-                if service_id.service_type == 'once':
+                if service_type == 'once':
                     utility_description = f"{service_id.service_id.name} (One-time)"
                     already_exists_id = existing_installments.filtered(
                         lambda inst: inst.payment_type == 'utility' and inst.description == utility_description
@@ -574,8 +1086,6 @@ class RentContract(models.Model):
             if not invoice_lines:
                 continue
 
-            # CRITICAL FIX: We now explicitly write both property_id and rent_contract_id directly!
-            # We use .with_context(skip_sync_installment=True) to prevent duplicate ledger creation.
             invoice_id = self.env['account.move'].with_context(skip_sync_installment=True).create({
                 'move_type': 'out_invoice',
                 'partner_id': self.tenant_id.id,
@@ -594,6 +1104,14 @@ class RentContract(models.Model):
 
             if deposit_added and not self.deposit_invoice_id:
                 self.deposit_invoice_id = invoice_id.id
+            if ejari_fee_added and not self.ejari_fee_invoice_id:
+                self.ejari_fee_invoice_id = invoice_id.id
+            if admin_charge_added and not self.admin_charge_invoice_id:
+                self.admin_charge_invoice_id = invoice_id.id
+            if commission_added and not self.commission_invoice_id:
+                self.commission_invoice_id = invoice_id.id
+            if parking_fee_added and not self.parking_fee_invoice_id:
+                self.parking_fee_invoice_id = invoice_id.id
             invoice_ids |= invoice_id
 
         if not invoice_ids:
@@ -826,7 +1344,6 @@ class RentContract(models.Model):
                 'invoice_date_due': fields.Date.today(),
                 'currency_id': contract_id.currency_id.id,
                 'invoice_origin': contract_id.name,
-                # CRITICAL PENALTY FIX: Automatically link the Property and Rent Contract here as well!
                 'property_id': contract_id.property_id.id,
                 'rent_contract_id': contract_id.id,
                 'invoice_line_ids': [(0, 0, {
@@ -837,7 +1354,6 @@ class RentContract(models.Model):
                     'account_id': income_account_id.id,
                 })],
             }
-            # We use .with_context(skip_sync_installment=True) to prevent duplicate ledger creation.
             invoice_id = self.env['account.move'].with_context(skip_sync_installment=True).create(move_vals)
 
             self.env['rent.installment'].create({
@@ -856,7 +1372,7 @@ class RentContract(models.Model):
         reminder_days = 7
         upcoming_installment_ids = self.env['rent.installment'].search([
             ('invoice_date', '=', today - timedelta(days=reminder_days)), ('invoice_id', '!=', False),
-            ('invoice_id.payment_state', '!=', 'paid'), ('rent_contract_id.state', '=', 'running'), ])
+            ('invoice_id.payment_state', '!=', 'paid'), ('rent_contract_id.state', 'in', ('running', 'move_out')), ])
         for installment_id in upcoming_installment_ids:
             contract_id = installment_id.rent_contract_id
             contract_id.message_post(
@@ -875,6 +1391,47 @@ class RentContract(models.Model):
                     'email_to': contract_id.tenant_id.email, }
                 self.env['mail.mail'].create(mail_values).send()
 
+    def action_renewal_notice_cron(self):
+        """Move-Out diagram step 1: send the renewal notice N calendar
+        months before a running contract's end date, N chosen by the agent
+        in Settings (eg_property_management.renewal_notice_months, 1/2/3,
+        default 3 - matches the period this used to be hardcoded to).
+        Mirrors action_rent_due_reminder_cron() exactly - same exact-date-
+        match search (so it fires once, not once per day, with no extra
+        "already sent" field needed), same message_post + mail.mail.
+        create(...).send() pattern. Only touches 'running' contracts, so
+        anything already terminated, cancelled, or expired is never
+        matched."""
+        notice_months = int(self.env['ir.config_parameter'].sudo().get_param(
+            'eg_property_management.renewal_notice_months', '3'
+        ))
+        today = date.today()
+        target_date = today + relativedelta(months=notice_months)
+        contracts = self.search([
+            ('state', '=', 'running'),
+            ('end_date', '=', target_date),
+        ])
+        for contract in contracts:
+            contract.message_post(
+                body=f"Renewal notice: this contract's end date ({contract.end_date}) is now "
+                     f"{notice_months} month(s) away."
+            )
+            if contract.tenant_id.email:
+                mail_values = {
+                    'subject': f"Lease Renewal Notice - {contract.name}",
+                    'body_html': f"""
+                        <p>Dear {contract.tenant_id.name},</p>
+                        <p>Your lease for <b>{contract.property_id.name or 'your property'}</b> is due to
+                        expire on <b>{contract.end_date}</b> ({notice_months} month(s) from today).</p>
+                        <p>Please let us know whether you'd like to renew or plan to move out, so we can
+                        prepare the next steps with you accordingly.</p>
+                        <p>Regards,<br/>{contract.company_id.name}</p>
+                    """,
+                    'email_to': contract.tenant_id.email,
+                }
+                self.env['mail.mail'].create(mail_values).send()
+        return True
+
     def action_contract_expiry_cron(self):
         today = date.today()
         expired_contracts_ids = self.search([('end_date', '<', today), ('state', '=', 'running')])
@@ -889,7 +1446,7 @@ class RentContract(models.Model):
     def action_auto_create_invoice_cron(self):
         today = fields.Date.today()
         contract_ids = self.search(
-            [('state', '=', 'running'), ('contract_type', '=', 'auto'), ('start_date', '<=', today),
+            [('state', 'in', ('running', 'move_out')), ('contract_type', '=', 'auto'), ('start_date', '<=', today),
              ('end_date', '>=', today), ])
 
         for contract_id in contract_ids:
@@ -906,3 +1463,90 @@ class RentContract(models.Model):
     def _compute_has_broker_bill(self):
         for rec in self:
             rec.has_broker_bill = any(inst.payment_type == 'broker_bill' for inst in rec.rent_installment_ids)
+
+    movein_id = fields.Many2one(comodel_name='rent.contract.movein', string='Move-In Record',
+                                compute='_compute_movein_id')
+
+    def _compute_movein_id(self):
+        for rec in self:
+            rec.movein_id = self.env['rent.contract.movein'].search(
+                [('rent_contract_id', '=', rec.id)], limit=1
+            )
+
+    def action_open_movein(self):
+        """Smart-button target: opens the contract's Move-In record,
+        creating it on first click. Purely additive - does not touch
+        contract creation (rent.contract.create()) or any existing state
+        transition, so every contract created before this feature shipped
+        works exactly as before until someone clicks this button."""
+        self.ensure_one()
+        movein = self.movein_id
+        if not movein:
+            movein = self.env['rent.contract.movein'].create({'rent_contract_id': self.id})
+        return {
+            'type': 'ir.actions.act_window',
+            'res_model': 'rent.contract.movein',
+            'res_id': movein.id,
+            'view_mode': 'form',
+            'target': 'current',
+        }
+
+    moveout_id = fields.Many2one(comodel_name='rent.contract.moveout', string='Move-Out Record',
+                                 compute='_compute_moveout_id')
+    moveout_state = fields.Selection(
+        [('draft', 'Move-Out: Draft'), ('clearance_pending', 'Move-Out: Clearance Pending'),
+         ('inspection_done', 'Move-Out: Final Inspection'), ('finance_review', 'Move-Out: Finance Review'),
+         ('approved', 'Move-Out: Approved'), ('settled', 'Move-Out: Settled')],
+        string='Move-Out Status', compute='_compute_moveout_state')
+
+    def _compute_moveout_state(self):
+        for rec in self:
+            rec.moveout_state = rec.moveout_id.state
+
+    def _compute_moveout_id(self):
+        for rec in self:
+            rec.moveout_id = self.env['rent.contract.moveout'].search(
+                [('rent_contract_id', '=', rec.id)], limit=1
+            )
+
+    def action_start_moveout(self):
+        """Header-button target for 'Start Move-Out Process'. Creates the
+        Move-Out record and moves the contract's own state to 'move_out'
+        (a distinct statusbar step) but deliberately returns nothing, so
+        the user stays on the contract form instead of being navigated
+        away - this button is a status change, not a navigation action.
+        To actually open the Move-Out record, use the "Move-Out" smart
+        button (action_open_moveout) once it exists."""
+        self.ensure_one()
+        if self.state != 'running':
+            raise UserError("Only a running contract can start the Move-Out process.")
+        if not self.moveout_id:
+            self.env['rent.contract.moveout'].create({'rent_contract_id': self.id})
+        self.state = 'move_out'
+
+    def action_open_moveout(self):
+        """Smart-button target: opens the contract's existing Move-Out
+        record. Only ever visible once one exists (action_start_moveout()
+        already created it), but still creates one on the rare chance it's
+        called first - so it's never a dead end. Never touches the
+        contract's own state itself; action_start_moveout() already
+        handled that. The property stays marked occupied ('rent') the
+        whole time; only Settle (rent.contract.moveout.action_settle(),
+        the sole caller of action_state_terminate()) frees it up.
+        action_state_terminate()/action_state_cancel() remain directly
+        callable at any point as the quick manual override."""
+        self.ensure_one()
+        moveout = self.moveout_id
+        if not moveout:
+            if self.state not in ('running', 'move_out'):
+                raise UserError("Only a running contract can start the Move-Out process.")
+            moveout = self.env['rent.contract.moveout'].create({'rent_contract_id': self.id})
+            if self.state == 'running':
+                self.state = 'move_out'
+        return {
+            'type': 'ir.actions.act_window',
+            'res_model': 'rent.contract.moveout',
+            'res_id': moveout.id,
+            'view_mode': 'form',
+            'target': 'current',
+        }

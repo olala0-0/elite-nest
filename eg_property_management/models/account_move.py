@@ -39,7 +39,7 @@ class AccountMove(models.Model):
                     # Search for an active running contract first using tenant_id
                     contract = self.env['rent.contract'].sudo().search([
                         ('tenant_id', '=', partner_id),
-                        ('state', '=', 'running')
+                        ('state', 'in', ('running', 'move_out'))
                     ], limit=1)
                     # Fallback to any contract for this tenant if none is currently 'running'
                     if not contract:
@@ -67,19 +67,27 @@ class AccountMove(models.Model):
     def _sync_rent_installments(self):
         """ Automatically creates, edits, or deletes 'rent.installment' lines in the background
         to ensure manual Accounting invoices reflect flawlessly inside Rent Contract master sheets. """
-        # Skip automatic synchronization if we are already in the context of the Rent Contract's action_create_invoice wizard
-        if self.env.context.get('active_model') == 'rent.contract':
+        # Skip automatic synchronization when the invoice was already created by
+        # rent.contract's own installment-creation flow (action_create_invoice,
+        # penalty cron), which sets skip_sync_installment=True and creates its
+        # own precise rent.installment rows right after. This used to check
+        # active_model == 'rent.contract' instead, a context key those flows
+        # never actually set (it's populated by the web client for certain
+        # button/list contexts, not by a plain server-side create() call) - so
+        # the guard never matched and every such invoice got a second, phantom
+        # installment row auto-generated on top of the correct explicit ones.
+        if self.env.context.get('skip_sync_installment') or self.env.context.get('active_model') == 'rent.contract':
             return
         
         for move in self:
             if move.move_type == 'out_invoice' and move.rent_contract_id:
                 # Sum the price subtotal from lines to bypass uncomputed draft totals
                 amount = sum(move.invoice_line_ids.mapped('price_subtotal'))
-                
+
                 existing_installments = self.env['rent.installment'].sudo().search([
                     ('invoice_id', '=', move.id)
                 ])
-                
+
                 if existing_installments:
                     # Update the existing installment entry with the modified invoice details
                     if len(existing_installments) == 1:
@@ -89,12 +97,25 @@ class AccountMove(models.Model):
                             'currency_id': move.currency_id.id,
                         })
                 else:
-                    # Automatically generate a new installment ledger line for this manual invoice
+                    # Only label this "Rent" if it's actually filling one of the
+                    # contract's still-open scheduled due dates - otherwise it's
+                    # some other ad hoc charge an accountant billed directly from
+                    # Accounting, and tagging it 'rent' would silently make it
+                    # look like a second, duplicate rent payment for a period
+                    # that's already been (or never was meant to be) invoiced.
+                    invoice_date = move.invoice_date or fields.Date.today()
+                    contract = move.rent_contract_id.sudo()
+                    is_scheduled_rent = invoice_date in contract._get_pending_rent_due_dates()
+                    payment_type = 'rent' if is_scheduled_rent else 'other'
+                    default_description = (
+                        f"Rent payment for {move.property_id.name or 'Unit'}" if is_scheduled_rent
+                        else f"Manual charge for {move.property_id.name or 'Unit'}"
+                    )
                     self.env['rent.installment'].sudo().create({
                         'rent_contract_id': move.rent_contract_id.id,
-                        'invoice_date': move.invoice_date or fields.Date.today(),
-                        'payment_type': 'rent',
-                        'description': move.invoice_line_ids[0].name if move.invoice_line_ids else f"Rent payment for {move.property_id.name or 'Unit'}",
+                        'invoice_date': invoice_date,
+                        'payment_type': payment_type,
+                        'description': move.invoice_line_ids[0].name if move.invoice_line_ids else default_description,
                         'amount': amount,
                         'currency_id': move.currency_id.id,
                         'invoice_id': move.id,
@@ -115,7 +136,7 @@ class AccountMove(models.Model):
             # Search active running contracts matching selected customer
             contract = self.env['rent.contract'].search([
                 ('tenant_id', '=', self.partner_id.id),
-                ('state', '=', 'running')
+                ('state', 'in', ('running', 'move_out'))
             ], limit=1)
             if not contract:
                 contract = self.env['rent.contract'].search([

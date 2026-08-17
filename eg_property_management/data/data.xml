@@ -39,6 +39,16 @@
         <field name="active">True</field>
     </record>
 
+    <record id="ir_cron_renewal_notice" model="ir.cron">
+        <field name="name">Lease Renewal Notice</field>
+        <field name="model_id" ref="model_rent_contract"/>
+        <field name="state">code</field>
+        <field name="code">model.action_renewal_notice_cron()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="active">True</field>
+    </record>
+
     <!--    &lt;!&ndash;Property Project&ndash;&gt;-->
     <!--    <record id="property_project_1" model="property.project">-->
     <!--        <field name="name">Backbone Apartment</field>-->

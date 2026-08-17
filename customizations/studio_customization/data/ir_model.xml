@@ -1,0 +1,81 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<odoo>
+  <record id="asset_category_dfcae6db-b1f3-492d-9e6e-74e2e4e1d802" model="ir.model" context="{'studio': True}">
+    <field name="info"><![CDATA[ Main super-class for regular database-persisted Odoo models.
+
+    Odoo models are created by inheriting from this class::
+
+        class ResUsers(Model):
+            ...
+
+    The system will later instantiate the class once per database (on
+    which the class' module is installed).
+    ]]></field>
+    <field name="is_mail_thread" eval="True"/>
+    <field name="is_mail_activity" eval="True"/>
+    <field name="model">x_asset_category</field>
+    <field name="name">ASSET CATEGORY</field>
+  </record>
+  <record id="room_area_0e04ca0c-41b9-45a9-b169-33f2eae9340b" model="ir.model" context="{'studio': True}">
+    <field name="info"><![CDATA[ Main super-class for regular database-persisted Odoo models.
+
+    Odoo models are created by inheriting from this class::
+
+        class ResUsers(Model):
+            ...
+
+    The system will later instantiate the class once per database (on
+    which the class' module is installed).
+    ]]></field>
+    <field name="is_mail_thread" eval="True"/>
+    <field name="is_mail_activity" eval="True"/>
+    <field name="model">x_room_area</field>
+    <field name="name">ROOM / AREA</field>
+  </record>
+  <record id="room_area_line_b7f36621-497a-4355-8f99-7332af72ce61" model="ir.model" context="{'studio': True}">
+    <field name="info"><![CDATA[ Main super-class for regular database-persisted Odoo models.
+
+    Odoo models are created by inheriting from this class::
+
+        class ResUsers(Model):
+            ...
+
+    The system will later instantiate the class once per database (on
+    which the class' module is installed).
+    ]]></field>
+    <field name="model">x_room_area_line_095b7</field>
+    <field name="name">room_area_line</field>
+  </record>
+  <record id="level_0b895bb2-a293-4823-b608-9d5694c430cb" model="ir.model" context="{'studio': True}">
+    <field name="info"><![CDATA[ Main super-class for regular database-persisted Odoo models.
+
+    Odoo models are created by inheriting from this class::
+
+        class ResUsers(Model):
+            ...
+
+    The system will later instantiate the class once per database (on
+    which the class' module is installed).
+    ]]></field>
+    <field name="is_mail_thread" eval="True"/>
+    <field name="is_mail_activity" eval="True"/>
+    <field name="model">x_level</field>
+    <field name="name">Level</field>
+  </record>
+  <record id="block_45fe7c77-0f59-452d-95db-9a8a2e02113a" model="ir.model" context="{'studio': True}">
+    <field name="info"><![CDATA[ Main super-class for regular database-persisted Odoo models.
+
+    Odoo models are created by inheriting from this class::
+
+        class ResUsers(Model):
+            ...
+
+    The system will later instantiate the class once per database (on
+    which the class' module is installed).
+    ]]></field>
+    <field name="is_mail_thread" eval="True"/>
+    <field name="is_mail_activity" eval="True"/>
+    <field name="model">x_block</field>
+    <field name="name">Block</field>
+  </record>
+</odoo>

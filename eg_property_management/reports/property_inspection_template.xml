@@ -1,0 +1,86 @@
+<odoo>
+    <template id="report_property_inspection_template">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="web.external_layout">
+                    <div class="page" style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #1F2937; background-color: #FFFFFF; padding: 10px;">
+
+                        <div style="border-bottom: 2px solid #1F2937; padding-bottom: 12px; margin-bottom: 20px;">
+                            <h2 style="font-weight: 700; color: #111827; font-size: 22px; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">
+                                <t t-if="o.inspection_type == 'move_in'">Pre-Move-In Inspection Report</t>
+                                <t t-else="">Move-Out Inspection Report</t>
+                            </h2>
+                            <p style="color: #4B5563; font-size: 13px; margin: 4px 0 0 0;">
+                                Reference: <strong style="color: #2563EB;"><span t-field="o.name"/></strong>
+                            </p>
+                        </div>
+
+                        <div style="background-color: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 6px; padding: 14px; margin-bottom: 20px;">
+                            <table style="width: 100%; font-size: 13px; border-collapse: collapse; color: #374151;">
+                                <tr>
+                                    <td style="padding: 5px 0; width: 18%; font-weight: 600; color: #6B7280;">Property:</td>
+                                    <td style="padding: 5px 0; width: 32%; color: #111827; font-weight: 600;"><span t-field="o.property_id.name"/></td>
+                                    <td style="padding: 5px 0; width: 18%; font-weight: 600; color: #6B7280;">Tenant:</td>
+                                    <td style="padding: 5px 0; width: 32%; color: #111827;"><span t-field="o.tenant_id.name"/></td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 5px 0; font-weight: 600; color: #6B7280;">Inspector:</td>
+                                    <td style="padding: 5px 0; color: #111827;"><span t-field="o.inspector_id.name"/></td>
+                                    <td style="padding: 5px 0; font-weight: 600; color: #6B7280;">Inspection Date:</td>
+                                    <td style="padding: 5px 0; color: #111827;">
+                                        <span t-field="o.inspection_date" t-options="{'widget': 'date', 'format': 'dd-MMM-yyyy'}"/>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <table style="width: 100%; font-size: 12px; border-collapse: collapse; color: #1F2937;">
+                            <thead>
+                                <tr style="background-color: #F3F4F6; color: #374151; text-transform: uppercase; font-size: 10px;">
+                                    <th style="text-align: left; padding: 6px 4px; border-bottom: 1px solid #D1D5DB;">Area</th>
+                                    <th style="text-align: left; padding: 6px 4px; border-bottom: 1px solid #D1D5DB;">Item</th>
+                                    <th style="text-align: left; padding: 6px 4px; border-bottom: 1px solid #D1D5DB;">Condition</th>
+                                    <th style="text-align: left; padding: 6px 4px; border-bottom: 1px solid #D1D5DB;">Notes</th>
+                                    <th style="text-align: right; padding: 6px 4px; border-bottom: 1px solid #D1D5DB;">Est. Cost</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr t-foreach="o.line_ids" t-as="line" style="border-bottom: 1px solid #E5E7EB;">
+                                    <td style="padding: 4px;"><span t-field="line.area"/></td>
+                                    <td style="padding: 4px;"><span t-field="line.name"/></td>
+                                    <td style="padding: 4px;">
+                                        <span t-attf-style="color: {{ '#DC2626' if line.condition != 'ok' else '#059669' }}; font-weight: 600;"
+                                              t-out="dict(line._fields['condition'].selection).get(line.condition)"/>
+                                    </td>
+                                    <td style="padding: 4px;"><span t-field="line.notes"/></td>
+                                    <td style="padding: 4px; text-align: right;">
+                                        <span t-if="line.condition != 'ok'" t-out="'{:,.2f}'.format(line.estimated_cost)"/>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <t t-if="o.inspection_type == 'move_out' and o.total_deduction_amount">
+                            <div style="text-align: right; margin-top: 10px; font-size: 13px; font-weight: 700; color: #111827;">
+                                Total Estimated Deduction: <span t-out="'{:,.2f}'.format(o.total_deduction_amount)"/> <span t-field="o.currency_id.name"/>
+                            </div>
+                        </t>
+
+                        <div style="margin-top: 60px; display: flex; justify-content: space-between;">
+                            <div style="width: 45%; border-top: 1px solid #9CA3AF; padding-top: 6px; font-size: 12px; color: #6B7280;">
+                                Inspector Signature
+                            </div>
+                            <div style="width: 45%; border-top: 1px solid #9CA3AF; padding-top: 6px; font-size: 12px; color: #6B7280;">
+                                <t t-if="o.tenant_signature">
+                                    <img t-att-src="image_data_uri(o.tenant_signature)" style="max-height: 50px; display: block; margin-bottom: 4px;"/>
+                                </t>
+                                Tenant Signature
+                            </div>
+                        </div>
+
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+</odoo>

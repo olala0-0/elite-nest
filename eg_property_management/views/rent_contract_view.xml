@@ -31,22 +31,27 @@
             <field name="arch" type="xml">
                 <form>
                     <header>
-                        <field name="state" widget="statusbar" statusbar_visible="draft,running,cancel,close,expire"/>
+                        <field name="state" widget="statusbar" statusbar_visible="draft,running,move_out,cancel,terminate,expire"/>
                         <button name="action_state_draft" string="Reset to Draft" type="object" class="btn-secondary"
-                                invisible="state in ['draft','running','cancel','expire']"/>
+                                invisible="state in ['draft','running','move_out','cancel','expire']"/>
                         <button name="action_state_running" string="Running" type="object" class="btn-primary"
-                                invisible="state in ['running','cancel','close','expire']"/>
+                                invisible="state in ['running','move_out','cancel','terminate','expire']"/>
                         <button name="action_create_invoice" string="Create Invoice" type="object" class="btn-primary"
-                                invisible="state in ['draft','cancel','close','expire']"/>
-                        <button name="action_state_close" string="Close Contract" type="object" class="btn-secondary"
-                                invisible="state in ['draft','cancel','close','expire']"/>
+                                invisible="state in ['draft','cancel','terminate','expire']"/>
+                        <button name="action_state_terminate" string="Terminate Contract" type="object" class="btn-secondary"
+                                invisible="state in ['draft','cancel','terminate','expire']"/>
+                        <button name="action_start_moveout" string="Start Move-Out Process" type="object" class="btn-secondary"
+                                invisible="state in ['draft','cancel','terminate','expire'] or moveout_id"/>
+                        <field name="moveout_state" widget="badge" decoration-warning="moveout_state != 'settled'"
+                               decoration-success="moveout_state == 'settled'"
+                               invisible="state in ['draft','cancel','terminate','expire'] or not moveout_id"/>
                         <button name="action_state_cancel" string="Cancel" type="object" class="btn-secondary"
-                                invisible="state in ['draft','cancel','close','expire']"/>
+                                invisible="state in ['draft','cancel','terminate','expire']"/>
                         <button name="action_create_broker_bill" string="Create Broker Bill" type="object"
                                 class="btn-primary"
                                 invisible="not broker_id or not broker_commission or state != 'running' or has_broker_bill == True"/>
                         <button name="%(action_rent_contract_extend_wizard)d" string="Extend Contract" type="action"
-                                class="btn-primary" invisible="state in ['draft','running','cancel','close']"/>
+                                class="btn-primary" invisible="state in ['draft','running','move_out','cancel','terminate']"/>
                     </header>
                     <sheet>
                         <div class="oe_button_box" name="button_box">
@@ -57,25 +62,41 @@
                             <button type="object" class="oe_stat_button" icon="fa-list-alt"
                                     name="action_view_broker_bills" string="Brokers">
                             </button>
+                            <button type="object" class="oe_stat_button" icon="fa-sign-in"
+                                    name="action_open_movein" string="Move-In">
+                            </button>
+                            <button type="object" class="oe_stat_button" icon="fa-sign-out"
+                                    name="action_open_moveout" string="Move-Out" invisible="not moveout_id">
+                            </button>
                         </div>
                         <h1>
                             <field name="name" readonly="1"/>
                         </h1>
                         <group string="Contract Details">
                             <group>
-                                <field name="start_date" required="1" readonly="state == 'running'"/>
-                                <field name="end_date" required="1" readonly="state == 'running'"/>
-                                <field name="rent" required="1" readonly="state == 'running'"/>
-                                <field name="deposit" required="1" readonly="state == 'running'"/>
+                                <field name="start_date" required="1" readonly="state in ('running', 'move_out')"/>
+                                <field name="end_date" required="1" readonly="state in ('running', 'move_out')"/>
+                                <field name="rent" required="1" readonly="state in ('running', 'move_out')"/>
+                                <field name="deposit" required="1" readonly="state in ('running', 'move_out')"/>
                                 <field name="invoice_start_date" required="1"/>
                             </group>
                             <group>
                                 <field name="duration"/>
                                 <field name="contract_days"/>
                                 <field name="remaining_days"/>
-                                <field name="payment_term_id" required="1" readonly="state == 'running'"/>
+                                <field name="payment_term_id" required="1" readonly="state in ('running', 'move_out')"/>
                                 <field name="payment_count" readonly="1"/>
-                                <field name="contract_type" required="1" readonly="state == 'running'"/>
+                                <field name="contract_type" required="1" readonly="state in ('running', 'move_out')"/>
+                            </group>
+                        </group>
+                        <group string="One-Time Charges">
+                            <group>
+                                <field name="ejari_fee" readonly="state in ('running', 'move_out')"/>
+                                <field name="admin_charge" readonly="state in ('running', 'move_out')"/>
+                            </group>
+                            <group>
+                                <field name="commission" readonly="state in ('running', 'move_out')"/>
+                                <field name="parking_fee" readonly="state in ('running', 'move_out')"/>
                             </group>
                         </group>
                         <hr style="border: 1px solid #000;"/>
@@ -90,8 +111,10 @@
                         <hr style="border: 1px solid #000;"/>
                         <group string="Property Information">
                             <group>
-                                <field name="property_id" required="1" domain="[('property_for','=','rent')]"/>
+                                <field name="property_id" required="1"
+                                       domain="[('property_for','=','rent'), ('state','!=','rent')]"/>
                                 <field name="residential_type_id" string="Residential Type" readonly="1"/>
+                                <field name="dewa_premises_no" readonly="1"/>
                                 <label for="street" string="Address"/>
                                 <div class="o_address_format">
                                     <field name="street" placeholder="Street..." class="o_address_street"/>
@@ -117,6 +140,7 @@
                                 <field name="tenant_id" required="1"/>
                                 <field name="tenant_phone"/>
                                 <field name="tenant_email"/>
+                                <field name="tenant_country_id"/>
                             </group>
                             <group>
                                 <field name="landlord_id" required="1"/>
@@ -125,37 +149,37 @@
                             </group>
                         </group>
                         <group string="Maintenance Details">
-                            <field name="maintenance_type" readonly="state == 'running'"/>
-                            <field name="charge_type" readonly="state == 'running'"/>
+                            <field name="maintenance_type" readonly="state in ('running', 'move_out')"/>
+                            <field name="charge_type" readonly="state in ('running', 'move_out')"/>
                             <field name="total_maintenance"/>
                         </group>
                         <group string="Taxes">
-                            <field name="tax_rate" readonly="state == 'running'"/>
+                            <field name="tax_rate" readonly="state in ('running', 'move_out')"/>
                             <field name="taxable_amount" readonly="1"/>
                             <field name="tax_amount" readonly="1"/>
                         </group>
 
                         <group string="Broker / Responsible">
                             <group>
-                                <field name="user_id" required="1" readonly="state == 'running'"/>
+                                <field name="user_id" required="1" readonly="state in ('running', 'move_out')"/>
                                 <field name="phone"/>
                                 <field name="email"/>
                             </group>
                             <group>
-                                <field name="broker_id" readonly="state == 'running'"/>
+                                <field name="broker_id" readonly="state in ('running', 'move_out')"/>
                                 <field name="broker_phone"/>
                                 <field name="broker_email"/>
-                                <field name="broker_commission" readonly="state == 'running'"/>
+                                <field name="broker_commission" readonly="state in ('running', 'move_out')"/>
                             </group>
                         </group>
                         <group string="CRM">
                             <field name="lead_id" domain="[('property_id', '=', property_id)]"
-                                   options="{'no_open': True, 'no_quick_create': True}" readonly="state == 'running'"/>
+                                   options="{'no_open': True, 'no_quick_create': True}" readonly="state in ('running', 'move_out')"/>
                         </group>
                         <group string="Penalty">
-                            <field name="penalty_type" readonly="state == 'running'"/>
-                            <field name="penalty_value" readonly="state == 'running'"/>
-                            <field name="penalty_grace_days" readonly="state == 'running'"/>
+                            <field name="penalty_type" readonly="state in ('running', 'move_out')"/>
+                            <field name="penalty_value" readonly="state in ('running', 'move_out')"/>
+                            <field name="penalty_grace_days" readonly="state in ('running', 'move_out')"/>
                         </group>
 
                         <notebook>
@@ -355,7 +379,7 @@
                     <field name="end_date" string="End Date"/>
                     <field name="state" string="Status"/>
 
-                    <filter string="Expired Contracts" name="expired_contracts" domain="[('state', '=', 'close')]"/>
+                    <filter string="Terminated Contracts" name="terminated_contracts" domain="[('state', '=', 'terminate')]"/>
                     <filter string="Automatic Installment" name="auto_contract"
                             domain="[('contract_type', '=', 'auto')]"/>
                     <filter string="Manual Installment" name="manual_contract"

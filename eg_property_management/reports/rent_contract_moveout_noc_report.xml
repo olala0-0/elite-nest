@@ -1,0 +1,12 @@
+<odoo>
+    <record id="action_report_moveout_noc" model="ir.actions.report">
+        <field name="name">Move-Out NOC</field>
+        <field name="model">rent.contract.moveout</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">eg_property_management.report_moveout_noc_template</field>
+        <field name="report_file">eg_property_management.report_moveout_noc_template</field>
+        <field name="print_report_name">'Move-Out NOC - %s' % (object.rent_contract_id.name)</field>
+        <field name="binding_model_id" ref="eg_property_management.model_rent_contract_moveout"/>
+        <field name="binding_type">report</field>
+    </record>
+</odoo>

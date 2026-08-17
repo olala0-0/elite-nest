@@ -1,0 +1,471 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<odoo>
+  <record id="furnishing_lead_0e336144-7949-4073-9f58-33daadbc3b60" model="ir.model.fields" context="{'studio': True}">
+    <field name="ttype">selection</field>
+    <field name="related">property_id.furnishing</field>
+    <field name="field_description">Budget </field>
+    <field name="model">crm.lead</field>
+    <field name="model_id" ref="crm.model_crm_lead"/>
+    <field name="name">x_studio_related_field_1j2_1jjth1n0v</field>
+    <field name="on_delete" eval="False"/>
+    <field name="readonly" eval="True"/>
+    <field name="selection">[('unfurnished', 'Unfurnished'), ('semi_furnished', 'Semi-Furnished'), ('fully_furnished', 'Fully Furnished')]</field>
+    <field name="store" eval="False"/>
+  </record>
+  <record id="new_monetary_lead_ed14bfd8-fa7f-438b-9b83-405f8d52c62f" model="ir.model.fields" context="{'studio': True}">
+    <field name="ttype">monetary</field>
+    <field name="copied" eval="True"/>
+    <field name="field_description">Budget </field>
+    <field name="model">crm.lead</field>
+    <field name="model_id" ref="crm.model_crm_lead"/>
+    <field name="name">x_studio_monetary_field_89v_1jjtiusl9</field>
+    <field name="on_delete" eval="False"/>
+    <field name="currency_field">company_currency</field>
+  </record>
+  <record id="country_name_lead_da3dd204-fc6c-4b54-93b3-11e6ee418f2f" model="ir.model.fields" context="{'studio': True}">
+    <field name="ttype">char</field>
+    <field name="related">country_id.name</field>
+    <field name="field_description">Nationality </field>
+    <field name="model">crm.lead</field>
+    <field name="model_id" ref="crm.model_crm_lead"/>
+    <field name="name">x_studio_nationality</field>
+    <field name="on_delete" eval="False"/>
+    <field name="readonly" eval="True"/>
+    <field name="store" eval="False"/>
+  </record>
+  <record id="country_copy_lead_015d051a-772e-4a47-b316-1856681527dd" model="ir.model.fields" context="{'studio': True}">
+    <field name="ttype">many2one</field>
+    <field name="related">country_id</field>
+    <field name="field_description">Country (Copy)</field>
+    <field name="model">crm.lead</field>
+    <field name="model_id" ref="crm.model_crm_lead"/>
+    <field name="name">x_studio_related_field_8m4_1jkfk2uo3</field>
+    <field name="readonly" eval="True"/>
+    <field name="relation">res.country</field>
+    <field name="store" eval="False"/>
+  </record>
+  <record id="new_many2one_lead_991dcc90-1a1a-4a6b-95a5-120425e37ba4" model="ir.model.fields" context="{'studio': True}">
+    <field name="ttype">many2one</field>
+    <field name="copied" eval="True"/>
+    <field name="field_description">Nationality </field>
+    <field name="model">crm.lead</field>
+    <field name="model_id" ref="crm.model_crm_lead"/>
+    <field name="name">x_studio_many2one_field_54f_1jkfk50ui</field>
+    <field name="relation">res.country</field>
+  </record>
+  <record id="new_text_property_de_c4b0a933-2d15-41b8-b029-37445af857cb" model="ir.model.fields" context="{'studio': True}">
+    <field name="ttype">char</field>
+    <field name="copied" eval="True"/>
+    <field name="field_description">Floor No.</field>
+    <field name="model">property.detail</field>
+    <field name="model_id" ref="eg_property_management.model_property_detail"/>
+    <field name="name">x_studio_floor_no</field>
+    <field name="on_delete" eval="False"/>
+  </record>
+  <record id="new_integer_rent_con_231bc3b4-4f47-4bf0-9ac9-9ad8a6830040" model="ir.model.fields" context="{'studio': True}">
+    <field name="ttype">integer</field>
+    <field name="copied" eval="True"/>
+    <field name="field_description">Days</field>
+    <field name="model">rent.contract</field>
+    <field name="model_id" ref="eg_property_management.model_rent_contract"/>
+    <field name="name">x_studio_days</field>
+    <field name="on_delete" eval="False"/>
+  </record>
+  <record id="new_monetary_lead_0de036c0-1c6e-4957-93e3-d8328579b0cb" model="ir.model.fields" context="{'studio': True}">
+    <field name="ttype">monetary</field>
+    <field name="copied" eval="True"/>
+    <field name="field_description">Budget </field>
+    <field name="model">crm.lead</field>
+    <field name="model_id" ref="crm.model_crm_lead"/>
+    <field name="name">x_studio_budget</field>
+    <field name="on_delete" eval="False"/>
+    <field name="currency_field">company_currency</field>
+  </record>
+  <record id="new_many2one_journal_fa4ea917-ed5f-450f-8299-cfb637670950" model="ir.model.fields" context="{'studio': True}">
+    <field name="ttype">many2one</field>
+    <field name="copied" eval="True"/>
+    <field name="field_description">Target Company </field>
+    <field name="model">account.move.line</field>
+    <field name="model_id" ref="account.model_account_move_line"/>
+    <field name="name">x_studio_target_company</field>
+    <field name="relation">res.company</field>
+  </record>
+  <record id="residential_type_cop_2f893f74-2884-4d5e-b073-ac033085c367" model="ir.model.fields" context="{'studio': True}">
+    <field name="ttype">char</field>
+    <field name="related">residential_type</field>
+    <field name="field_description">Residential Type (Copy)</field>
+    <field name="model">rent.contract</field>
+    <field name="model_id" ref="eg_property_management.model_rent_contract"/>
+    <field name="name">x_studio_related_field_90b_1jmoc9q0k</field>
+    <field name="on_delete" eval="False"/>
+    <field name="readonly" eval="True"/>
+    <field name="store" eval="False"/>
+  </record>
+  <record id="residential_type_cop_fab1fad9-41f9-48bf-8eeb-97e295109e55" model="ir.model.fields" context="{'studio': True}">
+    <field name="ttype">char</field>
+    <field name="related">residential_type</field>
+    <field name="field_description">Residential Type</field>
+    <field name="model">rent.contract</field>
+    <field name="model_id" ref="eg_property_management.model_rent_contract"/>
+    <field name="name">x_studio_residential_type</field>
+    <field name="on_delete" eval="False"/>
+    <field name="readonly" eval="True"/>
+    <field name="store" eval="False"/>
+  </record>
+  <record id="new_text_property_de_278c5727-dcb3-4b15-94a8-1c7b7bf0921e" model="ir.model.fields" context="{'studio': True}">
+    <field name="ttype">char</field>
+    <field name="copied" eval="True"/>
+    <field name="field_description">DEWA Premises no:</field>
+    <field name="model">property.detail</field>
+    <field name="model_id" ref="eg_property_management.model_property_detail"/>
+    <field name="name">x_studio_dewa_premises_no</field>
+    <field name="on_delete" eval="False"/>
+  </record>
+  <record id="security_deposit_cop_8fecba7f-0024-40d9-8184-b7bf5bb9c6d3" model="ir.model.fields" context="{'studio': True}">
+    <field name="ttype">monetary</field>
+    <field name="related">deposit</field>
+    <field name="field_description">Security Deposit (Copy)</field>
+    <field name="model">rent.contract</field>
+    <field name="model_id" ref="eg_property_management.model_rent_contract"/>
+    <field name="name">x_studio_related_field_va_1jqn69iaj</field>
+    <field name="on_delete" eval="False"/>
+    <field name="readonly" eval="True"/>
+    <field name="store" eval="False"/>
+    <field name="currency_field">currency_id</field>
+  </record>
+  <record id="security_deposit_cop_42024635-ef5f-4015-8095-e9178e58ec39" model="ir.model.fields" context="{'studio': True}">
+    <field name="ttype">monetary</field>
+    <field name="related">deposit</field>
+    <field name="field_description">Security Deposit </field>
+    <field name="model">rent.contract</field>
+    <field name="model_id" ref="eg_property_management.model_rent_contract"/>
+    <field name="name">x_studio_security_deposit</field>
+    <field name="on_delete" eval="False"/>
+    <field name="readonly" eval="True"/>
+    <field name="store" eval="False"/>
+    <field name="currency_field">currency_id</field>
+  </record>
+  <record id="description_asset_ca_01574eee-681e-43cf-86d0-e2816cb10564" model="ir.model.fields" context="{'studio': True}">
+    <field name="ttype">char</field>
+    <field name="copied" eval="True"/>
+    <field name="field_description">Category Name</field>
+    <field name="model">x_asset_category</field>
+    <field name="model_id" ref="asset_category_dfcae6db-b1f3-492d-9e6e-74e2e4e1d802"/>
+    <field name="name">x_name</field>
+    <field name="on_delete" eval="False"/>
+    <field name="required" eval="True"/>
+    <field name="tracking">1</field>
+    <field name="translate">standard</field>
+  </record>
+  <record id="active_asset_categor_62a8bd0b-c95d-4212-8272-dbaea055c4dd" model="ir.model.fields" context="{'studio': True}">
+    <field name="ttype">boolean</field>
+    <field name="copied" eval="True"/>
+    <field name="field_description">Active</field>
+    <field name="model">x_asset_category</field>
+    <field name="model_id" ref="asset_category_dfcae6db-b1f3-492d-9e6e-74e2e4e1d802"/>
+    <field name="name">x_active</field>
+    <field name="on_delete" eval="False"/>
+    <field name="tracking">1</field>
+  </record>
+  <record id="sequence_asset_categ_4f05ae84-b8ba-4a95-98f7-00283c17b398" model="ir.model.fields" context="{'studio': True}">
+    <field name="ttype">integer</field>
+    <field name="copied" eval="True"/>
+    <field name="field_description">Sequence</field>
+    <field name="model">x_asset_category</field>
+    <field name="model_id" ref="asset_category_dfcae6db-b1f3-492d-9e6e-74e2e4e1d802"/>
+    <field name="name">x_studio_sequence</field>
+    <field name="on_delete" eval="False"/>
+  </record>
+  <record id="description_room_are_e3184f19-48a2-4a46-a8b6-39ca840c8757" model="ir.model.fields" context="{'studio': True}">
+    <field name="ttype">char</field>
+    <field name="copied" eval="True"/>
+    <field name="field_description">Area Description </field>
+    <field name="model">x_room_area</field>
+    <field name="model_id" ref="room_area_0e04ca0c-41b9-45a9-b169-33f2eae9340b"/>
+    <field name="name">x_name</field>
+    <field name="on_delete" eval="False"/>
+    <field name="required" eval="True"/>
+    <field name="tracking">1</field>
+    <field name="translate">standard</field>
+  </record>
+  <record id="active_room_area_c02e5c19-58ae-42aa-b749-c9b08ec9d386" model="ir.model.fields" context="{'studio': True}">
+    <field name="ttype">boolean</field>
+    <field name="copied" eval="True"/>
+    <field name="field_description">Active</field>
+    <field name="model">x_room_area</field>
+    <field name="model_id" ref="room_area_0e04ca0c-41b9-45a9-b169-33f2eae9340b"/>
+    <field name="name">x_active</field>
+    <field name="on_delete" eval="False"/>
+    <field name="tracking">1</field>
+  </record>
+  <record id="sequence_room_area_4f928e6e-222b-4e1d-9266-5a1f818e89b2" model="ir.model.fields" context="{'studio': True}">
+    <field name="ttype">integer</field>
+    <field name="copied" eval="True"/>
+    <field name="field_description">Sequence</field>
+    <field name="model">x_room_area</field>
+    <field name="model_id" ref="room_area_0e04ca0c-41b9-45a9-b169-33f2eae9340b"/>
+    <field name="name">x_studio_sequence</field>
+    <field name="on_delete" eval="False"/>
+  </record>
+  <record id="room_area_line_c1ed221a-f617-498d-adda-5df87bff4a91" model="ir.model.fields" context="{'studio': True}">
+    <field name="ttype">many2one</field>
+    <field name="copied" eval="True"/>
+    <field name="field_description">X Room Area</field>
+    <field name="model">x_room_area_line_095b7</field>
+    <field name="model_id" ref="room_area_line_b7f36621-497a-4355-8f99-7332af72ce61"/>
+    <field name="name">x_room_area_id</field>
+    <field name="relation">x_room_area</field>
+  </record>
+  <record id="new_lines_room_area_4c7e3afe-d17b-420d-b330-c01f54f420a7" model="ir.model.fields" context="{'studio': True}">
+    <field name="ttype">one2many</field>
+    <field name="field_description">New Lines</field>
+    <field name="model">x_room_area</field>
+    <field name="model_id" ref="room_area_0e04ca0c-41b9-45a9-b169-33f2eae9340b"/>
+    <field name="name">x_room_area_line_ids_df020</field>
+    <field name="on_delete" eval="False"/>
+    <field name="relation">x_room_area_line_095b7</field>
+    <field name="relation_field">x_room_area_id</field>
+  </record>
+  <record id="sequence_room_area_l_39f34864-5754-4fa7-beb6-70c684911eac" model="ir.model.fields" context="{'studio': True}">
+    <field name="ttype">integer</field>
+    <field name="copied" eval="True"/>
+    <field name="field_description">Sequence</field>
+    <field name="model">x_room_area_line_095b7</field>
+    <field name="model_id" ref="room_area_line_b7f36621-497a-4355-8f99-7332af72ce61"/>
+    <field name="name">x_studio_sequence</field>
+    <field name="on_delete" eval="False"/>
+  </record>
+  <record id="description_room_are_bece4c51-bea0-4bac-aeff-5f3d723e35a4" model="ir.model.fields" context="{'studio': True}">
+    <field name="ttype">char</field>
+    <field name="copied" eval="True"/>
+    <field name="field_description">Description</field>
+    <field name="model">x_room_area_line_095b7</field>
+    <field name="model_id" ref="room_area_line_b7f36621-497a-4355-8f99-7332af72ce61"/>
+    <field name="name">x_name</field>
+    <field name="on_delete" eval="False"/>
+    <field name="required" eval="True"/>
+    <field name="translate">standard</field>
+  </record>
+  <record id="description_level_5bd320db-4a93-4db6-95fa-68cf1a827339" model="ir.model.fields" context="{'studio': True}">
+    <field name="ttype">char</field>
+    <field name="copied" eval="True"/>
+    <field name="field_description">Description</field>
+    <field name="model">x_level</field>
+    <field name="model_id" ref="level_0b895bb2-a293-4823-b608-9d5694c430cb"/>
+    <field name="name">x_name</field>
+    <field name="on_delete" eval="False"/>
+    <field name="required" eval="True"/>
+    <field name="tracking">1</field>
+    <field name="translate">standard</field>
+  </record>
+  <record id="active_level_8d328769-bffe-4b3f-8fd6-165bb896f4c6" model="ir.model.fields" context="{'studio': True}">
+    <field name="ttype">boolean</field>
+    <field name="copied" eval="True"/>
+    <field name="field_description">Active</field>
+    <field name="model">x_level</field>
+    <field name="model_id" ref="level_0b895bb2-a293-4823-b608-9d5694c430cb"/>
+    <field name="name">x_active</field>
+    <field name="on_delete" eval="False"/>
+    <field name="tracking">1</field>
+  </record>
+  <record id="sequence_level_8adc1a57-ae3a-474e-a5c1-863f6523d867" model="ir.model.fields" context="{'studio': True}">
+    <field name="ttype">integer</field>
+    <field name="copied" eval="True"/>
+    <field name="field_description">Sequence</field>
+    <field name="model">x_level</field>
+    <field name="model_id" ref="level_0b895bb2-a293-4823-b608-9d5694c430cb"/>
+    <field name="name">x_studio_sequence</field>
+    <field name="on_delete" eval="False"/>
+  </record>
+  <record id="description_block_7a18928c-9861-4a67-8d58-27164accd1d9" model="ir.model.fields" context="{'studio': True}">
+    <field name="ttype">char</field>
+    <field name="copied" eval="True"/>
+    <field name="field_description">Description</field>
+    <field name="model">x_block</field>
+    <field name="model_id" ref="block_45fe7c77-0f59-452d-95db-9a8a2e02113a"/>
+    <field name="name">x_name</field>
+    <field name="on_delete" eval="False"/>
+    <field name="required" eval="True"/>
+    <field name="tracking">1</field>
+    <field name="translate">standard</field>
+  </record>
+  <record id="active_block_3efd47f2-a8a6-427b-89ea-fa9141601627" model="ir.model.fields" context="{'studio': True}">
+    <field name="ttype">boolean</field>
+    <field name="copied" eval="True"/>
+    <field name="field_description">Active</field>
+    <field name="model">x_block</field>
+    <field name="model_id" ref="block_45fe7c77-0f59-452d-95db-9a8a2e02113a"/>
+    <field name="name">x_active</field>
+    <field name="on_delete" eval="False"/>
+    <field name="tracking">1</field>
+  </record>
+  <record id="sequence_block_b7d39644-0b42-49ed-98ca-1bd9e6fd52bd" model="ir.model.fields" context="{'studio': True}">
+    <field name="ttype">integer</field>
+    <field name="copied" eval="True"/>
+    <field name="field_description">Sequence</field>
+    <field name="model">x_block</field>
+    <field name="model_id" ref="block_45fe7c77-0f59-452d-95db-9a8a2e02113a"/>
+    <field name="name">x_studio_sequence</field>
+    <field name="on_delete" eval="False"/>
+  </record>
+  <record id="new_many2one_asset_m_50f7d6fb-c142-49b8-8f6b-06ee14ed9c5f" model="ir.model.fields" context="{'studio': True}">
+    <field name="ttype">many2one</field>
+    <field name="copied" eval="True"/>
+    <field name="field_description">Asset Category</field>
+    <field name="model">asset.management</field>
+    <field name="model_id" ref="asset_management.model_asset_management"/>
+    <field name="name">x_studio_asset_category</field>
+    <field name="relation">x_asset_category</field>
+  </record>
+  <record id="new_many2one_asset_m_65629a4f-d1ea-4b29-a8d1-fd39fe2fa1fa" model="ir.model.fields" context="{'studio': True}">
+    <field name="ttype">many2one</field>
+    <field name="copied" eval="True"/>
+    <field name="field_description">Room / Area</field>
+    <field name="model">asset.management</field>
+    <field name="model_id" ref="asset_management.model_asset_management"/>
+    <field name="name">x_studio_room_area_1</field>
+    <field name="relation">x_room_area</field>
+  </record>
+  <record id="new_many2one_asset_m_d8fcfd12-b457-4562-833c-dbe8ace52e33" model="ir.model.fields" context="{'studio': True}">
+    <field name="ttype">many2one</field>
+    <field name="copied" eval="True"/>
+    <field name="field_description">Level</field>
+    <field name="model">asset.management</field>
+    <field name="model_id" ref="asset_management.model_asset_management"/>
+    <field name="name">x_studio_level</field>
+    <field name="relation">x_level</field>
+  </record>
+  <record id="new_many2one_asset_m_b5456737-fc2e-42cb-8dae-2f0080a0045d" model="ir.model.fields" context="{'studio': True}">
+    <field name="ttype">many2one</field>
+    <field name="copied" eval="True"/>
+    <field name="field_description">Block</field>
+    <field name="model">asset.management</field>
+    <field name="model_id" ref="asset_management.model_asset_management"/>
+    <field name="name">x_studio_block</field>
+    <field name="relation">x_block</field>
+  </record>
+  <record id="new_text_asset_manag_b2970aed-3d38-46f6-9ec5-946c1fa9e450" model="ir.model.fields" context="{'studio': True}">
+    <field name="ttype">char</field>
+    <field name="copied" eval="True"/>
+    <field name="field_description">Forecasted Useful Life (Year)</field>
+    <field name="model">asset.management</field>
+    <field name="model_id" ref="asset_management.model_asset_management"/>
+    <field name="name">x_studio_forecasted_useful_life_year</field>
+    <field name="on_delete" eval="False"/>
+  </record>
+  <record id="new_many2one_asset_m_783d96f3-8d75-4b0f-b07c-2e603eae59bb" model="ir.model.fields" context="{'studio': True}">
+    <field name="ttype">many2one</field>
+    <field name="copied" eval="True"/>
+    <field name="field_description">FM Vendor</field>
+    <field name="model">asset.management</field>
+    <field name="model_id" ref="asset_management.model_asset_management"/>
+    <field name="name">x_studio_fm_vendor</field>
+    <field name="relation">res.partner</field>
+    <field name="domain">[("supplier_rank", ">", 0)]</field>
+  </record>
+  <record id="new_many2one_asset_m_3b0bf59b-a19a-4d02-be11-f231ebe9eff8" model="ir.model.fields" context="{'studio': True}">
+    <field name="ttype">many2one</field>
+    <field name="copied" eval="True"/>
+    <field name="field_description">FM Vendor</field>
+    <field name="model">asset.maintenance.entry</field>
+    <field name="model_id" ref="asset_management.model_asset_maintenance_entry"/>
+    <field name="name">x_studio_fm_vendor</field>
+    <field name="relation">res.partner</field>
+    <field name="domain">[("supplier_rank", ">", 0)]</field>
+  </record>
+  <record id="new_many2one_helpdes_8c49afd8-a569-4f51-9aac-c2107e7bdc72" model="ir.model.fields" context="{'studio': True}">
+    <field name="ttype">many2one</field>
+    <field name="copied" eval="True"/>
+    <field name="field_description">Property / Unit</field>
+    <field name="model">helpdesk.ticket</field>
+    <field name="model_id" ref="helpdesk.model_helpdesk_ticket"/>
+    <field name="name">x_studio_many2one_field_pg_1jqqkki79</field>
+    <field name="relation">property.detail</field>
+  </record>
+  <record id="new_many2one_helpdes_7db953d3-79dc-457e-9faa-5be1a1e3bd1b" model="ir.model.fields" context="{'studio': True}">
+    <field name="ttype">many2one</field>
+    <field name="copied" eval="True"/>
+    <field name="field_description">Maintenance Request</field>
+    <field name="model">helpdesk.ticket</field>
+    <field name="model_id" ref="helpdesk.model_helpdesk_ticket"/>
+    <field name="name">x_studio_maintenance_request</field>
+    <field name="relation">maintenance.request</field>
+  </record>
+  <record id="total_area_copy_prop_52a56a4e-c4d4-487f-9c19-27bcd27c3405" model="ir.model.fields" context="{'studio': True}">
+    <field name="ttype">float</field>
+    <field name="related">total_area</field>
+    <field name="field_description">Area Square meter </field>
+    <field name="model">property.detail</field>
+    <field name="model_id" ref="eg_property_management.model_property_detail"/>
+    <field name="name">x_studio_area_square_mete</field>
+    <field name="on_delete" eval="False"/>
+    <field name="readonly" eval="True"/>
+    <field name="store" eval="False"/>
+  </record>
+  <record id="usable_area_copy_pro_8e59f78a-a694-4fee-8818-88923803a566" model="ir.model.fields" context="{'studio': True}">
+    <field name="ttype">float</field>
+    <field name="related">usable_area</field>
+    <field name="field_description">Area Square Feet</field>
+    <field name="model">property.detail</field>
+    <field name="model_id" ref="eg_property_management.model_property_detail"/>
+    <field name="name">x_studio_area_square_feet</field>
+    <field name="on_delete" eval="False"/>
+    <field name="readonly" eval="True"/>
+    <field name="store" eval="False"/>
+  </record>
+  <record id="block_copy_asset_man_14da979f-f43d-428d-8e0c-8a3abcda941d" model="ir.model.fields" context="{'studio': True}">
+    <field name="ttype">many2one</field>
+    <field name="related">x_studio_block</field>
+    <field name="field_description">Block </field>
+    <field name="model">asset.management</field>
+    <field name="model_id" ref="asset_management.model_asset_management"/>
+    <field name="name">x_studio_block_1</field>
+    <field name="readonly" eval="True"/>
+    <field name="relation">x_block</field>
+    <field name="store" eval="False"/>
+  </record>
+  <record id="level_copy_asset_man_922d7148-2e71-46da-a7e8-eb61f87b19d2" model="ir.model.fields" context="{'studio': True}">
+    <field name="ttype">many2one</field>
+    <field name="related">x_studio_level</field>
+    <field name="field_description">Level</field>
+    <field name="model">asset.management</field>
+    <field name="model_id" ref="asset_management.model_asset_management"/>
+    <field name="name">x_studio_level_1</field>
+    <field name="readonly" eval="True"/>
+    <field name="relation">x_level</field>
+    <field name="store" eval="False"/>
+  </record>
+  <record id="room_area_copy_asset_554541d6-8193-4b5d-bc8d-2fd34ed29c2c" model="ir.model.fields" context="{'studio': True}">
+    <field name="ttype">many2one</field>
+    <field name="related">x_studio_room_area_1</field>
+    <field name="field_description">Room / Area </field>
+    <field name="model">asset.management</field>
+    <field name="model_id" ref="asset_management.model_asset_management"/>
+    <field name="name">x_studio_room_area</field>
+    <field name="readonly" eval="True"/>
+    <field name="relation">x_room_area</field>
+    <field name="store" eval="False"/>
+  </record>
+  <record id="asset_category_copy__b432834c-f4e4-4c4c-bbf2-51ea77ac55c9" model="ir.model.fields" context="{'studio': True}">
+    <field name="ttype">many2one</field>
+    <field name="related">x_studio_asset_category</field>
+    <field name="field_description">Asset Category </field>
+    <field name="model">asset.management</field>
+    <field name="model_id" ref="asset_management.model_asset_management"/>
+    <field name="name">x_studio_asset_category_1</field>
+    <field name="readonly" eval="True"/>
+    <field name="relation">x_asset_category</field>
+    <field name="store" eval="False"/>
+  </record>
+  <record id="company_asset_manage_ca767992-a15a-4d77-b095-0c791bdf2f8a" model="ir.model.fields" context="{'studio': True}">
+    <field name="ttype">many2one</field>
+    <field name="related">product_id.company_id</field>
+    <field name="field_description">Company</field>
+    <field name="model">asset.management</field>
+    <field name="model_id" ref="asset_management.model_asset_management"/>
+    <field name="name">x_studio_related_field_82a_1jsphmn5m</field>
+    <field name="readonly" eval="True"/>
+    <field name="relation">res.company</field>
+    <field name="store" eval="False"/>
+  </record>
+</odoo>

@@ -1390,16 +1390,21 @@ class RentContract(models.Model):
                 self.env['mail.mail'].create(mail_values).send()
 
     def action_renewal_notice_cron(self):
-        """Move-Out diagram step 1: send the renewal notice exactly 90 days
-        before a running contract's end date. Mirrors action_rent_due_
-        reminder_cron() exactly - same exact-date-match search (so it
-        fires once, not once per day, with no extra "already sent" field
-        needed), same message_post + mail.mail.create(...).send() pattern.
-        Only touches 'running' contracts, so anything already terminated,
-        cancelled, or expired is never matched."""
-        notice_days = 90
+        """Move-Out diagram step 1: send the renewal notice N calendar
+        months before a running contract's end date, N chosen by the agent
+        in Settings (eg_property_management.renewal_notice_months, 1/2/3,
+        default 3 - matches the period this used to be hardcoded to).
+        Mirrors action_rent_due_reminder_cron() exactly - same exact-date-
+        match search (so it fires once, not once per day, with no extra
+        "already sent" field needed), same message_post + mail.mail.
+        create(...).send() pattern. Only touches 'running' contracts, so
+        anything already terminated, cancelled, or expired is never
+        matched."""
+        notice_months = int(self.env['ir.config_parameter'].sudo().get_param(
+            'eg_property_management.renewal_notice_months', '3'
+        ))
         today = date.today()
-        target_date = today + timedelta(days=notice_days)
+        target_date = today + relativedelta(months=notice_months)
         contracts = self.search([
             ('state', '=', 'running'),
             ('end_date', '=', target_date),
@@ -1407,7 +1412,7 @@ class RentContract(models.Model):
         for contract in contracts:
             contract.message_post(
                 body=f"Renewal notice: this contract's end date ({contract.end_date}) is now "
-                     f"{notice_days} days away."
+                     f"{notice_months} month(s) away."
             )
             if contract.tenant_id.email:
                 mail_values = {
@@ -1415,7 +1420,7 @@ class RentContract(models.Model):
                     'body_html': f"""
                         <p>Dear {contract.tenant_id.name},</p>
                         <p>Your lease for <b>{contract.property_id.name or 'your property'}</b> is due to
-                        expire on <b>{contract.end_date}</b> ({notice_days} days from today).</p>
+                        expire on <b>{contract.end_date}</b> ({notice_months} month(s) from today).</p>
                         <p>Please let us know whether you'd like to renew or plan to move out, so we can
                         prepare the next steps with you accordingly.</p>
                         <p>Regards,<br/>{contract.company_id.name}</p>

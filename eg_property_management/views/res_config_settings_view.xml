@@ -7,6 +7,15 @@
             <field name="arch" type="xml">
                 <xpath expr="//app[@name='account']" position="inside">
                     <block title="Property Management" name="property_management_setting_container">
+                        <setting string="Lease Renewal Notice"
+                                 help="How far before a contract's end date to email the tenant a renewal notice.">
+                            <div class="content-group">
+                                <div class="row mt16">
+                                    <label for="renewal_notice_months" class="col-lg-3 o_light_label"/>
+                                    <field name="renewal_notice_months"/>
+                                </div>
+                            </div>
+                        </setting>
                         <setting string="Rent Invoice Defaults"
                                  help="Default product and description used when rent invoices are created from contracts.">
                             <div class="content-group">

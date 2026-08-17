@@ -4,6 +4,12 @@ from odoo import fields, models
 class ResConfigSettings(models.TransientModel):
     _inherit = "res.config.settings"
 
+    renewal_notice_months = fields.Selection(
+        [('1', '1 Month'), ('2', '2 Months'), ('3', '3 Months')],
+        string="Renewal Notice Period",
+        config_parameter="eg_property_management.renewal_notice_months",
+        default='3',
+    )
     rent_invoice_product_id = fields.Many2one(
         comodel_name="product.product",
         string="Rent Invoice Product",

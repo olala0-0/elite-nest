@@ -1,0 +1,274 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_sbs_project_extension_form_custom" model="ir.ui.view">
+        <field name="name">sbs_project_extension.project.form.custom</field>
+        <field name="model">project.project</field>
+        <field name="inherit_id" ref="project.edit_project"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header/field[@name='stage_id']" position="before">
+                <field name="sbs_is_locked" invisible="1"/>
+                <button name="action_sbs_lock"
+                        string="Lock"
+                        type="object"
+                        groups="base.group_system"
+                        invisible="not id or sbs_is_locked"/>
+                <button name="action_sbs_unlock"
+                        string="Unlock"
+                        type="object"
+                        groups="base.group_system"
+                        invisible="not sbs_is_locked"/>
+            </xpath>
+            <xpath expr="//field[@name='tag_ids']" position="attributes">
+                <attribute name="options">{'color_field': 'color', 'no_open': True}</attribute>
+            </xpath>
+            <xpath expr="//field[@name='user_id']" position="attributes">
+                <attribute name="options">{'no_open': True}</attribute>
+            </xpath>
+            <xpath expr="//field[@name='user_id']" position="before">
+                <field name="sbs_priority_number"/>
+                <field name="sbs_project_director"
+                       widget="many2one_avatar_user"
+                       options="{'no_open': True, 'no_create': True}"/>
+            </xpath>
+            <xpath expr="//field[@name='account_id']" position="attributes">
+                <attribute name="options">{'no_open': True}</attribute>
+            </xpath>
+            <xpath expr="//page[@name='description']" position="attributes">
+                <attribute name="readonly">sbs_is_locked</attribute>
+            </xpath>
+            <xpath expr="//page[@name='settings']" position="attributes">
+                <attribute name="readonly">sbs_is_locked</attribute>
+            </xpath>
+            <xpath expr="//notebook" position="inside">
+                <page name="sbs_summary" string="Summary" readonly="sbs_is_locked" groups="sbs_project_extension.group_sbs_project_extension">
+                    <group>
+                        <group string="Risk Assessment">
+                            <field name="risk_level"/>
+                            <field name="risk_factor_id" options="{'no_open': True}"/>
+                        </group>
+                        <group string="Project Type and Action">
+                            <field name="delivery_type"/>
+                            <field name="next_action"/>
+                            <field name="additional_notes"/>
+                        </group>
+                    </group>
+                </page>
+                <page string="Review History" groups="sbs_project_extension.group_sbs_project_extension">
+                          <field name="review_line_ids">
+                            <list create="false" edit="false" delete="false" no_open="1" class="text-wrap">
+                                <field name="review_id" string="Session Name" options="{'no_open': True}"/>
+                                <field name="highlevel_review" class="text-wrap" width="200px"/>
+                                <field name="internal_review" class="text-wrap" width="200px"/>
+                                <field name="task_frozen"/>
+                                <field name="internal_datetime"/>
+                                <field name="completion_percentage" widget="percentage"/>
+                                <field name="remarks_internal" class="text-wrap" width="200px"/>
+                                <field name="next_action" class="text-wrap" width="200px"/>
+                                <field name="customer_review" class="text-wrap" width="200px"/>
+                                <field name="customer_task_frozen"/>
+                                <field name="customer_datetime"/>
+                                <field name="customer_completion_percentage"/>
+                            </list>
+                        </field>
+                </page>
+                <page name="sbs_team" string="Team" readonly="sbs_is_locked" groups="sbs_project_extension.group_sbs_project_extension">
+                    <group>
+                        <field name="team_formation_type"/>
+                    </group>
+                    <group>
+                        <group>
+                            <field name="sp_ids" widget="many2many_tags" domain="[('user_id', '!=', False)] if team_formation_type == 'internal' else []" options="{'no_open': True, 'no_create': True}"/>
+                            <field name="pm_ids" widget="many2many_tags" domain="[('user_id', '!=', False)] if team_formation_type == 'internal' else []" options="{'no_open': True, 'no_create': True}"/>
+                            <field name="developer_ids" widget="many2many_tags" domain="[('user_id', '!=', False)] if team_formation_type == 'internal' else []" options="{'no_open': True, 'no_create': True}"/>
+                            <field name="qa_ids" widget="many2many_tags" domain="[('user_id', '!=', False)] if team_formation_type == 'internal' else []" options="{'no_open': True, 'no_create': True}"/>
+                        </group>
+                        <group>
+                            <field name="fa_ids" widget="many2many_tags" domain="[('user_id', '!=', False)] if team_formation_type == 'internal' else []" options="{'no_open': True, 'no_create': True}"/>
+                            <field name="pc_ids" widget="many2many_tags" domain="[('user_id', '!=', False)] if team_formation_type == 'internal' else []" options="{'no_open': True, 'no_create': True}"/>
+                            <field name="kam_ids" widget="many2many_tags" domain="[('user_id', '!=', False)] if team_formation_type == 'internal' else []" options="{'no_open': True, 'no_create': True}"/>
+                            <field name="csm_ids" widget="many2many_tags" domain="[('user_id', '!=', False)] if team_formation_type == 'internal' else []" options="{'no_open': True, 'no_create': True}"/>
+                        </group>
+                    </group>
+                    <group string="Kanban Photos">
+                        <field name="sbs_lead_developer_id" options="{'no_open': True, 'no_create': True}"/>
+                        <field name="sbs_lead_fa_id" options="{'no_open': True, 'no_create': True}"/>
+                    </group>
+                </page>
+                <page name="sbs_client_details" string="Client Details" readonly="sbs_is_locked" groups="sbs_project_extension.group_sbs_project_extension">
+                    <group>
+                        <group string="Basic Information">
+                            <field name="industry_id" options="{'no_open': True, 'no_create': True}"/>
+                            <field name="client_name"/>
+                            <field name="client_country_id" options="{'no_open': True, 'no_create': True}"/>
+                            <field name="client_website" widget="url"/>
+                        </group>
+                        <group string="Single Point of Contact (SPOC)">
+                            <field name="spoc_name"/>
+                            <field name="spoc_designation"/>
+                            <field name="spoc_phone" widget="phone"/>
+                            <field name="spoc_email" widget="email"/>
+                            <field name="spoc_cc_email" widget="email"/>
+                        </group>
+                    </group>
+                    <group string="Address Details">
+                        <field name="client_address"/>
+                        <field name="whatsapp_group"/>
+                    </group>
+                </page>
+                <page name="sbs_technical_info" string="Technical Info" readonly="sbs_is_locked" groups="sbs_project_extension.group_sbs_project_extension">
+                    <group>
+                        <group string="Git Configuration">
+                            <field name="git_repo_link" widget="url"/>
+                            <field name="git_repo_creator"/>
+                            <field name="git_repo_privacy"/>
+                        </group>
+                        <group string="Platform and Storage">
+                            <field name="tech_stack_id" options="{'no_open': True, 'no_create': True}"/>
+                            <field name="cloud_storage" widget="url"/>
+                        </group>
+                    </group>
+                </page>
+                <page name="sbs_amc_details" string="AMC Details" readonly="sbs_is_locked" groups="sbs_project_extension.group_sbs_project_extension">
+                    <group>
+                        <group string="AMC Status">
+                            <field name="amc_status"/>
+                        </group>
+                        <group string="Free AMC Details">
+                            <field name="free_amc_start_date"/>
+                            <field name="free_amc_expiry_date"/>
+                        </group>
+                        <group string="Paid AMC Details">
+                            <field name="amc_start_date"/>
+                            <field name="amc_expiry_date"/>
+                        </group>
+                        <group string="Remarks">
+                            <field name="amc_remarks"/>
+                        </group>
+                    </group>
+                </page>
+                <page name="sbs_credentials" string="Credentials" readonly="sbs_is_locked" groups="sbs_project_extension.group_sbs_project_password_user">
+                    <group>
+                        <group string="Production Environment">
+                            <field name="prod_hosting"/>
+                            <field name="prod_link" widget="url"/>
+                            <field name="prod_db"/>
+                            <field name="prod_user"/>
+                            <field name="prod_pass"/>
+                            <field name="prod_master_pass"/>
+                            <field name="prod_server_ip"/>
+                            <field name="prod_server_user"/>
+                            <field name="prod_server_password"/>
+                            <field name="prod_server_os"/>
+                        </group>
+                        <group string="Staging Environment">
+                            <field name="stag_hosting"/>
+                            <field name="stag_link" widget="url"/>
+                            <field name="stag_db"/>
+                            <field name="stag_user"/>
+                            <field name="stag_pass"/>
+                            <field name="stag_master_pass"/>
+                            <field name="stag_server_ip"/>
+                            <field name="stag_server_user"/>
+                            <field name="stag_server_password"/>
+                            <field name="stag_server_os"/>
+                        </group>
+                    </group>
+                </page>
+                <page name="sbs_financials" string="Financials" readonly="sbs_is_locked" groups="sbs_project_extension.group_sbs_project_financial_user">
+                    <group string="Financial History">
+                        <group>
+                            <field name="proposed_value"/>
+                            <field name="locked_value"/>
+                        </group>
+                        <group>
+                            <field name="revised_value"/>
+                        </group>
+                    </group>
+                    <separator string="Collection Plan"/>
+                    <field name="collection_plan_ids">
+                        <list editable="bottom" no_open="1">
+                            <field name="date"/>
+                            <field name="milestone"/>
+                            <field name="collection_plan"/>
+                            <field name="responsible_id" widget="many2one_avatar_user" options="{'no_open': True}"/>
+                            <field name="details"/>
+                        </list>
+                    </field>
+                    <separator string="Collection History" class="mt-4"/>
+                    <field name="collection_history_ids">
+                        <list editable="bottom" no_open="1">
+                            <field name="date"/>
+                            <field name="milestone"/>
+                            <field name="collected_amount" sum="Total Collected"/>
+                            <field name="collected_by_id" widget="many2one_avatar_user" options="{'no_open': True}"/>
+                            <field name="details"/>
+                        </list>
+                    </field>
+                </page>
+
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_sbs_project_extension_form_simplified" model="ir.ui.view">
+        <field name="name">sbs_project_extension.project.form.simplified</field>
+        <field name="model">project.project</field>
+        <field name="inherit_id" ref="project.project_project_view_form_simplified"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='user_id']" position="replace">
+                <group>
+                    <field name="sbs_priority_number"/>
+                    <field name="sbs_project_director"
+                           widget="many2one_avatar_user"
+                           options="{'no_open': True, 'no_create': True}"/>
+                    <field name="user_id"
+                           string="Project Manager"
+                           widget="many2one_avatar_user"
+                           domain="[('share', '=', False)]"
+                           options="{'no_open': True, 'no_create': True}"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_sbs_project_extension_project_kanban" model="ir.ui.view">
+        <field name="name">sbs_project_extension.project.kanban.priority</field>
+        <field name="model">project.project</field>
+        <field name="inherit_id" ref="project.view_project_kanban"/>
+        <field name="arch" type="xml">
+            <xpath expr="//kanban" position="attributes">
+                <attribute name="default_order">sbs_priority_number asc, is_favorite desc, sequence, name, id</attribute>
+            </xpath>
+            <xpath expr="//kanban/field[@name='sequence']" position="before">
+                <field name="sbs_priority_number"/>
+            </xpath>
+            <xpath expr="//t[@t-name='card']//field[@name='display_name']/.." position="after">
+                <span class="badge text-bg-light"
+                      t-if="record.sbs_priority_number.raw_value">
+                    Priority <field name="sbs_priority_number"/>
+                </span>
+            </xpath>
+            <xpath expr="//t[@t-name='card']//footer//field[@name='user_id'][@widget='many2one_avatar_user']" position="before">
+                <field name="sbs_project_director" widget="many2one_avatar_user" class="me-1"/>
+            </xpath>
+            <xpath expr="//t[@t-name='card']//footer//field[@name='user_id'][@widget='many2one_avatar_user']" position="after">
+                <field name="sbs_lead_fa_user_id" widget="many2one_avatar_user" class="me-1"/>
+                <field name="sbs_lead_developer_user_id" widget="many2one_avatar_user" class="me-1"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_sbs_project_extension_project_list" model="ir.ui.view">
+        <field name="name">sbs_project_extension.project.list.priority</field>
+        <field name="model">project.project</field>
+        <field name="inherit_id" ref="project.view_project"/>
+        <field name="arch" type="xml">
+            <xpath expr="//list" position="attributes">
+                <attribute name="default_order">sbs_priority_number asc, is_favorite desc, sequence, name, id</attribute>
+            </xpath>
+            <xpath expr="//field[@name='name']" position="before">
+                <field name="sbs_priority_number" string="Priority"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

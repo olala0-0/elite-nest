@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_sbs_project_extension_team_engagement_list" model="ir.ui.view">
+        <field name="name">sbs_project_extension.project.team.engagement.list</field>
+        <field name="model">project.project</field>
+        <field name="arch" type="xml">
+            <list string="Team Engagement" create="false" default_order="sbs_priority_number asc, name asc">
+                <field name="sbs_priority_number" string="Priority"/>
+                <field name="name"/>
+                <field name="sbs_project_director" widget="many2one_avatar_user" optional="1"/>
+                <field name="team_formation_type"/>
+                <field name="sp_ids" widget="many2many_tags" optional="1"/>
+                <field name="pm_ids" widget="many2many_tags"/>
+                <field name="fa_ids" widget="many2many_tags"/>
+                <field name="pc_ids" widget="many2many_tags"/>
+                <field name="developer_ids" widget="many2many_tags"/>
+                <field name="qa_ids" widget="many2many_tags"/>
+                <field name="kam_ids" widget="many2many_tags"/>
+                <field name="csm_ids" widget="many2many_tags"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_sbs_project_extension_team_engagement" model="ir.actions.act_window">
+        <field name="name">Team Engagement</field>
+        <field name="res_model">project.project</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_id" ref="view_sbs_project_extension_team_engagement_list"/>
+    </record>
+</odoo>

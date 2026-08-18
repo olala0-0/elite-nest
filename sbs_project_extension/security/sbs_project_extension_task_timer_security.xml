@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="rule_sbs_task_timer_own" model="ir.rule">
+        <field name="name">SBS Task Timer: own timers only</field>
+        <field name="model_id" ref="model_sbs_project_extension_task_timer"/>
+        <field name="domain_force">[('user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('hr_timesheet.group_hr_timesheet_user'))]"/>
+    </record>
+
+    <record id="rule_sbs_task_timer_admin" model="ir.rule">
+        <field name="name">SBS Task Timer: all timers</field>
+        <field name="model_id" ref="model_sbs_project_extension_task_timer"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('group_sbs_project_admin'))]"/>
+    </record>
+
+    <record id="rule_sbs_timesheet_log_wizard_own" model="ir.rule">
+        <field name="name">SBS Timesheet Log Wizard: own records only</field>
+        <field name="model_id" ref="model_sbs_project_extension_timesheet_log_wizard"/>
+        <field name="domain_force">[('create_uid', '=', user.id)]</field>
+        <field name="groups" eval="[(5, 0, 0)]"/>
+    </record>
+</odoo>

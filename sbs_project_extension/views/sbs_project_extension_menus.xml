@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <menuitem id="menu_sbs_project_extension_master_root" 
+              name="Project Master" 
+              parent="project.menu_main_pm" 
+              sequence="3"
+              groups="sbs_project_extension.group_sbs_project_extension"/>
+
+    <menuitem id="menu_sbs_project_extension_summary" 
+              name="Project Summary" 
+              parent="menu_sbs_project_extension_master_root" 
+              action="action_sbs_project_extension_summary" 
+              sequence="10"/>
+
+    <menuitem id="menu_sbs_project_extension_master_list"
+              name="Project Master"
+              parent="menu_sbs_project_extension_master_root"
+              action="action_sbs_project_extension_master"
+              sequence="20"/>
+
+    <menuitem id="menu_sbs_project_extension_review"
+              name="Review"
+              parent="menu_sbs_project_extension_master_root"
+              action="action_sbs_project_extension_review"
+              sequence="30"/>
+
+    <menuitem id="menu_sbs_project_extension_team_engagement" 
+              name="Team Engagement" 
+              parent="menu_sbs_project_extension_master_root" 
+              action="action_sbs_project_extension_team_engagement" 
+              sequence="40"/>
+
+    <menuitem id="menu_sbs_project_extension_client_technical" 
+              name="Client and Technical" 
+              parent="menu_sbs_project_extension_master_root" 
+              action="action_sbs_project_extension_client_technical" 
+              sequence="50"/>
+
+    <menuitem id="menu_sbs_project_extension_amc"
+              name="AMC"
+              parent="menu_sbs_project_extension_master_root"
+              action="action_sbs_project_extension_amc"
+              sequence="60"/>
+
+    <menuitem id="menu_sbs_project_extension_credentials"
+              name="Credentials" 
+              parent="menu_sbs_project_extension_master_root" 
+              action="action_sbs_project_extension_credentials" 
+              sequence="70"
+              groups="sbs_project_extension.group_sbs_project_password_user"/>
+
+    <menuitem id="menu_sbs_project_extension_financials"
+              name="Financials"
+              parent="menu_sbs_project_extension_master_root"
+              action="action_sbs_project_extension_financials"
+              sequence="80"
+              groups="sbs_project_extension.group_sbs_project_financial_user"/>
+</odoo>

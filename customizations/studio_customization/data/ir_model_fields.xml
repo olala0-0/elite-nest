@@ -361,7 +361,6 @@
     <field name="model_id" ref="asset_management.model_asset_management"/>
     <field name="name">x_studio_fm_vendor</field>
     <field name="relation">res.partner</field>
-    <field name="domain">[("supplier_rank", ">", 0)]</field>
   </record>
   <record id="new_many2one_asset_m_3b0bf59b-a19a-4d02-be11-f231ebe9eff8" model="ir.model.fields" context="{'studio': True}">
     <field name="ttype">many2one</field>
@@ -371,7 +370,6 @@
     <field name="model_id" ref="asset_management.model_asset_maintenance_entry"/>
     <field name="name">x_studio_fm_vendor</field>
     <field name="relation">res.partner</field>
-    <field name="domain">[("supplier_rank", ">", 0)]</field>
   </record>
   <record id="new_many2one_helpdes_8c49afd8-a569-4f51-9aac-c2107e7bdc72" model="ir.model.fields" context="{'studio': True}">
     <field name="ttype">many2one</field>

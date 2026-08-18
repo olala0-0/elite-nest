@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="sbs_project_extension.SbsTaskTimerField">
+        <span class="o_sbs_task_timer badge text-bg-danger ms-2 align-self-center">
+            <i class="fa fa-circle me-1" role="img" aria-label="Timer running" title="Timer running"/>
+            <span class="o_sbs_task_timer_value" t-esc="elapsed"/>
+        </span>
+    </t>
+
+</templates>

@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_sbs_project_extension_client_tech_list" model="ir.ui.view">
+        <field name="name">sbs_project_extension.project.client.tech.list</field>
+        <field name="model">project.project</field>
+        <field name="arch" type="xml">
+            <list string="Client and Technical" default_order="sbs_priority_number asc, name asc">
+                <field name="sbs_priority_number" string="Priority"/>
+                <field name="name"/>
+                <field name="sbs_project_director" widget="many2one_avatar_user" optional="1"/>
+                <field name="delivery_type"/>
+                <field name="risk_level" optional="1"/>
+                <field name="risk_factor_id" optional="1"/>
+                <field name="next_action" optional="1"/>
+                <field name="pm_ids" widget="many2many_tags" optional="1"/>
+                <field name="fa_ids" widget="many2many_tags" optional="1"/>
+                <field name="developer_ids" widget="many2many_tags" optional="1"/>
+                <field name="qa_ids" widget="many2many_tags" optional="1"/>
+                <field name="kam_ids" widget="many2many_tags" optional="1"/>
+                <field name="csm_ids" widget="many2many_tags" optional="1"/>
+                <field name="pc_ids" widget="many2many_tags" optional="1"/>
+                <field name="industry_id" optional="1"/>
+                <field name="client_name"/>
+                <field name="client_country_id"/>
+                <field name="client_website"/>
+                <field name="spoc_name"/>
+                <field name="spoc_designation"/>
+                <field name="spoc_phone"/>
+                <field name="spoc_email"/>
+                <field name="client_address"/>
+                <field name="git_repo_link"/>
+                <field name="git_repo_creator"/>
+                <field name="git_repo_privacy"/>
+                <field name="tech_stack_id"/>
+                <field name="whatsapp_group"/>
+                <field name="additional_notes" optional="1"/>
+            </list>
+        </field>
+    </record>
+
+        <record id="view_sbs_project_extension_amc_list" model="ir.ui.view">
+        <field name="name">sbs_project_extension.project.amc.list</field>
+        <field name="model">project.project</field>
+        <field name="arch" type="xml">
+            <list string="AMC" default_order="sbs_priority_number asc, name asc">
+                <field name="sbs_priority_number" string="Priority"/>
+                <field name="name"/>
+                <field name="sbs_project_director" widget="many2one_avatar_user" optional="1"/>
+                <field name="amc_status"/>
+                <field name="amc_start_date"/>
+                <field name="amc_expiry_date"/>
+                <field name="amc_remarks"/>
+                <field name="tech_stack_id" optional="1"/>
+                <field name="free_amc_start_date" optional="1"/>
+                <field name="free_amc_expiry_date" optional="1"/>
+                <field name="sp_ids" widget="many2many_tags" optional="1"/>
+                <field name="fa_ids" widget="many2many_tags" optional="1"/>
+                <field name="spoc_name" optional="1"/>
+                <field name="spoc_email" optional="1"/>
+                <field name="spoc_cc_email" optional="1"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_sbs_project_extension_credentials_list" model="ir.ui.view">
+        <field name="name">sbs_project_extension.project.credentials.list</field>
+        <field name="model">sbs_project_extension.project.credentials</field>
+        <field name="group_ids" eval="[(4, ref('group_sbs_project_password_user'))]"/>
+        <field name="arch" type="xml">
+            <list string="Credentials" create="false" delete="false">
+                <field name="project_id" options="{'no_open': True}"/>
+                <field name="company_id" optional="hide"/>
+                <field name="prod_hosting" optional="1"/>
+                <field name="prod_link"/>
+                <field name="prod_db"/>
+                <field name="prod_user"/>
+                <field name="prod_pass"/>
+                <field name="prod_master_pass"/>
+                <field name="prod_server_ip" optional="1"/>
+                <field name="prod_server_user" optional="1"/>
+                <field name="prod_server_password" optional="1"/>
+                <field name="prod_server_os" optional="1"/>
+                <field name="stag_hosting" optional="1"/>
+                <field name="stag_link"/>
+                <field name="stag_db"/>
+                <field name="stag_user"/>
+                <field name="stag_pass"/>
+                <field name="stag_master_pass"/>
+                <field name="stag_server_ip" optional="1"/>
+                <field name="stag_server_user" optional="1"/>
+                <field name="stag_server_password" optional="1"/>
+                <field name="stag_server_os" optional="1"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_sbs_project_extension_credentials_form" model="ir.ui.view">
+        <field name="name">sbs_project_extension.project.credentials.form</field>
+        <field name="model">sbs_project_extension.project.credentials</field>
+        <field name="group_ids" eval="[(4, ref('group_sbs_project_password_user'))]"/>
+        <field name="arch" type="xml">
+            <form string="Project Credentials" create="false" delete="false">
+                <sheet>
+                    <group>
+                        <field name="project_id" readonly="1" options="{'no_open': True}"/>
+                        <field name="company_id" readonly="1" groups="base.group_multi_company"/>
+                    </group>
+                    <group>
+                        <group string="Production Environment">
+                            <field name="prod_hosting"/>
+                            <field name="prod_link" widget="url"/>
+                            <field name="prod_db"/>
+                            <field name="prod_user"/>
+                            <field name="prod_pass"/>
+                            <field name="prod_master_pass"/>
+                            <field name="prod_server_ip"/>
+                            <field name="prod_server_user"/>
+                            <field name="prod_server_password"/>
+                            <field name="prod_server_os"/>
+                        </group>
+                        <group string="Staging Environment">
+                            <field name="stag_hosting"/>
+                            <field name="stag_link" widget="url"/>
+                            <field name="stag_db"/>
+                            <field name="stag_user"/>
+                            <field name="stag_pass"/>
+                            <field name="stag_master_pass"/>
+                            <field name="stag_server_ip"/>
+                            <field name="stag_server_user"/>
+                            <field name="stag_server_password"/>
+                            <field name="stag_server_os"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_sbs_project_extension_credentials_search" model="ir.ui.view">
+        <field name="name">sbs_project_extension.project.credentials.search</field>
+        <field name="model">sbs_project_extension.project.credentials</field>
+        <field name="group_ids" eval="[(4, ref('group_sbs_project_password_user'))]"/>
+        <field name="arch" type="xml">
+            <search string="Search Project Credentials">
+                <field name="project_id"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_sbs_project_extension_client_technical" model="ir.actions.act_window">
+        <field name="name">Client and Technical</field>
+        <field name="res_model">project.project</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_id" ref="view_sbs_project_extension_client_tech_list"/>
+        <field name="search_view_id" ref="view_sbs_project_extension_summary_list_search"/>
+    </record>
+
+    <record id="action_sbs_project_extension_credentials" model="ir.actions.act_window">
+        <field name="name">Credentials</field>
+        <field name="res_model">sbs_project_extension.project.credentials</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_id" ref="view_sbs_project_extension_credentials_list"/>
+        <field name="search_view_id" ref="view_sbs_project_extension_credentials_search"/>
+    </record>
+
+    <record id="action_sbs_project_extension_amc" model="ir.actions.act_window">
+        <field name="name">AMC</field>
+        <field name="res_model">project.project</field>
+        <field name="view_mode">list</field>
+        <field name="view_id" ref="view_sbs_project_extension_amc_list"/>
+        <field name="search_view_id" ref="view_sbs_project_extension_summary_list_search"/>
+    </record>
+</odoo>

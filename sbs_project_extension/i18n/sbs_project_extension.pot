@@ -1,0 +1,1552 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* sbs_project_extension
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 19.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-08-15 16:33+0000\n"
+"PO-Revision-Date: 2026-08-15 16:33+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_review_line__completion_percentage
+msgid "% of Completion"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_review_line__customer_completion_percentage
+msgid "% of Customer Completion"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.constraint,message:sbs_project_extension.constraint_sbs_project_extension_project_credentials_unique_project
+msgid "A project can have only one credential record."
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.constraint,message:sbs_project_extension.constraint_sbs_project_extension_project_financial_unique_project
+msgid "A project can have only one financial record."
+msgstr ""
+
+#. module: sbs_project_extension
+#. odoo-python
+#: code:addons/sbs_project_extension/models/sbs_project_extension_task_timer.py:0
+msgid "A timer cannot stop before it started."
+msgstr ""
+
+#. module: sbs_project_extension
+#. odoo-python
+#: code:addons/sbs_project_extension/models/sbs_project_extension_task_timer.py:0
+msgid ""
+"A timer is already running on task \"%s\". Stop it before starting a new "
+"one."
+msgstr ""
+
+#. module: sbs_project_extension
+#. odoo-python
+#: code:addons/sbs_project_extension/models/sbs_project_extension_task_timer.py:0
+msgid "A timer is already running on this task."
+msgstr ""
+
+#. module: sbs_project_extension
+#. odoo-python
+#: code:addons/sbs_project_extension/models/sbs_project_extension.py:0
+msgid "A user can have only one SBS Project Role."
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.constraint,message:sbs_project_extension.constraint_sbs_project_extension_task_timer_task_user_uniq
+msgid "A user can only have one timer per task."
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.actions.act_window,name:sbs_project_extension.action_sbs_project_extension_amc
+#: model:ir.model.fields.selection,name:sbs_project_extension.selection__project_project__delivery_type__amc
+#: model:ir.ui.menu,name:sbs_project_extension.menu_sbs_project_extension_amc
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_sbs_project_extension_amc_list
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_sbs_project_extension_summary_list_search
+msgid "AMC"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_sbs_project_extension_form_custom
+msgid "AMC Details"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_project_project__amc_expiry_date
+msgid "AMC Expiry Date"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_project_project__amc_start_date
+msgid "AMC Start Date"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_project_project__amc_status
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_sbs_project_extension_form_custom
+msgid "AMC Status"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_project_team__active
+#: model:ir.model.fields.selection,name:sbs_project_extension.selection__project_project__amc_status__active
+msgid "Active"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_sbs_timesheet_log_wizard_form
+msgid "Add to Timesheet"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_project_project__additional_notes
+msgid "Additional Notes"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_sbs_project_extension_form_custom
+msgid "Address Details"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:res.groups,comment:sbs_project_extension.group_sbs_project_admin
+msgid "Administrators have full SBS project access."
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.constraint,message:sbs_project_extension.constraint_sbs_project_extension_project_team_unique_user
+msgid "An internal user can have only one project team entry."
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model,name:sbs_project_extension.model_account_analytic_line
+msgid "Analytic Line"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_sbs_project_extension_summary_list_search
+msgid "Assigned Functional Analyst"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_sbs_project_extension_form_custom
+msgid "Basic Information"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_project_project__spoc_cc_email
+msgid "CC Email"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_project_project__client_address
+msgid "Client Address"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_project_project__client_country_id
+msgid "Client Country"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_sbs_project_extension_form_custom
+msgid "Client Details"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_project_project__client_name
+msgid "Client Name"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_project_project__csm_ids
+msgid "Client Success Managers"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_project_project__client_website
+msgid "Client Website"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.actions.act_window,name:sbs_project_extension.action_sbs_project_extension_client_technical
+#: model:ir.ui.menu,name:sbs_project_extension.menu_sbs_project_extension_client_technical
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_sbs_project_extension_client_tech_list
+msgid "Client and Technical"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_project_project__cloud_storage
+msgid "Cloud Storage Link"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_collection_history__collected_amount
+msgid "Collected Amount"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_collection_history__collected_by_id
+msgid "Collected By"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model,name:sbs_project_extension.model_sbs_project_extension_collection_history
+#: model:ir.model.fields,field_description:sbs_project_extension.field_project_project__collection_history_ids
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_sbs_project_extension_form_custom
+msgid "Collection History"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model,name:sbs_project_extension.model_sbs_project_extension_collection_plan
+#: model:ir.model.fields,field_description:sbs_project_extension.field_project_project__collection_plan_ids
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_collection_plan__collection_plan
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_sbs_project_extension_form_custom
+msgid "Collection Plan"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_project_credentials__company_id
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_project_financial__company_id
+msgid "Company"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_task_timer__elapsed_hours
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_timesheet_log_wizard__measured_hours
+msgid "Counted Time"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model_terms:ir.actions.act_window,help:sbs_project_extension.action_sbs_project_extension_review
+msgid "Create your first Project Review Session!"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_collection_history__create_uid
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_collection_plan__create_uid
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_industry__create_uid
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_project_credentials__create_uid
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_project_financial__create_uid
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_project_team__create_uid
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_review_line__create_uid
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_review_session__create_uid
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_risk_factor__create_uid
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_task_timer__create_uid
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_tech_stack__create_uid
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_timesheet_log_wizard__create_uid
+msgid "Created by"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_collection_history__create_date
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_collection_plan__create_date
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_industry__create_date
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_project_credentials__create_date
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_project_financial__create_date
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_project_team__create_date
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_review_line__create_date
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_review_session__create_date
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_risk_factor__create_date
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_task_timer__create_date
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_tech_stack__create_date
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_timesheet_log_wizard__create_date
+msgid "Created on"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_project_project__credential_detail_id
+msgid "Credential Detail"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_project_project__credential_detail_ids
+msgid "Credential Details"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.actions.act_window,name:sbs_project_extension.action_sbs_project_extension_credentials
+#: model:ir.ui.menu,name:sbs_project_extension.menu_sbs_project_extension_credentials
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_sbs_project_extension_credentials_list
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_sbs_project_extension_form_custom
+msgid "Credentials"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_collection_history__currency_id
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_project_financial__currency_id
+msgid "Currency"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_review_line__customer_review
+msgid "Customer Review"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_review_line__customer_task_frozen
+msgid "Customer Task Frozen"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_review_line__customer_datetime
+msgid "Customer Timeline"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_collection_history__date
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_collection_plan__date
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_timesheet_log_wizard__date
+msgid "Date"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_project_project__delivery_type
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_sbs_project_extension_summary_list_search
+msgid "Delivery Type"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_timesheet_log_wizard__name
+msgid "Description"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_collection_history__details
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_collection_plan__details
+msgid "Details"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_project_project__developer_ids
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_sbs_project_extension_summary_list_search
+msgid "Developers"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields.selection,name:sbs_project_extension.selection__project_project__amc_status__development
+#: model:ir.model.fields.selection,name:sbs_project_extension.selection__project_project__delivery_type__development
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_sbs_project_extension_summary_list_search
+msgid "Development"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_sbs_timesheet_log_wizard_form
+msgid "Discard Timer"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_account_analytic_line__display_name
+#: model:ir.model.fields,field_description:sbs_project_extension.field_project_project__display_name
+#: model:ir.model.fields,field_description:sbs_project_extension.field_project_task__display_name
+#: model:ir.model.fields,field_description:sbs_project_extension.field_res_users__display_name
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_collection_history__display_name
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_collection_plan__display_name
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_industry__display_name
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_project_credentials__display_name
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_project_financial__display_name
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_project_team__display_name
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_review_line__display_name
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_review_session__display_name
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_risk_factor__display_name
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_task_timer__display_name
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_tech_stack__display_name
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_timesheet_log_wizard__display_name
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_linked_mixin__display_name
+msgid "Display Name"
+msgstr ""
+
+#. module: sbs_project_extension
+#. odoo-javascript
+#: code:addons/sbs_project_extension/static/src/fields/duration_hms_field.js:0
+msgid "Duration (HH:MM:SS)"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_task_form2_sbs_timer
+msgid "End"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields.selection,name:sbs_project_extension.selection__project_project__amc_status__expired
+msgid "Expired"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_project_project__financial_detail_id
+msgid "Financial Detail"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_project_project__financial_detail_ids
+msgid "Financial Details"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_sbs_project_extension_form_custom
+msgid "Financial History"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_sbs_project_extension_financials_form
+msgid "Financial Values"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.actions.act_window,name:sbs_project_extension.action_sbs_project_extension_financials
+#: model:ir.ui.menu,name:sbs_project_extension.menu_sbs_project_extension_financials
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_sbs_project_extension_financials_list
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_sbs_project_extension_form_custom
+msgid "Financials"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_sbs_project_extension_form_custom
+msgid "Free AMC Details"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_project_project__free_amc_expiry_date
+msgid "Free AMC Expiry Date"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_project_project__free_amc_start_date
+msgid "Free AMC Start Date"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_sbs_project_extension_summary_list_search
+msgid "Functional Analysts"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_review_line__fa_ids
+msgid "Functional Consultant"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_project_project__fa_ids
+msgid "Functional Consultants"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_sbs_project_extension_form_custom
+msgid "Git Configuration"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_project_project__git_repo_privacy
+msgid "Git Privacy"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_project_project__git_repo_creator
+msgid "Git Repo Creator"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_project_project__git_repo_link
+msgid "Git Repo Link"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.module.category,description:sbs_project_extension.module_category_sbs_project_extension
+#: model:res.groups,comment:sbs_project_extension.group_sbs_project_extension
+msgid "Helps manage additional projects information."
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields.selection,name:sbs_project_extension.selection__project_project__risk_level__high
+msgid "High"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_sbs_project_extension_summary_list_search
+msgid "High Risk"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_review_line__highlevel_review
+msgid "High-level Review"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields.selection,name:sbs_project_extension.selection__project_project__team_formation_type__hybrid
+msgid "Hybrid"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_account_analytic_line__id
+#: model:ir.model.fields,field_description:sbs_project_extension.field_project_project__id
+#: model:ir.model.fields,field_description:sbs_project_extension.field_project_task__id
+#: model:ir.model.fields,field_description:sbs_project_extension.field_res_users__id
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_collection_history__id
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_collection_plan__id
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_industry__id
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_project_credentials__id
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_project_financial__id
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_project_team__id
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_review_line__id
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_review_session__id
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_risk_factor__id
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_task_timer__id
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_tech_stack__id
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_timesheet_log_wizard__id
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_linked_mixin__id
+msgid "ID"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields.selection,name:sbs_project_extension.selection__project_project__amc_status__inactive
+msgid "Inactive"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model,name:sbs_project_extension.model_sbs_project_extension_industry
+#: model:ir.model.fields,field_description:sbs_project_extension.field_project_project__industry_id
+msgid "Industry"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.actions.act_window,name:sbs_project_extension.action_sbs_project_extension_industry
+#: model:ir.ui.menu,name:sbs_project_extension.menu_sbs_project_extension_industry
+msgid "Industry Vertical Settings"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields.selection,name:sbs_project_extension.selection__project_project__team_formation_type__internal
+msgid "Internal"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_project_team__user_id
+msgid "Internal User"
+msgstr ""
+
+#. module: sbs_project_extension
+#. odoo-python
+#: code:addons/sbs_project_extension/models/sbs_project_extension.py:0
+msgid "Internal User %(user_id)s"
+msgstr ""
+
+#. module: sbs_project_extension
+#. odoo-python
+#: code:addons/sbs_project_extension/models/sbs_project_extension.py:0
+msgid "Internal project team entries are synchronized from users."
+msgstr ""
+
+#. module: sbs_project_extension
+#. odoo-python
+#: code:addons/sbs_project_extension/models/sbs_project_extension.py:0
+msgid "Internal project team entries cannot be deleted."
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_review_line__internal_datetime
+msgid "Intr. Timeline"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_sbs_timesheet_log_wizard_form
+msgid "Keep for Later"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_project_project__kam_ids
+msgid "Key Account Managers"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_collection_history__write_uid
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_collection_plan__write_uid
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_industry__write_uid
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_project_credentials__write_uid
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_project_financial__write_uid
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_project_team__write_uid
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_review_line__write_uid
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_review_session__write_uid
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_risk_factor__write_uid
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_task_timer__write_uid
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_tech_stack__write_uid
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_timesheet_log_wizard__write_uid
+msgid "Last Updated by"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_collection_history__write_date
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_collection_plan__write_date
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_industry__write_date
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_project_credentials__write_date
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_project_financial__write_date
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_project_team__write_date
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_review_line__write_date
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_review_session__write_date
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_risk_factor__write_date
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_task_timer__write_date
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_tech_stack__write_date
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_timesheet_log_wizard__write_date
+msgid "Last Updated on"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_sbs_project_extension_form_custom
+msgid "Lock"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_project_project__sbs_is_locked
+msgid "Locked"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_project_project__locked_value
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_project_financial__locked_value
+msgid "Locked Value"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model,name:sbs_project_extension.model_sbs_project_extension_timesheet_log_wizard
+msgid "Log Counted Time to Timesheet"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_task_form2_sbs_timer
+msgid "Log Time"
+msgstr ""
+
+#. module: sbs_project_extension
+#. odoo-python
+#: code:addons/sbs_project_extension/models/sbs_project_extension_task_timer.py:0
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_sbs_timesheet_log_wizard_form
+msgid "Log Time to Timesheet"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields.selection,name:sbs_project_extension.selection__project_project__risk_level__low
+msgid "Low"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_sbs_project_extension_summary_list_search
+msgid "Low Risk"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,help:sbs_project_extension.field_project_project__sbs_priority_number
+msgid "Lower positive numbers are shown first; zero is shown last."
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields.selection,name:sbs_project_extension.selection__project_project__risk_level__medium
+msgid "Medium"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_sbs_project_extension_summary_list_search
+msgid "Medium Risk"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_collection_history__milestone
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_collection_plan__milestone
+msgid "Milestone"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_industry__name
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_project_team__name
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_risk_factor__name
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_tech_stack__name
+msgid "Name"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_project_project__next_action
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_review_line__next_action
+msgid "Next Action"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields.selection,name:sbs_project_extension.selection__sbs_project_extension_review_line__customer_task_frozen__no
+#: model:ir.model.fields.selection,name:sbs_project_extension.selection__sbs_project_extension_review_line__task_frozen__no
+msgid "No"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields.selection,name:sbs_project_extension.selection__project_task__sbs_timer_state__idle
+msgid "No Timer"
+msgstr ""
+
+#. module: sbs_project_extension
+#. odoo-python
+#: code:addons/sbs_project_extension/models/sbs_project_extension_task_timer.py:0
+msgid "No timer is running on this task."
+msgstr ""
+
+#. module: sbs_project_extension
+#. odoo-python
+#: code:addons/sbs_project_extension/models/sbs_project_extension_task_timer.py:0
+msgid "No timer was found on this task."
+msgstr ""
+
+#. module: sbs_project_extension
+#. odoo-python
+#: code:addons/sbs_project_extension/models/sbs_project_extension.py:0
+msgid "Only a Super Admin can lock or unlock projects."
+msgstr ""
+
+#. module: sbs_project_extension
+#. odoo-python
+#: code:addons/sbs_project_extension/models/sbs_project_extension.py:0
+msgid "Only an SBS Project Admin can %(operation)s a project."
+msgstr ""
+
+#. module: sbs_project_extension
+#. odoo-python
+#: code:addons/sbs_project_extension/models/sbs_project_extension_task_timer.py:0
+msgid "Only an SBS Project Admin can delete task timesheets."
+msgstr ""
+
+#. module: sbs_project_extension
+#. odoo-python
+#: code:addons/sbs_project_extension/models/sbs_project_extension.py:0
+msgid "Only an SBS Project Admin can delete tasks."
+msgstr ""
+
+#. module: sbs_project_extension
+#. odoo-python
+#: code:addons/sbs_project_extension/models/sbs_project_extension_task_timer.py:0
+msgid "Only an SBS Project Admin can edit task timesheets."
+msgstr ""
+
+#. module: sbs_project_extension
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_sbs_project_extension_form_custom
+msgid "Paid AMC Details"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields.selection,name:sbs_project_extension.selection__project_project__delivery_type__pending
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_sbs_project_extension_summary_list_search
+msgid "Payment Pending"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields.selection,name:sbs_project_extension.selection__project_task__sbs_timer_state__stopped
+msgid "Pending Log"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_sbs_project_extension_form_custom
+msgid "Platform and Storage"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_sbs_project_extension_amc_list
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_sbs_project_extension_client_tech_list
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_sbs_project_extension_master_list
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_sbs_project_extension_project_kanban
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_sbs_project_extension_project_list
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_sbs_project_extension_summary_list
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_sbs_project_extension_team_engagement_list
+msgid "Priority"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_project_project__sbs_priority_number
+msgid "Priority Number"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields.selection,name:sbs_project_extension.selection__project_project__git_repo_privacy__private
+msgid "Private"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_project_project__prod_db
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_project_credentials__prod_db
+msgid "Production DB"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_sbs_project_extension_credentials_form
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_sbs_project_extension_form_custom
+msgid "Production Environment"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_project_project__prod_hosting
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_project_credentials__prod_hosting
+msgid "Production Hosting"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_project_project__prod_link
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_project_credentials__prod_link
+msgid "Production Link"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_project_project__prod_master_pass
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_project_credentials__prod_master_pass
+msgid "Production Master Password"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_project_project__prod_server_os
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_project_credentials__prod_server_os
+msgid "Production OS"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_project_project__prod_pass
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_project_credentials__prod_pass
+msgid "Production Password"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_project_project__prod_server_password
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_project_credentials__prod_server_password
+msgid "Production SSH Password"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_project_project__prod_server_user
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_project_credentials__prod_server_user
+msgid "Production SSH User"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_project_project__prod_server_ip
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_project_credentials__prod_server_ip
+msgid "Production Server IP"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_project_project__prod_user
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_project_credentials__prod_user
+msgid "Production User"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model,name:sbs_project_extension.model_project_project
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_collection_history__project_id
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_collection_plan__project_id
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_project_credentials__project_id
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_project_financial__project_id
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_review_line__project_id
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_timesheet_log_wizard__project_id
+msgid "Project"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_project_project__pc_ids
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_review_line__pc_ids
+msgid "Project Coordinators"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model,name:sbs_project_extension.model_sbs_project_extension_project_credentials
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_sbs_project_extension_credentials_form
+msgid "Project Credentials"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_project_project__sbs_project_director
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_sbs_project_extension_summary_list_search
+msgid "Project Director"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model,name:sbs_project_extension.model_sbs_project_extension_project_financial
+msgid "Project Financial Details"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_sbs_project_extension_financials_form
+msgid "Project Financials"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_sbs_project_extension_form_simplified
+msgid "Project Manager"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_project_project__pm_ids
+msgid "Project Managers"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.actions.act_window,name:sbs_project_extension.action_sbs_project_extension_master
+#: model:ir.ui.menu,name:sbs_project_extension.menu_sbs_project_extension_master_list
+#: model:ir.ui.menu,name:sbs_project_extension.menu_sbs_project_extension_master_root
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_sbs_project_extension_master_list
+msgid "Project Master"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.actions.act_window,name:sbs_project_extension.action_sbs_project_extension_review
+msgid "Project Review"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model,name:sbs_project_extension.model_sbs_project_extension_review_line
+msgid "Project Review Line"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model,name:sbs_project_extension.model_sbs_project_extension_review_session
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_sbs_project_extension_review_session_form
+msgid "Project Review Session"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_sbs_project_extension_review_session_list
+msgid "Project Review Sessions"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.actions.act_window,name:sbs_project_extension.action_sbs_project_extension_summary
+#: model:ir.ui.menu,name:sbs_project_extension.menu_sbs_project_extension_summary
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_sbs_project_extension_summary_list
+msgid "Project Summary"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model,name:sbs_project_extension.model_sbs_project_extension_project_team
+msgid "Project Team"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.ui.menu,name:sbs_project_extension.menu_sbs_project_extension_project_team
+msgid "Project Team Settings"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_sbs_project_extension_form_custom
+msgid "Project Type and Action"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model,name:sbs_project_extension.model_sbs_project_linked_mixin
+msgid "Project-linked Record Access"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_project_project__proposed_value
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_project_financial__proposed_value
+msgid "Proposed Value"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields.selection,name:sbs_project_extension.selection__project_project__git_repo_privacy__public
+msgid "Public"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_project_project__qa_ids
+msgid "QAs"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:res.groups,name:sbs_project_extension.group_sbs_task_read_create
+msgid "Read Task Only"
+msgstr ""
+
+#. module: sbs_project_extension
+#. odoo-python
+#: code:addons/sbs_project_extension/models/sbs_project_extension.py:0
+msgid "Read Task Only users can create tasks but cannot edit them."
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_project_project__amc_remarks
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_review_line__remarks_internal
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_sbs_project_extension_form_custom
+msgid "Remarks"
+msgstr ""
+
+#. module: sbs_project_extension
+#. odoo-python
+#: code:addons/sbs_project_extension/models/sbs_project_extension.py:0
+msgid ""
+"Remove external team members before changing %(project)s to an Internal "
+"team: %(members)s"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_collection_plan__responsible_id
+msgid "Responsible"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_review_line__internal_review
+#: model:ir.ui.menu,name:sbs_project_extension.menu_sbs_project_extension_review
+msgid "Review"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_review_session__date
+msgid "Review Date"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_project_project__review_line_ids
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_sbs_project_extension_form_custom
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_sbs_project_extension_review_session_form
+msgid "Review History"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_review_session__review_line_ids
+msgid "Review Lines"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_review_session__name
+msgid "Review Name"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_review_line__review_id
+msgid "Review Reference"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_project_project__revised_value
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_project_financial__revised_value
+msgid "Revised Value"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_sbs_project_extension_form_custom
+msgid "Risk Assessment"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model,name:sbs_project_extension.model_sbs_project_extension_risk_factor
+#: model:ir.model.fields,field_description:sbs_project_extension.field_project_project__risk_factor_id
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_sbs_project_extension_summary_list_search
+msgid "Risk Factor"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.actions.act_window,name:sbs_project_extension.action_sbs_project_extension_risk_factor
+#: model:ir.ui.menu,name:sbs_project_extension.menu_sbs_project_extension_risk_factor
+msgid "Risk Factor Settings"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_project_project__risk_level
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_sbs_project_extension_summary_list_search
+msgid "Risk Level"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields.selection,name:sbs_project_extension.selection__project_task__sbs_timer_state__running
+#: model:ir.model.fields.selection,name:sbs_project_extension.selection__sbs_project_extension_task_timer__state__running
+msgid "Running"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:res.groups,name:sbs_project_extension.group_sbs_project_admin
+msgid "SBS Project Admin"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:res.groups,name:sbs_project_extension.group_sbs_project_credentials_financial_user
+msgid "SBS Project Credentials & Financial User"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:res.groups,name:sbs_project_extension.group_sbs_project_password_user
+msgid "SBS Project Credentials User"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.module.category,name:sbs_project_extension.module_category_sbs_project_extension
+msgid "SBS Project Extension"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:res.groups,name:sbs_project_extension.group_sbs_project_financial_user
+msgid "SBS Project Financial User"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:res.groups.privilege,name:sbs_project_extension.privilege_sbs_project_role
+msgid "SBS Project Role"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.ui.menu,name:sbs_project_extension.menu_sbs_project_extension_config_root
+msgid "SBS Project Settings"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:res.groups,name:sbs_project_extension.group_sbs_project_extension
+msgid "SBS Project User"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:res.groups.privilege,name:sbs_project_extension.privilege_sbs_task_access
+msgid "SBS Task Access"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_project_project__spoc_designation
+msgid "SPOC Designation"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_project_project__spoc_email
+msgid "SPOC Email"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_project_project__spoc_name
+msgid "SPOC Name"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_project_project__spoc_phone
+msgid "SPOC Phone"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_review_line__sp_ids
+msgid "Sales Person"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_project_project__sp_ids
+msgid "Sales Persons"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_sbs_project_extension_credentials_search
+msgid "Search Project Credentials"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_sbs_project_extension_financials_search
+msgid "Search Project Financials"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_sbs_project_extension_summary_list_search
+msgid "Search Projects"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_sbs_project_extension_form_custom
+msgid "Session Name"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_sbs_project_extension_form_custom
+msgid "Single Point of Contact (SPOC)"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_project_project__stag_db
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_project_credentials__stag_db
+msgid "Staging DB"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_sbs_project_extension_credentials_form
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_sbs_project_extension_form_custom
+msgid "Staging Environment"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_project_project__stag_hosting
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_project_credentials__stag_hosting
+msgid "Staging Hosting"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_project_project__stag_link
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_project_credentials__stag_link
+msgid "Staging Link"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_project_project__stag_master_pass
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_project_credentials__stag_master_pass
+msgid "Staging Master Password"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_project_project__stag_server_os
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_project_credentials__stag_server_os
+msgid "Staging OS"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_project_project__stag_pass
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_project_credentials__stag_pass
+msgid "Staging Password"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_project_project__stag_server_password
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_project_credentials__stag_server_password
+msgid "Staging SSH Password"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_project_project__stag_server_ip
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_project_credentials__stag_server_ip
+msgid "Staging Server IP"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_project_project__stag_server_user
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_project_credentials__stag_server_user
+msgid "Staging Server SSH User"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_project_project__stag_user
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_project_credentials__stag_user
+msgid "Staging User"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_task_form2_sbs_timer
+msgid "Start"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_task_timer__date_start
+msgid "Started On"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_task_timer__state
+msgid "Status"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields.selection,name:sbs_project_extension.selection__sbs_project_extension_task_timer__state__stopped
+msgid "Stopped"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_task_timer__date_stop
+msgid "Stopped On"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_sbs_project_extension_form_custom
+msgid "Summary"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model,name:sbs_project_extension.model_project_task
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_task_timer__task_id
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_timesheet_log_wizard__task_id
+msgid "Task"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_review_line__task_frozen
+msgid "Task Frozen"
+msgstr ""
+
+#. module: sbs_project_extension
+#. odoo-javascript
+#: code:addons/sbs_project_extension/static/src/fields/task_timer_field.js:0
+msgid "Task Timer"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model,name:sbs_project_extension.model_sbs_project_extension_task_timer
+msgid "Task Work Timer"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_sbs_project_extension_form_custom
+msgid "Team"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.actions.act_window,name:sbs_project_extension.action_sbs_project_extension_team_engagement
+#: model:ir.ui.menu,name:sbs_project_extension.menu_sbs_project_extension_team_engagement
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_sbs_project_extension_team_engagement_list
+msgid "Team Engagement"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_project_project__team_formation_type
+msgid "Team Formation Type"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.actions.act_window,name:sbs_project_extension.action_sbs_project_extension_project_team
+msgid "Team Member Name"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model,name:sbs_project_extension.model_sbs_project_extension_tech_stack
+#: model:ir.model.fields,field_description:sbs_project_extension.field_project_project__tech_stack_id
+msgid "Tech Stack"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.actions.act_window,name:sbs_project_extension.action_sbs_project_extension_tech_stack
+#: model:ir.ui.menu,name:sbs_project_extension.menu_sbs_project_extension_tech_stack
+msgid "Tech Stack Settings"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_sbs_project_extension_form_custom
+msgid "Technical Info"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_sbs_timesheet_log_wizard_form
+msgid "The counted time will be deleted without being logged. Continue?"
+msgstr ""
+
+#. module: sbs_project_extension
+#. odoo-python
+#: code:addons/sbs_project_extension/models/sbs_project_extension.py:0
+msgid "The project priority number cannot be negative."
+msgstr ""
+
+#. module: sbs_project_extension
+#. odoo-python
+#: code:addons/sbs_project_extension/wizard/sbs_project_extension_timesheet_log.py:0
+msgid "The time to log must be greater than zero."
+msgstr ""
+
+#. module: sbs_project_extension
+#. odoo-python
+#: code:addons/sbs_project_extension/models/sbs_project_extension_task_timer.py:0
+msgid "The timer is still running. Stop it before logging the time."
+msgstr ""
+
+#. module: sbs_project_extension
+#. odoo-python
+#: code:addons/sbs_project_extension/wizard/sbs_project_extension_timesheet_log.py:0
+msgid "This timer no longer exists. Start the timer again to count new time."
+msgstr ""
+
+#. module: sbs_project_extension
+#. odoo-python
+#: code:addons/sbs_project_extension/models/sbs_project_extension_task_timer.py:0
+msgid ""
+"Time cannot be recorded on a private task. Move the task into a project "
+"first."
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_timesheet_log_wizard__hours
+msgid "Time to Log"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_timesheet_log_wizard__timer_id
+msgid "Timer"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_project_task__sbs_timer_elapsed_hours
+msgid "Timer Counted Time"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_project_task__sbs_timer_start
+msgid "Timer Started On"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_project_task__sbs_timer_state
+msgid "Timer Status"
+msgstr ""
+
+#. module: sbs_project_extension
+#. odoo-javascript
+#: code:addons/sbs_project_extension/static/src/fields/task_timer_field.xml:0
+msgid "Timer running"
+msgstr ""
+
+#. module: sbs_project_extension
+#. odoo-python
+#: code:addons/sbs_project_extension/models/sbs_project_extension_task_timer.py:0
+msgid ""
+"Timesheets are not enabled on project \"%s\". Enable Timesheets on the "
+"project first."
+msgstr ""
+
+#. module: sbs_project_extension
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_sbs_project_extension_form_custom
+msgid "Total Collected"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_sbs_project_extension_form_custom
+msgid "Unlock"
+msgstr ""
+
+#. module: sbs_project_extension
+#. odoo-python
+#: code:addons/sbs_project_extension/models/sbs_project_extension.py:0
+msgid "Unlock the following projects before modifying them: %(projects)s"
+msgstr ""
+
+#. module: sbs_project_extension
+#. odoo-python
+#: code:addons/sbs_project_extension/models/sbs_project_extension.py:0
+msgid "Use the Lock or Unlock button to change a project's lock status."
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,help:sbs_project_extension.field_project_task__display_name
+msgid ""
+"Use these keywords in the title to set new tasks:\n"
+"\n"
+"        30h Allocate 30 hours to the task\n"
+"        #tags Set tags on the task\n"
+"        @user Assign the task to a user\n"
+"        ! Set the task a medium priority\n"
+"        !! Set the task a high priority\n"
+"        !!! Set the task a urgent priority\n"
+"\n"
+"        Make sure to use the right format and order e.g. Improve the configuration screen 5h #feature #v16 @Mitchell !"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model,name:sbs_project_extension.model_res_users
+#: model:ir.model.fields,field_description:sbs_project_extension.field_sbs_project_extension_task_timer__user_id
+msgid "User"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:res.groups,comment:sbs_project_extension.group_sbs_task_read_create
+msgid ""
+"Users can view and create accessible tasks, but cannot edit or delete them. "
+"They can run the task timer and log their own time."
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:res.groups,comment:sbs_project_extension.group_sbs_project_credentials_financial_user
+msgid ""
+"Users in this group can view and maintain project credentials and financial "
+"information."
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:res.groups,comment:sbs_project_extension.group_sbs_project_password_user
+msgid "Users in this group can view and maintain project credentials."
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:res.groups,comment:sbs_project_extension.group_sbs_project_financial_user
+msgid ""
+"Users in this group can view and maintain project financial information."
+msgstr ""
+
+#. module: sbs_project_extension
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_sbs_timesheet_log_wizard_form
+msgid "What did you work on?"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields,field_description:sbs_project_extension.field_project_project__whatsapp_group
+msgid "WhatsApp Group Name"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model:ir.model.fields.selection,name:sbs_project_extension.selection__sbs_project_extension_review_line__customer_task_frozen__yes
+#: model:ir.model.fields.selection,name:sbs_project_extension.selection__sbs_project_extension_review_line__task_frozen__yes
+msgid "Yes"
+msgstr ""
+
+#. module: sbs_project_extension
+#. odoo-python
+#: code:addons/sbs_project_extension/models/sbs_project_extension_task_timer.py:0
+msgid ""
+"You already have counted time on this task waiting to be logged. Use Log "
+"Time to add it to the timesheet first."
+msgstr ""
+
+#. module: sbs_project_extension
+#. odoo-python
+#: code:addons/sbs_project_extension/wizard/sbs_project_extension_timesheet_log.py:0
+msgid "You can only discard your own timer."
+msgstr ""
+
+#. module: sbs_project_extension
+#. odoo-python
+#: code:addons/sbs_project_extension/wizard/sbs_project_extension_timesheet_log.py:0
+msgid "You can only log your own counted time."
+msgstr ""
+
+#. module: sbs_project_extension
+#. odoo-python
+#: code:addons/sbs_project_extension/wizard/sbs_project_extension_timesheet_log.py:0
+msgid ""
+"You can only reduce the counted time. The timer counted %(counted)s hours, "
+"so you cannot log %(asked)s hours."
+msgstr ""
+
+#. module: sbs_project_extension
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_sbs_timesheet_log_wizard_form
+msgid ""
+"You can reduce the counted time before logging it, but you\n"
+"                    cannot increase it."
+msgstr ""
+
+#. module: sbs_project_extension
+#. odoo-python
+#: code:addons/sbs_project_extension/models/sbs_project_extension.py:0
+msgid ""
+"You cannot access this project detail because you cannot read its project."
+msgstr ""
+
+#. module: sbs_project_extension
+#. odoo-python
+#: code:addons/sbs_project_extension/models/sbs_project_extension.py:0
+msgid ""
+"You cannot access this review session because it contains a project you "
+"cannot read."
+msgstr ""
+
+#. module: sbs_project_extension
+#. odoo-python
+#: code:addons/sbs_project_extension/wizard/sbs_project_extension_timesheet_log.py:0
+msgid ""
+"Your user is not linked to an employee, so timesheets cannot be created. Ask"
+" an administrator to link an employee to your user."
+msgstr ""
+
+#. module: sbs_project_extension
+#. odoo-python
+#: code:addons/sbs_project_extension/models/sbs_project_extension.py:0
+msgid "create"
+msgstr ""
+
+#. module: sbs_project_extension
+#. odoo-python
+#: code:addons/sbs_project_extension/models/sbs_project_extension.py:0
+msgid "delete"
+msgstr ""
+
+#. module: sbs_project_extension
+#: model_terms:ir.ui.view,arch_db:sbs_project_extension.view_sbs_project_extension_review_session_form
+msgid "e.g. Q3 Project Reviews"
+msgstr ""

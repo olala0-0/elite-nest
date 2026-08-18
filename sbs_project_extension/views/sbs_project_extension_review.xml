@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="view_sbs_project_extension_review_session_list" model="ir.ui.view">
+            <field name="name">sbs_project_extension.review.session.list</field>
+            <field name="model">sbs_project_extension.review.session</field>
+            <field name="arch" type="xml">
+                <list string="Project Review Sessions">
+                    <field name="name"/>
+                    <field name="date"/>
+                </list>
+            </field>
+        </record>
+
+        <record id="view_sbs_project_extension_review_session_form" model="ir.ui.view">
+            <field name="name">sbs_project_extension.review.session.form</field>
+            <field name="model">sbs_project_extension.review.session</field>
+            <field name="arch" type="xml">
+                <form string="Project Review Session">
+                    <sheet>
+                        <div class="oe_title">
+                            <h1>
+                                <field name="name" placeholder="e.g. Q3 Project Reviews"/>
+                            </h1>
+                        </div>
+                        <group>
+                            <group>
+                                <field name="date"/>
+                            </group>
+                            <group>
+                                <field name="create_date"/>
+                                <field name="create_uid" options="{'no_open': True}" readonly="1"/>
+                            </group>
+                            <group>
+                                <field name="write_date"/>
+                                <field name="write_uid" options="{'no_open': True}" readonly="1"/>
+                            </group>
+                        </group>
+
+                        <notebook>
+                            <page string="Review History">
+                                <field name="review_line_ids">
+                                    <list editable="bottom" no_open="1">
+                                        <field name="project_id" class="text-wrap" width="200px" options="{'no_open': True}"/>
+                                        <field name="sp_ids" widget="many2many_tags" options="{'no_open': True}"/>
+                                        <field name="fa_ids" widget="many2many_tags" class="text-wrap" width="150px" options="{'no_open': True}"/>
+                                        <field name="pc_ids" widget="many2many_tags" class="text-wrap" width="150px" options="{'no_open': True}"/>
+                                        <field name="highlevel_review" class="text-wrap" width="200px"/>
+                                        <field name="internal_review" class="text-wrap" width="200px"/>
+                                        <field name="task_frozen"/>
+                                        <field name="internal_datetime"/>
+                                        <field name="completion_percentage" widget="percentage"/>
+                                        <field name="remarks_internal" class="text-wrap" width="200px"/>
+                                        <field name="next_action" class="text-wrap" width="200px"/>
+                                        <field name="customer_review" class="text-wrap" width="200px"/>
+                                        <field name="customer_task_frozen"/>
+                                        <field name="customer_datetime"/>
+                                        <field name="customer_completion_percentage"/>
+                                    </list>
+                                </field>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_sbs_project_extension_review" model="ir.actions.act_window">
+            <field name="name">Project Review</field>
+            <field name="res_model">sbs_project_extension.review.session</field>
+            <field name="view_mode">list,form</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Create your first Project Review Session!
+                </p>
+            </field>
+        </record>
+    </data>
+</odoo>

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_task_form2_sbs_timer" model="ir.ui.view">
+        <field name="name">project.task.form.sbs.timer</field>
+        <field name="model">project.task</field>
+        <field name="inherit_id" ref="project.view_task_form2"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <field name="sbs_timer_state"
+                       invisible="1"
+                       groups="hr_timesheet.group_hr_timesheet_user"/>
+                <button name="action_sbs_timer_start"
+                        type="object"
+                        string="Start"
+                        icon="fa-play"
+                        class="btn-primary"
+                        groups="hr_timesheet.group_hr_timesheet_user"
+                        invisible="not id or not allow_timesheets or sbs_timer_state != 'idle'"/>
+                <button name="action_sbs_timer_stop"
+                        type="object"
+                        string="End"
+                        icon="fa-stop"
+                        class="btn-danger"
+                        groups="hr_timesheet.group_hr_timesheet_user"
+                        invisible="sbs_timer_state != 'running'"/>
+                <button name="action_sbs_timer_log"
+                        type="object"
+                        string="Log Time"
+                        icon="fa-clock-o"
+                        class="btn-warning"
+                        groups="hr_timesheet.group_hr_timesheet_user"
+                        invisible="sbs_timer_state != 'stopped'"/>
+                <field name="sbs_timer_start"
+                       widget="sbs_task_timer"
+                       nolabel="1"
+                       groups="hr_timesheet.group_hr_timesheet_user"
+                       invisible="sbs_timer_state != 'running'"/>
+                <field name="sbs_timer_elapsed_hours"
+                       widget="sbs_duration_hms"
+                       nolabel="1"
+                       readonly="1"
+                       groups="hr_timesheet.group_hr_timesheet_user"
+                       invisible="sbs_timer_state != 'stopped'"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

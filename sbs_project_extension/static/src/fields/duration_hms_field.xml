@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="sbs_project_extension.SbsDurationHmsField">
+        <span t-if="props.readonly" t-esc="formattedValue"/>
+        <input t-else=""
+               t-att-id="props.id"
+               t-ref="input"
+               type="text"
+               class="o_input"
+               autocomplete="off"
+               placeholder="00:00:00"/>
+    </t>
+
+</templates>

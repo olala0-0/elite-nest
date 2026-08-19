@@ -50,12 +50,12 @@
         "views/helpdesk_ticket_view.xml",
         "views/account_move_view.xml",
         "reports/tenant_financial_statement_report.xml",
-        "reports/tenant_financial_statement_template.xml"
+        "reports/tenant_financial_statement_template.xml",
     ],
     "demo": [
         "data/project_demo_data.xml",
         "data/property_demo_data.xml",
-        "data/contract_demo_data.xml"
+        "data/contract_demo_data.xml",
     ],
     "installable": True,
     "application": True,
@@ -64,7 +64,7 @@
     "currency": "EUR",
     "license": "OPL-1",
     "images": [
-        "static/description/banner.gif"
+        "static/description/banner.gif",
     ],
-    "description": "The Real Estate Management App is an all-in-one solution for managing properties, projects, rentals, and sales. It helps automate rent and sale contracts, broker commissions, and financial reports. Users can easily handle maintenance requests, invoices, and property details like floor plans and amenities. The app also includes modules for managing customers, vendors, employees, and leads ensuring smooth operations across all departments. A perfect tool for property managers and real estate businesses to stay organized and efficient."
+    "description": "The Real Estate Management App is an all-in-one solution for managing properties, projects, rentals, and sales. It helps automate rent and sale contracts, broker commissions, and financial reports. Users can easily handle maintenance requests, invoices, and property details like floor plans and amenities. The app also includes modules for managing customers, vendors, employees, and leads ensuring smooth operations across all departments. A perfect tool for property managers and real estate businesses to stay organized and efficient.",
 }

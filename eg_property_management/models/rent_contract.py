@@ -211,6 +211,8 @@ class RentContract(models.Model):
 
     @api.model_create_multi
     def create(self, vals):
+        """ Overridden to dynamically swap the 'RC/' sequence prefix 
+        with the actual name of the Property/Unit (e.g., 'LPB-103/11027'). """
         for val in vals:
             seq = self.env['ir.sequence'].next_by_code('rent.contract') or '/'
             property_id = val.get('property_id')
@@ -1034,7 +1036,7 @@ class RentContract(models.Model):
                         })
 
             for service_id in self.utility_service_ids:
-                if service_id.service_type == 'once':
+                if service_type == 'once':
                     utility_description = f"{service_id.service_id.name} (One-time)"
                     already_exists_id = existing_installments.filtered(
                         lambda inst: inst.payment_type == 'utility' and inst.description == utility_description

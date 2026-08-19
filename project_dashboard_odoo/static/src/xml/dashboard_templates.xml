@@ -52,7 +52,8 @@
                                         t-on-change="(ev) => this._onchangeFilter(ev)">
                                     <option value="null">All Projects</option>
                                     <option t-foreach="state.projects"
-                                            t-as="project" t-key="project.index"
+                                            t-as="project" 
+                                            t-key="project.id || project_index"
                                             t-att-value="project.id">
                                         <t t-esc="project.name?.en_US || project.name || ''"/>
                                     </option>
@@ -66,7 +67,8 @@
                                         t-on-change="(ev) => this._onchangeFilter(ev)">
                                     <option value="null">All Employees</option>
                                     <option t-foreach="state.employees"
-                                            t-as="employee" t-key="employee.index"
+                                            t-as="employee" 
+                                            t-key="employee.id || employee_index"
                                             t-att-value="employee.id">
                                         <t t-esc="employee.name?.en_US || employee.name || ''"/>
                                     </option>
@@ -108,8 +110,7 @@
                                 <h4 class="fw-bold text-dark mb-0"
                                     t-ref="tot_employee"><t t-esc="total_employees"/></h4>
                                 <div class="mt-2 text-primary small">
-                                    <i class="fa fa-arrow-up me-1"></i>View
-                                    Details
+                                    <i class="fa fa-arrow-up me-1"></i>View Details
                                 </div>
                             </div>
                         </div>
@@ -137,8 +138,7 @@
                                 <h4 class="fw-bold text-dark mb-0"
                                     t-ref="tot_hrs"><t t-esc="total_hours"/></h4>
                                 <div class="mt-2 text-primary small">
-                                    <i class="fa fa-arrow-up me-1"></i>View
-                                    Details
+                                    <i class="fa fa-arrow-up me-1"></i>View Details
                                 </div>
                             </div>
                         </div>
@@ -154,8 +154,7 @@
                                 <h4 class="fw-bold text-dark mb-0"
                                     t-ref="tot_margin"><t t-esc="total_profitability"/></h4>
                                 <div class="mt-2 text-primary small">
-                                    <i class="fa fa-arrow-up me-1"></i>View
-                                    Details
+                                    <i class="fa fa-arrow-up me-1"></i>View Details
                                 </div>
                             </div>
                         </div>
@@ -177,7 +176,7 @@
                 <!-- Charts & Task Details -->
                 <div class="row g-3">
                     <div class="col-lg-6">
-                        <!-- Donut Chart - Reduced Size -->
+                        <!-- Donut Chart -->
                         <div class="card shadow-sm rounded-3 border-0 mb-3">
                             <div class="card-header bg-white py-3">
                                 <h5 class="card-title mb-0 fw-semibold text-dark">
@@ -211,7 +210,7 @@
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <t t-foreach="task_data" t-as="proj" t-key="proj[1]">
+                                            <t t-foreach="task_data" t-as="proj" t-key="proj[1] || proj_index">
                                                 <t t-set="status_val" t-value="proj[3]?.en_US || proj[3] || ''"/>
                                                 <tr>
                                                     <td class="ps-3"><t t-esc="proj[2]?.en_US || proj[2] || ''"/></td>
@@ -233,7 +232,7 @@
                         </div>
                     </div>
                     <div class="col-lg-6">
-                        <!-- Bar Chart - Also reduced for consistency -->
+                        <!-- Bar Chart -->
                         <div class="card shadow-sm rounded-3 border-0 mb-3">
                             <div class="card-header bg-white py-3">
                                 <h5 class="card-title mb-0 fw-semibold text-dark">
@@ -260,7 +259,7 @@
                                 <div class="table-responsive">
                                     <table class="table table-sm mb-0">
                                         <t t-foreach="project_stage_list"
-                                           t-as="data" t-key="data['id']">
+                                           t-as="data" t-key="data['id'] || data_index">
                                             <tr>
                                                 <td class="ps-3"><t t-esc="data['name']?.en_US || data['name'] || ''"/></td>
                                                 <td class="pe-3 text-end"><span class="badge bg-primary text-white rounded-pill"><t t-esc="data['projects']"/></span></td>

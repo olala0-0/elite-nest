@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="codeerts_company_overview_dashboard.Dashboard">
+        <div class="o_action codeerts_bd_root" t-att-class="(props.className || '') + (isDark ? ' codeerts_bd_dark' : '')" t-ref="root">
+
+            <div class="codeerts_bd_toolbar">
+                <div class="codeerts_bd_title">Company Overview</div>
+                <div class="codeerts_bd_filters">
+                    <div class="codeerts_bd_presets">
+                        <t t-foreach="[['today','Today'],['month','This Month'],['quarter','This Quarter'],['ytd','This Year'],['last12','Last 12 Months']]" t-as="p" t-key="p[0]">
+                            <button class="codeerts_bd_preset"
+                                    t-att-class="{ active: p[0] === state.preset }"
+                                    t-on-click="() => this.onPreset(p[0])"
+                                    t-esc="p[1]"/>
+                        </t>
+                    </div>
+                    <div class="codeerts_bd_custom" t-att-class="{ active: state.preset === 'custom' }">
+                        <input type="text" class="codeerts_bd_date" t-ref="start-date" placeholder="Start date"/>
+                        <span class="codeerts_bd_to">to</span>
+                        <input type="text" class="codeerts_bd_date" t-ref="end-date" placeholder="End date"/>
+                    </div>
+                    <button class="codeerts_bd_reset" t-on-click="onReset" title="Reset to Last 12 Months">Reset</button>
+                </div>
+            </div>
+
+            <div class="codeerts_bd_body">
+                <t t-if="state.loading">
+                    <div class="codeerts_bd_skeleton">Loading dashboard...</div>
+                </t>
+                <t t-elif="state.data">
+                    <div class="codeerts_bd_kpis">
+                        <t t-foreach="state.data.kpis" t-as="kpi" t-key="kpi.key">
+                            <div class="codeerts_bd_kpi"
+                                 t-att-class="{ clickable: kpi.domain }"
+                                 t-on-click="() => this.onKpiClick(kpi)">
+                                <div class="codeerts_bd_kpi_val" t-esc="fmt(kpi)"/>
+                                <div class="codeerts_bd_kpi_lbl" t-esc="kpi.label"/>
+                                <div t-if="kpi.delta !== undefined"
+                                     class="codeerts_bd_kpi_delta"
+                                     t-att-class="'dir_' + kpi.delta_dir">
+                                    <t t-esc="kpi.delta_dir === 'up' ? '▲' : (kpi.delta_dir === 'down' ? '▼' : '=')"/>
+                                    <t t-esc="Math.abs(kpi.delta)"/>% vs prev
+                                </div>
+                            </div>
+                        </t>
+                    </div>
+                    <div class="codeerts_bd_charts">
+                        <t t-foreach="state.data.charts" t-as="chart" t-key="chart.key">
+                            <div class="codeerts_bd_chart_card">
+                                <div class="codeerts_bd_chart_title" t-esc="chart.title"/>
+                                <div t-att-data-chart="chart.key" class="codeerts_bd_chart_body"/>
+                            </div>
+                        </t>
+                    </div>
+                    <div t-if="!state.data.kpis.length and !state.data.charts.length" class="codeerts_bd_empty">
+                        No data yet for this area in the selected period.
+                    </div>
+                </t>
+            </div>
+        </div>
+    </t>
+</templates>

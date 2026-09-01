@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_company_overview_dashboard" model="ir.actions.client">
+        <field name="name">Company Overview</field>
+        <field name="tag">codeerts_company_overview_dashboard</field>
+    </record>
+
+    <!-- Own application tile in the main menu (cross-app, not nested in a single app) -->
+    <menuitem id="menu_company_overview_root"
+              name="Company Overview"
+              web_icon="codeerts_company_overview_dashboard,static/description/icon.png"
+              sequence="5"/>
+    <menuitem id="menu_company_overview_dashboard"
+              name="Dashboard"
+              parent="menu_company_overview_root"
+              action="action_company_overview_dashboard"
+              sequence="1"/>
+</odoo>

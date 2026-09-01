@@ -1,0 +1,2 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_codeerts_company_overview_dashboard_user,codeerts.company_overview.dashboard.user,model_codeerts_company_overview_dashboard,base.group_user,1,1,1,0

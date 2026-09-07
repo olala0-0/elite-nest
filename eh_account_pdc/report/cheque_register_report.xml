@@ -1,18 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <odoo>
 
-    <!--
-        Cheque register: tabular PDF of selected cheques with status and
-        lifecycle dates. Triggered from the cheque list "Print" action so
-        the operator picks any subset (filter by state, journal, value
-        date, partner) and gets a print-ready register.
-
-        The report iterates the recordset directly; per-record cells are
-        rendered against the cheque object so currency formatting honours
-        the cheque's currency_id rather than the company default. Status
-        badges map cheque states to the suite badge colour palette.
-    -->
-
     <record id="action_report_cheque_register" model="ir.actions.report">
         <field name="name">Cheque Register</field>
         <field name="model">eh.cheque</field>
@@ -21,88 +9,60 @@
         <field name="report_file">eh_account_pdc.report_cheque_register</field>
         <field name="binding_model_id" ref="model_eh_cheque"/>
         <field name="binding_type">report</field>
-        <field name="paperformat_id"
-               ref="eh_account_base.paperformat_eh_landscape"/>
+        <field name="paperformat_id" ref="eh_account_base.paperformat_eh_landscape"/>
     </record>
 
     <template id="report_cheque_register">
         <t t-call="web.html_container">
             <t t-call="eh_account_base.eh_report_styles"/>
             <t t-call="web.external_layout">
-                <div class="page eh_pdf_page">
-                    <h1 class="eh_pdf_title">Cheque Register</h1>
-                    <div class="eh_pdf_meta">
-                        <span>
-                            <strong>Cheques:</strong>
-                            <t t-out="len(docs)"/>
-                        </span>
-                        <span>
-                            <strong>Generated:</strong>
-                            <t t-out="context_timestamp(datetime.datetime.now()).strftime('%Y-%m-%d %H:%M')"/>
-                        </span>
-                        <span t-if="docs and len(docs.mapped('company_id')) == 1">
-                            <strong>Company:</strong>
-                            <t t-out="docs[0].company_id.display_name"/>
-                        </span>
+                <div class="page eh_pdf_page" style="padding-top: 20px; font-family: sans-serif; font-size: 11px;">
+                    
+                    <!-- Header Section -->
+                    <div style="margin-bottom: 18px; border-bottom: 2px solid #e9ecef; padding-bottom: 10px;">
+                        <h2 style="margin: 0 0 6px 0; font-size: 20px; font-weight: bold; color: #212529;">Cheque Register</h2>
+                        <div style="color: #6c757d; font-size: 11px; display: flex; gap: 20px;">
+                            <span><strong>Cheques:</strong> <t t-out="len(docs)"/></span>
+                            <span><strong>Generated:</strong> <t t-out="context_timestamp(datetime.datetime.now()).strftime('%Y-%m-%d %H:%M')"/></span>
+                            <span t-if="docs and len(docs.mapped('company_id')) == 1">
+                                <strong>Company:</strong> <t t-out="docs[0].company_id.display_name"/>
+                            </span>
+                        </div>
                     </div>
 
-                    <table class="eh_pdf_table">
+                    <!-- Main Register Table -->
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
                         <thead>
-                            <tr>
-                                <th>Reference</th>
-                                <th>Cheque #</th>
-                                <th>Direction</th>
-                                <th>Bank Journal</th>
-                                <th>Counterparty</th>
-                                <th>Issue Date</th>
-                                <th>Value Date</th>
-                                <th class="text-end">Amount</th>
-                                <th class="text-center">Status</th>
+                            <tr style="background-color: #f1f3f5; border-top: 1px solid #ced4da; border-bottom: 2px solid #adb5bd;">
+                                <th style="padding: 9px 8px; text-align: left; font-weight: 600; width: 14%;">Reference</th>
+                                <th style="padding: 9px 8px; text-align: left; font-weight: 600; width: 10%;">Cheque #</th>
+                                <th style="padding: 9px 8px; text-align: left; font-weight: 600; width: 9%;">Direction</th>
+                                <th style="padding: 9px 8px; text-align: left; font-weight: 600; width: 11%;">Bank Journal</th>
+                                <th style="padding: 9px 8px; text-align: left; font-weight: 600; width: 22%;">Counterparty</th>
+                                <th style="padding: 9px 8px; text-align: center; font-weight: 600; width: 9%;">Issue Date</th>
+                                <th style="padding: 9px 8px; text-align: center; font-weight: 600; width: 9%;">Value Date</th>
+                                <th style="padding: 9px 8px; text-align: right; font-weight: 600; width: 10%;">Amount</th>
+                                <th style="padding: 9px 8px; text-align: center; font-weight: 600; width: 6%;">Status</th>
                             </tr>
                         </thead>
                         <tbody>
                             <t t-foreach="docs" t-as="cheque">
-                                <tr>
-                                    <td>
-                                        <t t-out="cheque.name or ''"/>
-                                    </td>
-                                    <td>
-                                        <t t-out="cheque.cheque_number or ''"/>
-                                    </td>
-                                    <td>
-                                        <t t-if="cheque.direction == 'outgoing'">
-                                            Issued
-                                        </t>
+                                <tr style="border-bottom: 1px solid #e9ecef;">
+                                    <td style="padding: 8px;"><t t-out="cheque.name or ''"/></td>
+                                    <td style="padding: 8px;"><t t-out="cheque.cheque_number or ''"/></td>
+                                    <td style="padding: 8px;">
+                                        <t t-if="cheque.direction == 'outgoing'">Issued</t>
                                         <t t-else="">Received</t>
                                     </td>
-                                    <td>
-                                        <t t-out="cheque.journal_id.name or ''"/>
+                                    <td style="padding: 8px;"><t t-out="cheque.journal_id.name or ''"/></td>
+                                    <td style="padding: 8px;"><t t-out="cheque.partner_id.display_name or ''"/></td>
+                                    <td style="padding: 8px; text-align: center;"><t t-out="cheque.issue_date and cheque.issue_date.strftime('%Y-%m-%d') or ''"/></td>
+                                    <td style="padding: 8px; text-align: center;"><t t-out="cheque.value_date and cheque.value_date.strftime('%Y-%m-%d') or ''"/></td>
+                                    <td style="padding: 8px; text-align: right; font-weight: 600;">
+                                        <span t-out="cheque.amount" t-options="{'widget': 'monetary', 'display_currency': cheque.currency_id}"/>
                                     </td>
-                                    <td>
-                                        <t t-out="cheque.partner_id.display_name or ''"/>
-                                    </td>
-                                    <td>
-                                        <t t-out="cheque.issue_date and cheque.issue_date.strftime('%Y-%m-%d') or ''"/>
-                                    </td>
-                                    <td>
-                                        <t t-out="cheque.value_date and cheque.value_date.strftime('%Y-%m-%d') or ''"/>
-                                    </td>
-                                    <td class="text-end">
-                                        <span t-out="cheque.amount"
-                                              t-options="{'widget': 'monetary', 'display_currency': cheque.currency_id}"/>
-                                    </td>
-                                    <td class="text-center">
-                                        <t t-set="badge_class"
-                                           t-value="{
-                                               'draft':      'eh_pdf_status_neutral',
-                                               'registered': 'eh_pdf_status_info',
-                                               'presented':  'eh_pdf_status_info',
-                                               'cleared':    'eh_pdf_status_ok',
-                                               'bounced':    'eh_pdf_status_danger',
-                                               'replaced':   'eh_pdf_status_warn',
-                                               'cancelled':  'eh_pdf_status_neutral',
-                                           }.get(cheque.state, 'eh_pdf_status_neutral')"/>
-                                        <span t-att-class="'eh_pdf_status_badge ' + badge_class">
+                                    <td style="padding: 8px; text-align: center;">
+                                        <span style="display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 10px; font-weight: 600; background-color: #e9ecef; color: #495057;">
                                             <t t-out="dict(cheque._fields['state'].selection).get(cheque.state, cheque.state)"/>
                                         </span>
                                     </td>
@@ -110,8 +70,7 @@
                             </t>
                             <t t-if="not docs">
                                 <tr>
-                                    <td colspan="9" class="text-center text-muted"
-                                        style="padding: 16pt;">
+                                    <td colspan="9" style="text-align: center; color: #6c757d; padding: 24px;">
                                         No cheques selected.
                                     </td>
                                 </tr>
@@ -119,7 +78,6 @@
                         </tbody>
                     </table>
 
-                    <t t-call="eh_account_base.eh_report_footer"/>
                 </div>
             </t>
         </t>

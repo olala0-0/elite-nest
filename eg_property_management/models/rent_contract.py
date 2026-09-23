@@ -118,9 +118,9 @@ class RentContract(models.Model):
                                    default="fixed")
     total_maintenance = fields.Monetary(string="Maintenance", currency_field="currency_id", tracking=True)
 
-    installment_item_id = fields.Many2one(comodel_name="product.product", string="Installment Item", )
-    deposit_item_id = fields.Many2one(comodel_name="product.product", string="Deposit Item", )
-    deposit_invoice_id = fields.Many2one(comodel_name='account.move', string="Deposit Invoice", readonly=True, )
+    installment_item_id = fields.Many2one(comodel_name="product.product", string="Installment Item")
+    deposit_item_id = fields.Many2one(comodel_name="product.product", string="Deposit Item")
+    deposit_invoice_id = fields.Many2one(comodel_name='account.move', string="Deposit Invoice", readonly=True)
 
     # One-time charges (Ejari Fee / Admin Charge / Commission / Parking Fee) -
     # each follows the exact Security Deposit pattern above: a configured
@@ -152,7 +152,7 @@ class RentContract(models.Model):
     penalty_type = fields.Selection([('fixed', 'Fixed'), ('percent', 'Percent')], string="Penalty Type",
                                     default='fixed')
     penalty_value = fields.Float(string="Penalty Value")
-    penalty_grace_days = fields.Integer(string="Penalty Grace Days", default=3, )
+    penalty_grace_days = fields.Integer(string="Penalty Grace Days", default=3)
     penalty_product_id = fields.Many2one(comodel_name='product.product', string='Penalty Product')
 
     tax_rate = fields.Float(string="Tax Rate (%)")
@@ -202,10 +202,18 @@ class RentContract(models.Model):
     margin_paid = fields.Monetary(string="Margin Paid", currency_field="currency_id", compute="_compute_margin",
                                   store=True)
 
+    # Status terminology updated to past-tense conventions
     state = fields.Selection(
-        [('draft', 'Draft'), ('running', 'Running'), ('move_out', 'Move-Out Process'), ('cancel', 'Cancel'),
-         ('terminate', 'Terminate'), ('expire', 'Expire'), ],
-        string="Status", default='draft', tracking=True)
+        [
+            ('draft', 'Draft'),
+            ('running', 'Running'),
+            ('move_out', 'Move-Out Process'),
+            ('cancelled', 'Cancelled'),
+            ('terminated', 'Terminated'),
+            ('expired', 'Expired'),
+        ],
+        string="Status", default='draft', tracking=True
+    )
 
     invoice_count = fields.Integer(string="Invoices", compute="_compute_invoice_count")
 
@@ -221,7 +229,7 @@ class RentContract(models.Model):
                 prefix = property_rec.name or 'RC'
             else:
                 prefix = 'RC'
-            
+
             if seq.startswith('RC/'):
                 val['name'] = seq.replace('RC/', f"{prefix}/")
             else:
@@ -251,29 +259,14 @@ class RentContract(models.Model):
         minus amount_residual - the same core fields Odoo itself uses to
         compute payment_state, so it's correct no matter how the payment
         was reconciled (a registered payment, a bank statement match, a
-        write-off, ...). Two earlier attempts at deriving this by walking
-        the reconciliation graph directly (account.move._get_reconciled_
-        payments(), then account.move.line.matched_debit_ids/
-        matched_credit_ids + payment_id) both returned nothing on invoices
-        whose own payment_state clearly showed paid/in_payment on this
-        instance - amount_residual can't disagree with payment_state since
-        payment_state is computed from it."""
+        write-off, ...)."""
         self.ensure_one()
         return invoice.amount_total - invoice.amount_residual
 
     def _get_invoice_payment_matches(self, invoice):
         """Best-effort per-payment breakdown (name/date/reference) for
         display only - NOT the source of truth for how much was paid, see
-        _get_invoice_paid_amount() for that. Reads the reconciliation
-        directly off account.move.line.matched_debit_ids/matched_credit_ids
-        (core, stable accounting API), using each partial reconcile's own
-        matched amount rather than the payment's full amount, so a payment
-        split across several invoices in one batch doesn't overstate what
-        was applied to this specific invoice. May return nothing even for a
-        fully paid invoice if the reconciliation didn't go through a
-        standard account.payment record - the caller falls back to a single
-        summary row using _get_invoice_paid_amount() in that case.
-        """
+        _get_invoice_paid_amount() for that."""
         receivable_lines = invoice.line_ids.filtered(
             lambda line: line.account_id.account_type in ('asset_receivable', 'liability_payable')
         )
@@ -291,13 +284,7 @@ class RentContract(models.Model):
     def _get_deposit_summary(self):
         """Single source of truth for what's actually been invoiced/paid
         for the security deposit - reflects real invoice state, not just
-        the amount configured on the contract (those can diverge, e.g. if
-        the contract's deposit field was edited after the deposit invoice
-        was already sent, or the deposit was never invoiced yet). Shared
-        between the tenant statement (get_tenant_financial_statement) and
-        the Move-Out deposit settlement (rent.contract.moveout) so both
-        always agree - extracted from what was previously inline-only
-        logic in the statement, with no change in behavior."""
+        the amount configured on the contract."""
         self.ensure_one()
         deposit_installment = self.rent_installment_ids.filtered(
             lambda inst: inst.payment_type == 'deposit'
@@ -312,11 +299,6 @@ class RentContract(models.Model):
             else 0.0
         )
 
-        # How much of the deposit has actually been consumed by a finalized
-        # Move-Out deposit settlement (rent.contract.moveout.action_
-        # finalize_deductions()). Capped at deposit_received: what's owed
-        # beyond the deposit is a separate AR matter for Accounting to
-        # reconcile, not part of "how much of THIS deposit was used."
         moveout = self.env['rent.contract.moveout'].search(
             [('rent_contract_id', '=', self.id)], limit=1
         )
@@ -336,10 +318,7 @@ class RentContract(models.Model):
     def _get_one_time_charges_summary(self):
         """Amount Due / Status for each of the four one-time contract
         charges (Ejari Fee, Admin Charge, Commission, Parking Fee) that
-        actually have a value set - skipped entirely if 0, matching the
-        same silent-skip rule used when these are added to the first
-        invoice in action_create_invoice(). Shown in the tenant statement
-        alongside Security Deposit rather than as its own box."""
+        actually have a value set."""
         self.ensure_one()
         summary = []
         for field_name, label in ONE_TIME_CHARGE_FIELDS:
@@ -355,9 +334,9 @@ class RentContract(models.Model):
         return summary
 
     def get_tenant_financial_statement(self):
-        """ Computes chronological Statement of Account data including opening balance,
+        """Computes chronological Statement of Account data including opening balance,
         one row per charge (rent/deposit/maintenance/utility/penalty), matched payments,
-        running balances, totals, payment counts, and security deposit status. """
+        running balances, totals, payment counts, and security deposit status."""
         self.ensure_one()
 
         raw_lines = [{
@@ -371,12 +350,6 @@ class RentContract(models.Model):
             'company': self.company_id.name,
         }]
 
-        # One row per rent.installment - the same records already shown on
-        # the contract's "Rent Installments" tab. Reading the invoice's
-        # first line instead (the previous approach) silently dropped any
-        # Deposit/Maintenance amount that had been combined into the same
-        # invoice as Rent, since debit was taken from amount_total while
-        # the description only reflected invoice_line_ids[0].
         charge_installments = self.rent_installment_ids.filtered(
             lambda inst: inst.payment_type != 'broker_bill'
         ).sorted(key=lambda inst: (inst.invoice_date or fields.Date.today(), inst.id))
@@ -392,12 +365,6 @@ class RentContract(models.Model):
             is_posted = bool(invoice and invoice.state == 'posted')
 
             if not is_posted:
-                # Not a confirmed charge yet - still shown with its scheduled
-                # amount (this is the fix for a tenant seeing a blank "-" for
-                # every upcoming charge and having no way to know what they'll
-                # owe) but excluded from totals/running balance, matching
-                # standard statement-of-account practice of only reflecting
-                # confirmed charges in the running total.
                 pending_amount = self._amount_with_tax(invoice, inst.amount)
                 pending_count += 1
                 total_pending_amount += pending_amount
@@ -426,10 +393,6 @@ class RentContract(models.Model):
                 'company': invoice.company_id.name,
             })
 
-        # One pass per unique invoice (not per installment) - several
-        # installments can share the same invoice (e.g. Rent + Deposit
-        # combined into one move), and looking payments up per-installment
-        # would credit the same payment twice, once for each shared row.
         for invoice in posted_invoices:
             paid_amount = self._get_invoice_paid_amount(invoice)
             if paid_amount <= 0.005:
@@ -439,8 +402,6 @@ class RentContract(models.Model):
             matched_total = sum(m[1] for m in matches)
 
             if matches and abs(matched_total - paid_amount) <= 0.01:
-                # Detailed breakdown accounts for the full paid amount - use
-                # it for the nicer per-payment name/date/reference.
                 for payment, matched_amount, pay_date in matches:
                     raw_lines.append({
                         'date': pay_date or invoice.invoice_date or fields.Date.today(),
@@ -453,10 +414,6 @@ class RentContract(models.Model):
                         'company': payment.company_id.name or invoice.company_id.name,
                     })
             else:
-                # Breakdown missing or doesn't add up (e.g. reconciled via a
-                # bank statement match with no account.payment record) -
-                # fall back to a single row using the authoritative amount
-                # instead of silently showing no payment at all.
                 raw_lines.append({
                     'date': invoice.invoice_date_due or invoice.invoice_date or fields.Date.today(),
                     'description': f"Payment Received (matched to {invoice.name})",
@@ -468,8 +425,6 @@ class RentContract(models.Model):
                     'company': invoice.company_id.name,
                 })
 
-        # Credit notes aren't tracked via rent_installment_ids - pull them
-        # separately by contract reference, same as the previous logic.
         refunds = self.env['account.move'].search([
             '|',
             ('rent_contract_id', '=', self.id),
@@ -489,11 +444,8 @@ class RentContract(models.Model):
                 'company': refund.company_id.name,
             })
 
-        # Sort all lines chronologically
         raw_lines.sort(key=lambda x: (x['date'] or fields.Date.today()))
 
-        # Calculate running balances and totals - pending rows don't affect
-        # either, they just carry the balance forward unchanged.
         running_balance = 0.0
         total_charges = 0.0
         total_payments = 0.0
@@ -513,9 +465,6 @@ class RentContract(models.Model):
         deposit_utilized = deposit_summary['deposit_utilized']
         one_time_charges = self._get_one_time_charges_summary()
 
-        # Itemized Move-Out deductions, for a "Deposit Settlement" section
-        # on the printed statement - empty list (section hidden) unless a
-        # Move-Out has actually been finalized for this contract.
         deduction_lines = []
         deposit_refund_amount = 0.0
         moveout = deposit_summary['moveout']
@@ -703,11 +652,6 @@ class RentContract(models.Model):
                 'eg_property_management.parking_fee_invoice_description',
                 'Parking Fee',
             ),
-            # Dilapidation/Shortfall Rent previously reused the Penalty/Rent
-            # products (a known simplification from when Move-Out deposit
-            # settlement was first built) - now have their own, so they show
-            # up as their own line/product on invoices and reports instead
-            # of being counted as Penalty or Rent revenue.
             'dilapidation_product': _get_product('eg_property_management.dilapidation_invoice_product_id'),
             'dilapidation_description': param_obj.get_param(
                 'eg_property_management.dilapidation_invoice_description',
@@ -788,13 +732,6 @@ class RentContract(models.Model):
 
     @staticmethod
     def _amount_with_tax(invoice, base_amount):
-        """Scale a tax-excluded installment amount up to its tax-inclusive
-        equivalent using that invoice's own tax ratio (amount_total /
-        amount_untaxed) - correct even if an invoice mixes products with
-        different tax rates, and a no-op (ratio 1) when there's no invoice
-        or no tax on it. Used so the printed tenant statement shows the
-        same final total the tenant is actually billed, not the pre-tax
-        price_unit stored on the installment."""
         if not invoice or not invoice.amount_untaxed:
             return base_amount
         return base_amount * (invoice.amount_total / invoice.amount_untaxed)
@@ -828,17 +765,17 @@ class RentContract(models.Model):
 
     def action_state_terminate(self):
         for rec in self:
-            rec.state = 'terminate'
+            rec.state = 'terminated'
             rec.property_id.state = 'on_rent'
 
     def action_state_cancel(self):
         for rec in self:
-            rec.state = 'cancel'
+            rec.state = 'cancelled'
             rec.property_id.state = 'on_rent'
 
     def action_expire(self):
         for rec in self:
-            rec.state = 'expire'
+            rec.state = 'expired'
             rec.property_id.state = 'on_rent'
 
     def action_create_invoice(self):
@@ -1239,7 +1176,7 @@ class RentContract(models.Model):
             raise UserError("Please set a Broker and Commission before creating a bill.")
 
         existing_broker_inst_id = self.env['rent.installment'].search(
-            [('rent_contract_id', '=', self.id), ('payment_type', '=', 'broker_bill'), ], limit=1)
+            [('rent_contract_id', '=', self.id), ('payment_type', '=', 'broker_bill')], limit=1)
 
         if existing_broker_inst_id:
             raise UserError(f"A broker bill already exists for this contract "
@@ -1296,7 +1233,7 @@ class RentContract(models.Model):
             'view_mode': 'list,form',
             'domain': [('id', 'in', bill_ids.ids)],
             'context': {'default_property_id': self.property_id.id,
-                        'default_rent_contract_id': self.id, },
+                        'default_rent_contract_id': self.id},
         }
 
     @api.depends('rent', 'total_maintenance', 'utility_service_ids.cost', 'tax_rate')
@@ -1395,13 +1332,8 @@ class RentContract(models.Model):
         """Move-Out diagram step 1: send the renewal notice N calendar
         months before a running contract's end date, N chosen by the agent
         in Settings (eg_property_management.renewal_notice_months, 1/2/3,
-        default 3 - matches the period this used to be hardcoded to).
-        Mirrors action_rent_due_reminder_cron() exactly - same exact-date-
-        match search (so it fires once, not once per day, with no extra
-        "already sent" field needed), same message_post + mail.mail.
-        create(...).send() pattern. Only touches 'running' contracts, so
-        anything already terminated, cancelled, or expired is never
-        matched."""
+        default 3). Only touches 'running' contracts, so anything already
+        terminated, cancelled, or expired is never matched."""
         notice_months = int(self.env['ir.config_parameter'].sudo().get_param(
             'eg_property_management.renewal_notice_months', '3'
         ))
@@ -1436,7 +1368,7 @@ class RentContract(models.Model):
         today = date.today()
         expired_contracts_ids = self.search([('end_date', '<', today), ('state', '=', 'running')])
         for expired_contracts_id in expired_contracts_ids:
-            expired_contracts_id.state = 'expire'
+            expired_contracts_id.state = 'expired'
             expired_contracts_id.property_id.state = 'on_rent'
             expired_contracts_id.message_post(
                 body=f"This contract reached its end date on <b>{expired_contracts_id.end_date}</b> "
@@ -1475,10 +1407,7 @@ class RentContract(models.Model):
 
     def action_open_movein(self):
         """Smart-button target: opens the contract's Move-In record,
-        creating it on first click. Purely additive - does not touch
-        contract creation (rent.contract.create()) or any existing state
-        transition, so every contract created before this feature shipped
-        works exactly as before until someone clicks this button."""
+        creating it on first click."""
         self.ensure_one()
         movein = self.movein_id
         if not movein:
@@ -1511,12 +1440,7 @@ class RentContract(models.Model):
 
     def action_start_moveout(self):
         """Header-button target for 'Start Move-Out Process'. Creates the
-        Move-Out record and moves the contract's own state to 'move_out'
-        (a distinct statusbar step) but deliberately returns nothing, so
-        the user stays on the contract form instead of being navigated
-        away - this button is a status change, not a navigation action.
-        To actually open the Move-Out record, use the "Move-Out" smart
-        button (action_open_moveout) once it exists."""
+        Move-Out record and moves the contract's own state to 'move_out'."""
         self.ensure_one()
         if self.state != 'running':
             raise UserError("Only a running contract can start the Move-Out process.")
@@ -1525,16 +1449,7 @@ class RentContract(models.Model):
         self.state = 'move_out'
 
     def action_open_moveout(self):
-        """Smart-button target: opens the contract's existing Move-Out
-        record. Only ever visible once one exists (action_start_moveout()
-        already created it), but still creates one on the rare chance it's
-        called first - so it's never a dead end. Never touches the
-        contract's own state itself; action_start_moveout() already
-        handled that. The property stays marked occupied ('rent') the
-        whole time; only Settle (rent.contract.moveout.action_settle(),
-        the sole caller of action_state_terminate()) frees it up.
-        action_state_terminate()/action_state_cancel() remain directly
-        callable at any point as the quick manual override."""
+        """Smart-button target: opens the contract's existing Move-Out record."""
         self.ensure_one()
         moveout = self.moveout_id
         if not moveout:

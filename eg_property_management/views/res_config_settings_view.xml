@@ -68,6 +68,7 @@
                                 </div>
                             </div>
                         </setting>
+<<<<<<< Updated upstream
                         <setting string="Ejari Fee Invoice Defaults"
                                  help="Default product and description used for the one-time Ejari Fee charge, billed once on the first invoice if set on the contract.">
                             <div class="content-group">
@@ -143,6 +144,36 @@
                                 <div class="row mt16">
                                     <label for="shortfall_rent_invoice_description" class="col-lg-3 o_light_label"/>
                                     <field name="shortfall_rent_invoice_description"/>
+=======
+                        <setting string="Contract Expiry Notification"
+                                 help="Number of days before contract expiry date to trigger in-system notifications (default: 90 days).">
+                            <div class="content-group">
+                                <div class="row mt16">
+                                    <label for="contract_expiry_notice_days" class="col-lg-3 o_light_label"/>
+                                    <field name="contract_expiry_notice_days"/>
+                                </div>
+                            </div>
+                        </setting>
+                        <setting string="Tenant Payment Reminder Window"
+                                 help="Days before scheduled payment date to send reminders (e.g. 10 to 15 days).">
+                            <div class="content-group">
+                                <div class="row mt16">
+                                    <label for="payment_reminder_min_days" string="Min Days Before Due" class="col-lg-3 o_light_label"/>
+                                    <field name="payment_reminder_min_days"/>
+                                </div>
+                                <div class="row mt16">
+                                    <label for="payment_reminder_max_days" string="Max Days Before Due" class="col-lg-3 o_light_label"/>
+                                    <field name="payment_reminder_max_days"/>
+                                </div>
+                            </div>
+                        </setting>
+                        <setting string="Finance Notification Users"
+                                 help="Specific Finance team users to receive in-system tenancy notifications. If empty, all Accounting/Billing users are notified.">
+                            <div class="content-group">
+                                <div class="row mt16">
+                                    <label for="finance_user_ids" class="col-lg-3 o_light_label"/>
+                                    <field name="finance_user_ids" widget="many2many_tags"/>
+>>>>>>> Stashed changes
                                 </div>
                             </div>
                         </setting>

@@ -18,3 +18,4 @@ class RentInstallment(models.Model):
     invoice_id = fields.Many2one(comodel_name='account.move', string='Invoice Number')
     currency_id = fields.Many2one(comodel_name='res.currency', related='rent_contract_id.currency_id',
                                   string='Currency', store=True, readonly=True)
+    payment_reminder_sent = fields.Boolean(string='Payment Reminder Sent', default=False, copy=False)

@@ -37,8 +37,14 @@
                         <field name="state" widget="statusbar" statusbar_visible="draft,running,move_out,cancelled,terminated,expired"/>
 
                         <button name="action_state_draft" string="Reset to Draft" type="object" class="btn-secondary"
+<<<<<<< Updated upstream
                                 invisible="state in ['draft','running','move_out','cancelled','expired']"/>
 
+=======
+                                invisible="state in ['draft','running','cancel','expire']"/>
+                        <button name="action_request_approval" string="Request Finance Approval" type="object" class="btn-secondary"
+                                invisible="state != 'draft'"/>
+>>>>>>> Stashed changes
                         <button name="action_state_running" string="Running" type="object" class="btn-primary"
                                 invisible="state in ['running','move_out','cancelled','terminated','expired']"/>
 
@@ -65,6 +71,10 @@
                                 class="btn-primary" invisible="state in ['draft','running','move_out','cancelled','terminated']"/>
                     </header>
                     <sheet>
+                        <div class="alert alert-warning mb-2" role="alert"
+                             invisible="remaining_days &gt; 90 or remaining_days &lt;= 0 or state != 'running'">
+                            <i class="fa fa-exclamation-triangle me-2"/> <strong>Contract Expiry Notice:</strong> This contract expires in <field name="remaining_days" readonly="1"/> days.
+                        </div>
                         <div class="oe_button_box" name="button_box">
                             <button type="object" class="oe_stat_button" icon="fa-files-o"
                                     name="action_view_invoices">

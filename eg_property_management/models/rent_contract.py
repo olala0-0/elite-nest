@@ -216,6 +216,8 @@ class RentContract(models.Model):
     )
 
     invoice_count = fields.Integer(string="Invoices", compute="_compute_invoice_count")
+    expiry_notified_90_days = fields.Boolean(string="Expiry 90-Days Notified", default=False, copy=False)
+    approval_notified = fields.Boolean(string="Approval Notified to Finance", default=False, copy=False)
 
     @api.model_create_multi
     def create(self, vals):
@@ -238,6 +240,7 @@ class RentContract(models.Model):
 
         return super(RentContract, self).create(vals)
 
+<<<<<<< Updated upstream
     def _invoice_status_label(self, invoice):
         """Human-readable status for one charge's invoice, for the printed
         statement - distinguishes "never invoiced" from "invoiced but still
@@ -258,6 +261,16 @@ class RentContract(models.Model):
         compute payment_state, so it's correct no matter how the payment
         was reconciled (a registered payment, a bank statement match, a
         write-off, ...)."""
+=======
+    def write(self, vals):
+        if 'end_date' in vals:
+            vals['expiry_notified_90_days'] = False
+        return super(RentContract, self).write(vals)
+
+    def get_tenant_financial_statement(self):
+        """ Computes chronological Statement of Account data including opening balance,
+        invoices, payments, running balances, totals, and security deposit details. """
+>>>>>>> Stashed changes
         self.ensure_one()
         return invoice.amount_total - invoice.amount_residual
 
@@ -752,6 +765,144 @@ class RentContract(models.Model):
         amount_map = self._get_pending_rent_amount_map(pending_due_dates)
         return amount_map.get(pending_due_dates[0], 0.0)
 
+    def _get_finance_users(self):
+        """Find users representing the Finance / Accounting team."""
+        # 1. Configured finance users in Settings
+        config_user_ids = self.env['ir.config_parameter'].sudo().get_param('eg_property_management.finance_user_ids')
+        if config_user_ids:
+            try:
+                user_ids = [int(u_id.strip()) for u_id in config_user_ids.split(',') if u_id.strip().isdigit()]
+                users = self.env['res.users'].browse(user_ids).exists().filtered(lambda u: u.active)
+                if users:
+                    return users
+            except Exception:
+                pass
+
+        # 2. Users belonging to standard Odoo Accounting / Invoicing groups
+        groups = [
+            'account.group_account_invoice',
+            'account.group_account_user',
+            'account.group_account_manager',
+        ]
+        users = self.env['res.users']
+        for group_xml_id in groups:
+            group = self.env.ref(group_xml_id, raise_if_not_found=False)
+            if group and group.users:
+                users |= group.users
+
+        # Filter out portal/public or inactive users
+        users = users.filtered(lambda u: u.active and not u.share)
+        if not users:
+            admin_group = self.env.ref('base.group_erp_manager', raise_if_not_found=False)
+            if admin_group:
+                users = admin_group.users.filtered(lambda u: u.active and not u.share)
+        return users
+
+    def _get_finance_partners(self):
+        """Find partners associated with Finance users to receive in-system notifications."""
+        finance_users = self._get_finance_users()
+        return finance_users.mapped('partner_id')
+
+    def _send_system_notification(self, title, message, partners, activity_summary=None, activity_user_ids=None):
+        """Send in-system notification directly to partners and users:
+        1. Posts in contract chatter with forced notification_type='in_app'
+           (increments Discuss systray unread badge, no emails sent even if database neutralized).
+        2. Sends real-time pop-up notification via bus.bus to connected users.
+        3. Optionally schedules mail.activity for users.
+        """
+        self.ensure_one()
+        if not partners:
+            return
+
+        # 1. Post notification in contract chatter
+        msg = self.message_post(
+            body=f"<b>{title}</b><br/>{message}",
+            subject=title,
+            partner_ids=partners.ids,
+            message_type='notification',
+            subtype_xmlid='mail.mt_comment',
+        )
+        # Force notification delivery to in-app (Discuss inbox) instead of email
+        if msg and msg.notification_ids:
+            msg.notification_ids.sudo().write({'notification_type': 'in_app'})
+
+        # 2. Real-time pop-up notification via bus.bus
+        for partner in partners:
+            try:
+                self.env['bus.bus']._sendone(
+                    partner,
+                    'simple_notification',
+                    {
+                        'type': 'info',
+                        'title': title,
+                        'message': message,
+                        'sticky': False,
+                    }
+                )
+            except Exception:
+                try:
+                    self.env['bus.bus']._sendone(
+                        partner,
+                        'mail.simple_notification',
+                        {
+                            'type': 'info',
+                            'title': title,
+                            'message': message,
+                            'sticky': False,
+                        }
+                    )
+                except Exception:
+                    pass
+
+        # 3. Schedule mail.activity if requested
+        if activity_summary and activity_user_ids:
+            for user in activity_user_ids:
+                existing_activity = self.env['mail.activity'].search([
+                    ('res_model', '=', self._name),
+                    ('res_id', '=', self.id),
+                    ('user_id', '=', user.id),
+                    ('summary', '=', activity_summary),
+                ], limit=1)
+                if not existing_activity:
+                    try:
+                        self.activity_schedule(
+                            'mail.mail_activity_data_todo',
+                            user_id=user.id,
+                            summary=activity_summary,
+                            note=message,
+                        )
+                    except Exception:
+                        pass
+
+    def action_request_approval(self):
+        """Send tenancy contract approval notification within the system to the Finance team."""
+        for rec in self:
+            finance_users = rec._get_finance_users()
+            finance_partners = rec._get_finance_partners()
+            title = f"Tenancy Contract Approval Requested: {rec.name}"
+            message = (
+                f"Tenancy Contract <b>{rec.name}</b> for property <b>{rec.property_id.name or 'N/A'}</b> "
+                f"(Tenant: <b>{rec.tenant_id.name or 'N/A'}</b>, Rent: <b>{rec.rent} {rec.currency_id.symbol or ''}</b>) "
+                f"has been submitted for approval."
+            )
+            rec._send_system_notification(
+                title=title,
+                message=message,
+                partners=finance_partners,
+                activity_summary="Approve Tenancy Contract",
+                activity_user_ids=finance_users,
+            )
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': 'Approval Requested',
+                'message': 'Tenancy contract approval request sent directly to the Finance team within the system.',
+                'type': 'success',
+                'sticky': False,
+            }
+        }
+
     def action_state_draft(self):
         for rec in self:
             rec.state = 'draft'
@@ -760,6 +911,42 @@ class RentContract(models.Model):
         for rec in self:
             rec.state = 'running'
             rec.property_id.state = 'rent'
+            rec.approval_notified = True
+
+            # Send tenancy contract approval notification within the system to Finance team
+            finance_users = rec._get_finance_users()
+            finance_partners = rec._get_finance_partners()
+            recipients = finance_partners
+            if rec.user_id and rec.user_id.partner_id:
+                recipients |= rec.user_id.partner_id
+
+            title = f"Tenancy Contract Approved: {rec.name}"
+            message = (
+                f"Tenancy Contract <b>{rec.name}</b> for property <b>{rec.property_id.name or 'N/A'}</b> "
+                f"(Tenant: <b>{rec.tenant_id.name or 'N/A'}</b>, Rent: <b>{rec.rent} {rec.currency_id.symbol or ''}</b>) "
+                f"has been approved and is now Running."
+            )
+            rec._send_system_notification(
+                title=title,
+                message=message,
+                partners=recipients,
+                activity_summary="Tenancy Contract Approved",
+                activity_user_ids=rec.user_id,
+            )
+            try:
+                rec.activity_feedback(['mail.mail_activity_data_todo'], feedback="Contract approved and moved to Running state.")
+            except Exception:
+                pass
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': 'Contract Approved',
+                'message': 'Contract moved to Running state. Finance team has been notified within the system.',
+                'type': 'success',
+                'sticky': False,
+            }
+        }
 
     def action_state_terminate(self):
         for rec in self:
@@ -1303,16 +1490,61 @@ class RentContract(models.Model):
                 body=f"Penalty invoice {invoice_id.name} generated for overdue installment {installments_id.id}.")
 
     def action_rent_due_reminder_cron(self):
+        """Send tenant payment reminders 10 to 15 days before the scheduled payment date:
+        - Sends pop-up notification and Discuss inbox message to Finance team and contract responsible user.
+        - Sends email reminder to Tenant if email exists.
+        - Schedules activity for responsible user.
+        """
         today = date.today()
-        reminder_days = 7
+        min_days = int(self.env['ir.config_parameter'].sudo().get_param(
+            'eg_property_management.payment_reminder_min_days', '10'))
+        max_days = int(self.env['ir.config_parameter'].sudo().get_param(
+            'eg_property_management.payment_reminder_max_days', '15'))
+
+        window_start = today + timedelta(days=min_days)
+        window_end = today + timedelta(days=max_days)
+
         upcoming_installment_ids = self.env['rent.installment'].search([
+<<<<<<< Updated upstream
             ('invoice_date', '=', today - timedelta(days=reminder_days)), ('invoice_id', '!=', False),
             ('invoice_id.payment_state', '!=', 'paid'), ('rent_contract_id.state', 'in', ('running', 'move_out')), ])
+=======
+            ('invoice_date', '>=', window_start),
+            ('invoice_date', '<=', window_end),
+            ('payment_reminder_sent', '=', False),
+            ('rent_contract_id.state', '=', 'running'),
+        ])
+>>>>>>> Stashed changes
         for installment_id in upcoming_installment_ids:
+            # Skip if invoice exists and is already paid
+            if installment_id.invoice_id and installment_id.invoice_id.payment_state in ('paid', 'in_payment'):
+                continue
+
+            installment_id.payment_reminder_sent = True
             contract_id = installment_id.rent_contract_id
-            contract_id.message_post(
-                body=f"Reminder: Rent installment of {installment_id.amount} is due on {installment_id.invoice_date}."
+            days_until_due = (installment_id.invoice_date - today).days
+
+            title = f"Tenant Payment Reminder: {contract_id.name}"
+            msg_body = (
+                f"Reminder: Rent installment of <b>{installment_id.amount} {contract_id.currency_id.symbol or ''}</b> "
+                f"is scheduled for <b>{installment_id.invoice_date}</b> ({days_until_due} day(s) from today) "
+                f"for contract <b>{contract_id.name}</b> (Tenant: <b>{contract_id.tenant_id.name or 'N/A'}</b>)."
             )
+
+            # In-system notification directly to Finance team and contract responsible user
+            recipients = contract_id._get_finance_partners()
+            if contract_id.user_id and contract_id.user_id.partner_id:
+                recipients |= contract_id.user_id.partner_id
+
+            contract_id._send_system_notification(
+                title=title,
+                message=msg_body,
+                partners=recipients,
+                activity_summary=f"Payment Reminder: Due in {days_until_due} days",
+                activity_user_ids=contract_id.user_id or contract_id._get_finance_users(),
+            )
+
+            # Email notification to Tenant
             if contract_id.tenant_id.email:
                 mail_values = {
                     'subject': f"Rent Due Reminder - {contract_id.name}",
@@ -1320,11 +1552,17 @@ class RentContract(models.Model):
                         <p>Dear {contract_id.tenant_id.name},</p>
                         <p>This is a reminder that your rent installment of 
                         <b>{installment_id.amount} {contract_id.currency_id.symbol}</b> 
-                        is due on <b>{installment_id.invoice_date}</b>.</p>
+                        is scheduled for payment on <b>{installment_id.invoice_date}</b> ({days_until_due} day(s) from today).</p>
+                        <p>Property: <b>{contract_id.property_id.name or 'Your Property'}</b></p>
                         <p>Regards,<br/>{contract_id.company_id.name}</p>
                     """,
-                    'email_to': contract_id.tenant_id.email, }
-                self.env['mail.mail'].create(mail_values).send()
+                    'email_to': contract_id.tenant_id.email,
+                }
+                try:
+                    self.env['mail.mail'].create(mail_values).send()
+                except Exception:
+                    pass
+        return True
 
     def action_renewal_notice_cron(self):
         """Move-Out diagram step 1: send the renewal notice N calendar
@@ -1363,7 +1601,13 @@ class RentContract(models.Model):
         return True
 
     def action_contract_expiry_cron(self):
+        """1. Move expired contracts past end_date to 'expire'.
+        2. Trigger contract expiry notifications exactly 90 days before the contract expiry date:
+           - In-system pop-up and Discuss notification for Finance team and responsible user.
+           - Activity scheduled on the contract.
+        """
         today = date.today()
+        # 1. Handle contracts that have already expired
         expired_contracts_ids = self.search([('end_date', '<', today), ('state', '=', 'running')])
         for expired_contracts_id in expired_contracts_ids:
             expired_contracts_id.state = 'expired'
@@ -1371,6 +1615,40 @@ class RentContract(models.Model):
             expired_contracts_id.message_post(
                 body=f"This contract reached its end date on <b>{expired_contracts_id.end_date}</b> "
                      f"and has been automatically moved to the status <b>Expired</b>.")
+
+        # 2. Contract expiry notification triggered 90 days before end_date
+        expiry_notice_days = int(self.env['ir.config_parameter'].sudo().get_param(
+            'eg_property_management.contract_expiry_notice_days', '90'))
+        target_expiry_date = today + timedelta(days=expiry_notice_days)
+
+        expiring_contracts_ids = self.search([
+            ('state', '=', 'running'),
+            ('end_date', '<=', target_expiry_date),
+            ('end_date', '>=', today),
+            ('expiry_notified_90_days', '=', False),
+        ])
+        for contract in expiring_contracts_ids:
+            contract.expiry_notified_90_days = True
+            days_left = (contract.end_date - today).days if contract.end_date else expiry_notice_days
+            title = f"Contract Expiry Notice: {contract.name} expires in {days_left} days"
+            message = (
+                f"Tenancy Contract <b>{contract.name}</b> for property <b>{contract.property_id.name or 'N/A'}</b> "
+                f"(Tenant: <b>{contract.tenant_id.name or 'N/A'}</b>) is scheduled to expire on "
+                f"<b>{contract.end_date}</b> ({days_left} day(s) from today). "
+                f"Please review renewal or move-out arrangements."
+            )
+
+            recipients = contract._get_finance_partners()
+            if contract.user_id and contract.user_id.partner_id:
+                recipients |= contract.user_id.partner_id
+
+            contract._send_system_notification(
+                title=title,
+                message=message,
+                partners=recipients,
+                activity_summary=f"Contract Expiry in {days_left} Days",
+                activity_user_ids=contract.user_id or contract._get_finance_users(),
+            )
         return True
 
     def action_auto_create_invoice_cron(self):

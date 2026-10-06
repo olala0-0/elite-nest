@@ -1,4 +1,4 @@
-from odoo import fields, models
+from odoo import api, fields, models
 
 
 class ResConfigSettings(models.TransientModel):
@@ -46,6 +46,7 @@ class ResConfigSettings(models.TransientModel):
         string="Penalty Invoice Description",
         config_parameter="eg_property_management.penalty_invoice_description",
     )
+<<<<<<< Updated upstream
     ejari_fee_invoice_product_id = fields.Many2one(
         comodel_name="product.product",
         string="Ejari Fee Invoice Product",
@@ -100,3 +101,44 @@ class ResConfigSettings(models.TransientModel):
         string="Shortfall Rent Invoice Description",
         config_parameter="eg_property_management.shortfall_rent_invoice_description",
     )
+=======
+
+    contract_expiry_notice_days = fields.Integer(
+        string="Expiry Notice (Days)",
+        default=90,
+        config_parameter="eg_property_management.contract_expiry_notice_days",
+    )
+    payment_reminder_min_days = fields.Integer(
+        string="Payment Reminder Min Days",
+        default=10,
+        config_parameter="eg_property_management.payment_reminder_min_days",
+    )
+    payment_reminder_max_days = fields.Integer(
+        string="Payment Reminder Max Days",
+        default=15,
+        config_parameter="eg_property_management.payment_reminder_max_days",
+    )
+    finance_user_ids = fields.Many2many(
+        comodel_name="res.users",
+        string="Finance Notification Users",
+        relation="res_config_settings_finance_users_rel",
+    )
+
+    def set_values(self):
+        super().set_values()
+        param = self.env['ir.config_parameter'].sudo()
+        param.set_param(
+            'eg_property_management.finance_user_ids',
+            ','.join(map(str, self.finance_user_ids.ids))
+        )
+
+    @api.model
+    def get_values(self):
+        res = super().get_values()
+        param = self.env['ir.config_parameter'].sudo()
+        finance_ids_str = param.get_param('eg_property_management.finance_user_ids', '')
+        if finance_ids_str:
+            user_ids = [int(x) for x in finance_ids_str.split(',') if x.strip().isdigit()]
+            res['finance_user_ids'] = [(6, 0, user_ids)]
+        return res
+>>>>>>> Stashed changes

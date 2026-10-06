@@ -815,9 +815,12 @@ class RentContract(models.Model):
             message_type='notification',
             subtype_xmlid='mail.mt_comment',
         )
-        # Force notification delivery to in-app (Discuss inbox) instead of email
+        # Force notification delivery to inbox (Discuss inbox) instead of email
         if msg and msg.notification_ids:
-            msg.notification_ids.sudo().write({'notification_type': 'in_app'})
+            try:
+                msg.notification_ids.sudo().write({'notification_type': 'inbox'})
+            except Exception:
+                pass
 
         # 2. Real-time pop-up notification via bus.bus
         for partner in partners:

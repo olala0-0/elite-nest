@@ -345,7 +345,10 @@ class RentContractMoveOut(models.Model):
             subtype_xmlid='mail.mt_comment',
         )
         if msg and msg.notification_ids:
-            msg.notification_ids.sudo().write({'notification_type': 'in_app'})
+            try:
+                msg.notification_ids.sudo().write({'notification_type': 'inbox'})
+            except Exception:
+                pass
 
         # Also post in Contract chatter
         if self.rent_contract_id:
@@ -358,7 +361,10 @@ class RentContractMoveOut(models.Model):
                     subtype_xmlid='mail.mt_comment',
                 )
                 if c_msg and c_msg.notification_ids:
-                    c_msg.notification_ids.sudo().write({'notification_type': 'in_app'})
+                    try:
+                        c_msg.notification_ids.sudo().write({'notification_type': 'inbox'})
+                    except Exception:
+                        pass
             except Exception:
                 pass
 

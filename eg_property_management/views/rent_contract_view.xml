@@ -38,8 +38,6 @@
 
                         <button name="action_state_draft" string="Reset to Draft" type="object" class="btn-secondary"
                                 invisible="state in ['draft','running','move_out','cancelled','expired']"/>
-                        <button name="action_request_approval" string="Request Finance Approval" type="object" class="btn-secondary"
-                                invisible="state != 'draft'"/>
                         <button name="action_state_running" string="Running" type="object" class="btn-primary"
                                 invisible="state in ['running','move_out','cancelled','terminated','expired']"/>
 

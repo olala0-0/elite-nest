@@ -16,6 +16,7 @@
         "helpdesk",
     ],
     "data": [
+        "security/property_security.xml",
         "security/ir.model.access.csv",
         "data/ir_sequence.xml",
         "data/data.xml",

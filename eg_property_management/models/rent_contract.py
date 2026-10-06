@@ -217,7 +217,6 @@ class RentContract(models.Model):
 
     invoice_count = fields.Integer(string="Invoices", compute="_compute_invoice_count")
     expiry_notified_90_days = fields.Boolean(string="Expiry 90-Days Notified", default=False, copy=False)
-    approval_notified = fields.Boolean(string="Approval Notified to Finance", default=False, copy=False)
 
     @api.model_create_multi
     def create(self, vals):
@@ -868,35 +867,6 @@ class RentContract(models.Model):
                     except Exception:
                         pass
 
-    def action_request_approval(self):
-        """Send tenancy contract approval notification within the system to the Finance team."""
-        for rec in self:
-            finance_users = rec._get_finance_users()
-            finance_partners = rec._get_finance_partners()
-            title = f"Tenancy Contract Approval Requested: {rec.name}"
-            message = (
-                f"Tenancy Contract <b>{rec.name}</b> for property <b>{rec.property_id.name or 'N/A'}</b> "
-                f"(Tenant: <b>{rec.tenant_id.name or 'N/A'}</b>, Rent: <b>{rec.rent} {rec.currency_id.symbol or ''}</b>) "
-                f"has been submitted for approval."
-            )
-            rec._send_system_notification(
-                title=title,
-                message=message,
-                partners=finance_partners,
-                activity_summary="Approve Tenancy Contract",
-                activity_user_ids=finance_users,
-            )
-        return {
-            'type': 'ir.actions.client',
-            'tag': 'display_notification',
-            'params': {
-                'title': 'Approval Requested',
-                'message': 'Tenancy contract approval request sent directly to the Finance team within the system.',
-                'type': 'success',
-                'sticky': False,
-            }
-        }
-
     def action_state_draft(self):
         for rec in self:
             rec.state = 'draft'
@@ -905,42 +875,6 @@ class RentContract(models.Model):
         for rec in self:
             rec.state = 'running'
             rec.property_id.state = 'rent'
-            rec.approval_notified = True
-
-            # Send tenancy contract approval notification within the system to Finance team
-            finance_users = rec._get_finance_users()
-            finance_partners = rec._get_finance_partners()
-            recipients = finance_partners
-            if rec.user_id and rec.user_id.partner_id:
-                recipients |= rec.user_id.partner_id
-
-            title = f"Tenancy Contract Approved: {rec.name}"
-            message = (
-                f"Tenancy Contract <b>{rec.name}</b> for property <b>{rec.property_id.name or 'N/A'}</b> "
-                f"(Tenant: <b>{rec.tenant_id.name or 'N/A'}</b>, Rent: <b>{rec.rent} {rec.currency_id.symbol or ''}</b>) "
-                f"has been approved and is now Running."
-            )
-            rec._send_system_notification(
-                title=title,
-                message=message,
-                partners=recipients,
-                activity_summary="Tenancy Contract Approved",
-                activity_user_ids=rec.user_id,
-            )
-            try:
-                rec.activity_feedback(['mail.mail_activity_data_todo'], feedback="Contract approved and moved to Running state.")
-            except Exception:
-                pass
-        return {
-            'type': 'ir.actions.client',
-            'tag': 'display_notification',
-            'params': {
-                'title': 'Contract Approved',
-                'message': 'Contract moved to Running state. Finance team has been notified within the system.',
-                'type': 'success',
-                'sticky': False,
-            }
-        }
 
     def action_state_terminate(self):
         for rec in self:

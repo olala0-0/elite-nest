@@ -28,7 +28,7 @@
                         <button name="action_submit_finance_review" string="Submit for Finance Review" type="object"
                                 class="btn-primary" invisible="state != 'inspection_done'"/>
                         <button name="action_approve" string="Approve Deposit Release" type="object"
-                                class="btn-primary" groups="base.group_system"
+                                class="btn-primary" groups="eg_property_management.group_property_finance_approver,base.group_system"
                                 invisible="state != 'finance_review'"/>
                         <button name="action_settle" string="Settle Move-Out" type="object"
                                 class="btn-primary" invisible="state != 'approved'"/>
@@ -148,6 +148,7 @@
                             </page>
                         </notebook>
                     </sheet>
+                    <chatter/>
                 </form>
             </field>
         </record>

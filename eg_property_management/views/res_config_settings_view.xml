@@ -68,7 +68,6 @@
                                 </div>
                             </div>
                         </setting>
-<<<<<<< Updated upstream
                         <setting string="Ejari Fee Invoice Defaults"
                                  help="Default product and description used for the one-time Ejari Fee charge, billed once on the first invoice if set on the contract.">
                             <div class="content-group">
@@ -144,7 +143,9 @@
                                 <div class="row mt16">
                                     <label for="shortfall_rent_invoice_description" class="col-lg-3 o_light_label"/>
                                     <field name="shortfall_rent_invoice_description"/>
-=======
+                                </div>
+                            </div>
+                        </setting>
                         <setting string="Contract Expiry Notification"
                                  help="Number of days before contract expiry date to trigger in-system notifications (default: 90 days).">
                             <div class="content-group">
@@ -173,7 +174,6 @@
                                 <div class="row mt16">
                                     <label for="finance_user_ids" class="col-lg-3 o_light_label"/>
                                     <field name="finance_user_ids" widget="many2many_tags"/>
->>>>>>> Stashed changes
                                 </div>
                             </div>
                         </setting>

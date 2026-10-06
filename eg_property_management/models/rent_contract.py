@@ -240,7 +240,11 @@ class RentContract(models.Model):
 
         return super(RentContract, self).create(vals)
 
-<<<<<<< Updated upstream
+    def write(self, vals):
+        if 'end_date' in vals:
+            vals['expiry_notified_90_days'] = False
+        return super(RentContract, self).write(vals)
+
     def _invoice_status_label(self, invoice):
         """Human-readable status for one charge's invoice, for the printed
         statement - distinguishes "never invoiced" from "invoiced but still
@@ -261,16 +265,6 @@ class RentContract(models.Model):
         compute payment_state, so it's correct no matter how the payment
         was reconciled (a registered payment, a bank statement match, a
         write-off, ...)."""
-=======
-    def write(self, vals):
-        if 'end_date' in vals:
-            vals['expiry_notified_90_days'] = False
-        return super(RentContract, self).write(vals)
-
-    def get_tenant_financial_statement(self):
-        """ Computes chronological Statement of Account data including opening balance,
-        invoices, payments, running balances, totals, and security deposit details. """
->>>>>>> Stashed changes
         self.ensure_one()
         return invoice.amount_total - invoice.amount_residual
 
@@ -1505,16 +1499,11 @@ class RentContract(models.Model):
         window_end = today + timedelta(days=max_days)
 
         upcoming_installment_ids = self.env['rent.installment'].search([
-<<<<<<< Updated upstream
-            ('invoice_date', '=', today - timedelta(days=reminder_days)), ('invoice_id', '!=', False),
-            ('invoice_id.payment_state', '!=', 'paid'), ('rent_contract_id.state', 'in', ('running', 'move_out')), ])
-=======
             ('invoice_date', '>=', window_start),
             ('invoice_date', '<=', window_end),
             ('payment_reminder_sent', '=', False),
-            ('rent_contract_id.state', '=', 'running'),
+            ('rent_contract_id.state', 'in', ('running', 'move_out')),
         ])
->>>>>>> Stashed changes
         for installment_id in upcoming_installment_ids:
             # Skip if invoice exists and is already paid
             if installment_id.invoice_id and installment_id.invoice_id.payment_state in ('paid', 'in_payment'):

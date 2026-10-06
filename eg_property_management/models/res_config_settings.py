@@ -46,7 +46,6 @@ class ResConfigSettings(models.TransientModel):
         string="Penalty Invoice Description",
         config_parameter="eg_property_management.penalty_invoice_description",
     )
-<<<<<<< Updated upstream
     ejari_fee_invoice_product_id = fields.Many2one(
         comodel_name="product.product",
         string="Ejari Fee Invoice Product",
@@ -101,7 +100,6 @@ class ResConfigSettings(models.TransientModel):
         string="Shortfall Rent Invoice Description",
         config_parameter="eg_property_management.shortfall_rent_invoice_description",
     )
-=======
 
     contract_expiry_notice_days = fields.Integer(
         string="Expiry Notice (Days)",
@@ -141,4 +139,3 @@ class ResConfigSettings(models.TransientModel):
             user_ids = [int(x) for x in finance_ids_str.split(',') if x.strip().isdigit()]
             res['finance_user_ids'] = [(6, 0, user_ids)]
         return res
->>>>>>> Stashed changes

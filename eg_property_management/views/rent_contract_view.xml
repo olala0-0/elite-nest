@@ -37,14 +37,9 @@
                         <field name="state" widget="statusbar" statusbar_visible="draft,running,move_out,cancelled,terminated,expired"/>
 
                         <button name="action_state_draft" string="Reset to Draft" type="object" class="btn-secondary"
-<<<<<<< Updated upstream
                                 invisible="state in ['draft','running','move_out','cancelled','expired']"/>
-
-=======
-                                invisible="state in ['draft','running','cancel','expire']"/>
                         <button name="action_request_approval" string="Request Finance Approval" type="object" class="btn-secondary"
                                 invisible="state != 'draft'"/>
->>>>>>> Stashed changes
                         <button name="action_state_running" string="Running" type="object" class="btn-primary"
                                 invisible="state in ['running','move_out','cancelled','terminated','expired']"/>
 

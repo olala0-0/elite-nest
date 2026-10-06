@@ -126,7 +126,7 @@
                         <group string="Property Information">
                             <group>
                                 <field name="property_id" required="1"
-                                       domain="[('property_for','=','rent'), ('state','!=','rent')]"/>
+                                       domain="[('property_for','=','rent'), ('state','not in',['on_rent','rent','sold'])]"/>
                                 <field name="residential_type_id" string="Residential Type" readonly="1"/>
                                 <field name="dewa_premises_no" readonly="1"/>
                                 <label for="street" string="Address"/>

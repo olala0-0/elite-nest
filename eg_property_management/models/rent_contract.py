@@ -877,22 +877,22 @@ class RentContract(models.Model):
     def action_state_running(self):
         for rec in self:
             rec.state = 'running'
-            rec.property_id.state = 'rent'
+            rec.property_id.state = 'on_rent'
 
     def action_state_terminate(self):
         for rec in self:
             rec.state = 'terminated'
-            rec.property_id.state = 'on_rent'
+            rec.property_id.state = 'available'
 
     def action_state_cancel(self):
         for rec in self:
             rec.state = 'cancelled'
-            rec.property_id.state = 'on_rent'
+            rec.property_id.state = 'available'
 
     def action_expire(self):
         for rec in self:
             rec.state = 'expired'
-            rec.property_id.state = 'on_rent'
+            rec.property_id.state = 'available'
 
     def action_create_invoice(self):
         self.ensure_one()
@@ -1537,7 +1537,7 @@ class RentContract(models.Model):
         expired_contracts_ids = self.search([('end_date', '<', today), ('state', '=', 'running')])
         for expired_contracts_id in expired_contracts_ids:
             expired_contracts_id.state = 'expired'
-            expired_contracts_id.property_id.state = 'on_rent'
+            expired_contracts_id.property_id.state = 'available'
             expired_contracts_id.message_post(
                 body=f"This contract reached its end date on <b>{expired_contracts_id.end_date}</b> "
                      f"and has been automatically moved to the status <b>Expired</b>.")

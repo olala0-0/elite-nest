@@ -32,8 +32,11 @@
                                 invisible="state != 'finance_review'"/>
                         <button name="action_settle" string="Settle Move-Out" type="object"
                                 class="btn-primary" invisible="state != 'approved'"/>
+                        <button name="action_cancel" string="Cancel Move-Out" type="object"
+                                class="btn-secondary" invisible="state in ('settled', 'cancelled')"
+                                confirm="Are you sure you want to cancel this Move-Out process?"/>
                         <button name="action_reset_draft" string="Reset to Draft" type="object"
-                                invisible="state == 'draft'"/>
+                                invisible="state in ('draft', 'settled')"/>
                         <field name="state" widget="statusbar"
                                statusbar_visible="draft,clearance_pending,inspection_done,finance_review,approved,settled"/>
                     </header>
@@ -162,7 +165,8 @@
                     <field name="property_id"/>
                     <field name="tenant_id"/>
                     <field name="deposit_release_amount"/>
-                    <field name="state" widget="badge" decoration-success="state == 'settled'"/>
+                    <field name="state" widget="badge" decoration-success="state == 'settled'"
+                           decoration-danger="state == 'cancelled'"/>
                 </list>
             </field>
         </record>

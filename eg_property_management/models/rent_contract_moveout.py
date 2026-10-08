@@ -89,7 +89,8 @@ class RentContractMoveOut(models.Model):
 
     state = fields.Selection(
         [('draft', 'Draft'), ('clearance_pending', 'Clearance Pending'), ('inspection_done', 'Final Inspection'),
-         ('finance_review', 'Finance Review'), ('approved', 'Approved'), ('settled', 'Settled')],
+         ('finance_review', 'Finance Review'), ('approved', 'Approved'), ('settled', 'Settled'),
+         ('cancelled', 'Cancelled')],
         string='Status', default='draft', tracking=True)
 
     @api.depends('deduction_line_ids.amount', 'rent_contract_id')
@@ -552,6 +553,34 @@ class RentContractMoveOut(models.Model):
                     rec.property_id.write({'state': 'available'})
         return res
 
+    def action_cancel(self):
+        """Cancel the Move-Out process at any stage unless it is already settled."""
+        for rec in self:
+            if rec.state == 'settled':
+                raise UserError("A settled Move-Out cannot be cancelled.")
+            rec.state = 'cancelled'
+
+            # Cancel any scheduled activities for this Move-Out
+            try:
+                rec.activity_unlink(['mail.mail_activity_data_todo'])
+            except Exception:
+                pass
+
+            rec.message_post(
+                body=f"Move-Out record has been cancelled by <b>{self.env.user.name}</b>.",
+                subtype_xmlid='mail.mt_comment'
+            )
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': 'Move-Out Cancelled',
+                'message': 'Move-out record has been cancelled.',
+                'type': 'warning',
+                'sticky': False,
+            }
+        }
+
     def action_reset_draft(self):
         """Aborting/restarting a Move-Out also returns the contract's own
         state to 'running' (only if it's currently 'move_out' - never
@@ -559,6 +588,8 @@ class RentContractMoveOut(models.Model):
         contract doesn't sit indefinitely on the 'Move-Out Process'
         statusbar step with nothing actually in progress."""
         for rec in self:
+            if rec.state == 'settled':
+                raise UserError("A settled Move-Out cannot be reset to draft.")
             rec.state = 'draft'
             if rec.rent_contract_id.state == 'move_out':
                 rec.rent_contract_id.state = 'running'

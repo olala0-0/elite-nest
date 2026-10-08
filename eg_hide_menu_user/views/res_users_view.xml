@@ -1,0 +1,19 @@
+<odoo>
+    <record id="view_users_form_hidden_menus" model="ir.ui.view">
+        <field name="name">res.users.form.hidden.menus</field>
+        <field name="model">res.users</field>
+        <field name="inherit_id" ref="base.view_users_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page string="Hidden Menus" name="hidden_menus" groups="base.group_system">
+                    <p class="text-muted">
+                        Selected menus and all their sub-menus will be hidden for this user.
+                    </p>
+                    <field name="hidden_menu_ids" widget="many2many_tags"
+                           options="{'no_create': True}"/>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>
+

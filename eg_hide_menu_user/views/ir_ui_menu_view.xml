@@ -1,0 +1,16 @@
+<odoo>
+    <record id="edit_menu_access_hidden_users" model="ir.ui.view">
+        <field name="name">ir.ui.menu.form.hidden.users</field>
+        <field name="model">ir.ui.menu</field>
+        <field name="inherit_id" ref="base.edit_menu_access"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page string="Hidden for Users" name="hidden_users" groups="base.group_system">
+                    <field name="hidden_user_ids" widget="many2many_tags"
+                           options="{'no_create': True}"/>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>
+

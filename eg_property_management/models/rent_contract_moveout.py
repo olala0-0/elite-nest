@@ -519,15 +519,38 @@ class RentContractMoveOut(models.Model):
 
     def action_settle(self):
         """Step 15. The only place that frees the property: calls the
-        contract's existing action_state_terminate(), unchanged, exactly as
-        if someone had clicked "Terminate Contract" by hand. Everything
-        before this point is informational/tracking only - clicking through
-        earlier steps never touches the contract or the property."""
+        contract's existing action_state_terminate(), unchanged, and explicitly
+        sets the linked property to 'available' (Vacant)."""
         for rec in self:
             if rec.state != 'approved':
                 raise UserError("The deposit release must be approved before settling the Move-Out.")
-            rec.rent_contract_id.action_state_terminate()
+            if rec.rent_contract_id:
+                rec.rent_contract_id.action_state_terminate()
+            if rec.property_id:
+                rec.property_id.write({'state': 'available'})
             rec.state = 'settled'
+            rec.message_post(
+                body=f"Move-Out has been settled. Linked property <b>{rec.property_id.name or 'N/A'}</b> is now <b>Vacant</b>.",
+                subtype_xmlid='mail.mt_comment'
+            )
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': 'Move-Out Settled',
+                'message': 'Move-out settled successfully. The linked property is now Vacant.',
+                'type': 'success',
+                'sticky': False,
+            }
+        }
+
+    def write(self, vals):
+        res = super().write(vals)
+        if vals.get('state') == 'settled':
+            for rec in self:
+                if rec.property_id:
+                    rec.property_id.write({'state': 'available'})
+        return res
 
     def action_reset_draft(self):
         """Aborting/restarting a Move-Out also returns the contract's own

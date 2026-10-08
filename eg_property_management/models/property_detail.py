@@ -197,6 +197,23 @@ class PropertyDetails(models.Model):
             SET state = 'on_rent'
             WHERE state = 'rent';
         """)
+        # Ensure properties with settled move-out and no running contract are marked Vacant ('available')
+        self.env.cr.execute("""
+            UPDATE property_detail pd
+            SET state = 'available'
+            WHERE pd.id IN (
+                SELECT rcm.property_id
+                FROM rent_contract_moveout rcm
+                WHERE rcm.state = 'settled'
+                  AND rcm.property_id IS NOT NULL
+            )
+            AND pd.id NOT IN (
+                SELECT rc.property_id
+                FROM rent_contract rc
+                WHERE rc.state = 'running'
+                  AND rc.property_id IS NOT NULL
+            );
+        """)
 
     def action_set_draft(self):
         self._check_no_active_contract("Draft")

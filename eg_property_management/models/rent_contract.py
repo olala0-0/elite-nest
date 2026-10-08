@@ -882,17 +882,20 @@ class RentContract(models.Model):
     def action_state_terminate(self):
         for rec in self:
             rec.state = 'terminated'
-            rec.property_id.state = 'available'
+            if rec.property_id:
+                rec.property_id.write({'state': 'available'})
 
     def action_state_cancel(self):
         for rec in self:
             rec.state = 'cancelled'
-            rec.property_id.state = 'available'
+            if rec.property_id:
+                rec.property_id.write({'state': 'available'})
 
     def action_expire(self):
         for rec in self:
             rec.state = 'expired'
-            rec.property_id.state = 'available'
+            if rec.property_id:
+                rec.property_id.write({'state': 'available'})
 
     def action_create_invoice(self):
         self.ensure_one()

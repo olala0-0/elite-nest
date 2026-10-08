@@ -6,11 +6,14 @@
         <field name="arch" type="xml">
             <xpath expr="//notebook" position="inside">
                 <page string="Hidden for Users" name="hidden_users" groups="base.group_system">
-                    <field name="hidden_user_ids" widget="many2many_tags"
-                           options="{'no_create': True}"/>
+                    <field name="hidden_user_ids" nolabel="1" options="{'no_create': True}">
+                        <list>
+                            <field name="name"/>
+                            <field name="login"/>
+                        </list>
+                    </field>
                 </page>
             </xpath>
         </field>
     </record>
 </odoo>
-

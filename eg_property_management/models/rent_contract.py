@@ -771,24 +771,36 @@ class RentContract(models.Model):
             except Exception:
                 pass
 
+        groups_field = 'group_ids' if 'group_ids' in self.env['res.users']._fields else 'groups_id'
+
         # 2. Users belonging to standard Odoo Accounting / Invoicing groups
         groups = [
             'account.group_account_invoice',
             'account.group_account_user',
             'account.group_account_manager',
         ]
-        users = self.env['res.users']
+        group_ids = []
         for group_xml_id in groups:
             group = self.env.ref(group_xml_id, raise_if_not_found=False)
-            if group and group.users:
-                users |= group.users
+            if group:
+                group_ids.append(group.id)
 
-        # Filter out portal/public or inactive users
-        users = users.filtered(lambda u: u.active and not u.share)
+        users = self.env['res.users']
+        if group_ids:
+            users = self.env['res.users'].search([
+                (groups_field, 'in', group_ids),
+                ('share', '=', False),
+                ('active', '=', True),
+            ])
+
         if not users:
             admin_group = self.env.ref('base.group_erp_manager', raise_if_not_found=False)
             if admin_group:
-                users = admin_group.users.filtered(lambda u: u.active and not u.share)
+                users = self.env['res.users'].search([
+                    (groups_field, 'in', admin_group.ids),
+                    ('share', '=', False),
+                    ('active', '=', True),
+                ])
         return users
 
     def _get_finance_partners(self):

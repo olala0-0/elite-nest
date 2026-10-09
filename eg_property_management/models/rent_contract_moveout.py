@@ -300,10 +300,16 @@ class RentContractMoveOut(models.Model):
             except Exception:
                 pass
 
+        groups_field = 'group_ids' if 'group_ids' in self.env['res.users']._fields else 'groups_id'
+
         # 2. Users in Move-Out Finance Approver group
         finance_group = self.env.ref('eg_property_management.group_property_finance_approver', raise_if_not_found=False)
-        if finance_group and finance_group.users:
-            users = finance_group.users.filtered(lambda u: u.active and not u.share)
+        if finance_group:
+            users = self.env['res.users'].search([
+                (groups_field, 'in', finance_group.ids),
+                ('share', '=', False),
+                ('active', '=', True),
+            ])
             if users:
                 return users
 
@@ -313,17 +319,28 @@ class RentContractMoveOut(models.Model):
             'account.group_account_invoice',
             'account.group_account_manager',
         ]
-        users = self.env['res.users']
+        group_ids = []
         for group_xml_id in groups:
             group = self.env.ref(group_xml_id, raise_if_not_found=False)
-            if group and group.users:
-                users |= group.users
+            if group:
+                group_ids.append(group.id)
 
-        users = users.filtered(lambda u: u.active and not u.share)
+        users = self.env['res.users']
+        if group_ids:
+            users = self.env['res.users'].search([
+                (groups_field, 'in', group_ids),
+                ('share', '=', False),
+                ('active', '=', True),
+            ])
+
         if not users:
             admin_group = self.env.ref('base.group_erp_manager', raise_if_not_found=False)
             if admin_group:
-                users = admin_group.users.filtered(lambda u: u.active and not u.share)
+                users = self.env['res.users'].search([
+                    (groups_field, 'in', admin_group.ids),
+                    ('share', '=', False),
+                    ('active', '=', True),
+                ])
         return users
 
     def _send_system_notification(self, title, message, partners, activity_summary=None, activity_user_ids=None):

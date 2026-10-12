@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_property_unit_user,property.unit.user,model_property_unit,base.group_user,1,1,1,1
+access_property_contract_user,property.contract.user,model_property_contract,base.group_user,1,1,1,1

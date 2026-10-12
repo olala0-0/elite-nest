@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Sequence for Property Lease Contracts -->
+        <record id="seq_property_contract" model="ir.sequence">
+            <field name="name">Property Lease Contract</field>
+            <field name="code">property.contract</field>
+            <field name="prefix">PLC/%(year)s/</field>
+            <field name="padding">4</field>
+            <field name="company_id" eval="False"/>
+        </record>
+    </data>
+</odoo>

@@ -1,0 +1,389 @@
+/* ==========================================================================
+   PROPERTY REAL-TIME EXECUTIVE DASHBOARD (ODOO 19 ENTERPRISE OWL)
+   ========================================================================== */
+
+$bg-dashboard: #0b0f19;
+$card-bg: #111827;
+$card-border: rgba(255, 255, 255, 0.08);
+$card-hover-border: rgba(16, 185, 129, 0.35);
+
+$color-emerald: #10b981;
+$color-sky: #38bdf8;
+$color-violet: #8b5cf6;
+$color-amber: #f59e0b;
+$color-rose: #ef4444;
+$color-slate: #64748b;
+
+$text-primary: #f8fafc;
+$text-secondary: #94a3b8;
+$text-muted: #64748b;
+
+.o_property_dashboard_container {
+    background-color: $bg-dashboard;
+    color: $text-primary;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    min-height: 100%;
+    transition: background-color 0.3s ease;
+
+    &.pulse-active {
+        box-shadow: inset 0 0 40px rgba(16, 185, 129, 0.25);
+    }
+}
+
+/* --------------------------------------------------------------------------
+   Executive Topbar & Controls
+   -------------------------------------------------------------------------- */
+.executive-topbar {
+    background-color: rgba(17, 24, 39, 0.95);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid $card-border;
+    z-index: 20;
+
+    .brand-badge {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(56, 189, 248, 0.1));
+        border: 1px solid rgba(16, 185, 129, 0.3);
+        width: 44px;
+        height: 44px;
+    }
+
+    .live-sync-badge {
+        background-color: rgba(16, 185, 129, 0.12);
+        color: $color-emerald;
+        border: 1px solid rgba(16, 185, 129, 0.3);
+        font-size: 0.75rem;
+        padding: 0.35rem 0.65rem;
+
+        .pulse-beacon {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: $color-emerald;
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+            animation: pulse-ring 2s infinite;
+        }
+    }
+
+    .executive-select, .executive-input {
+        background-color: #1f2937;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        color: #f1f5f9;
+        font-size: 0.825rem;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+
+        &:focus {
+            background-color: #1f2937;
+            border-color: $color-emerald;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+            color: #ffffff;
+        }
+
+        &::placeholder {
+            color: #64748b;
+        }
+    }
+
+    .search-input-wrapper {
+        min-width: 190px;
+
+        .search-icon {
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.8rem;
+        }
+    }
+
+    .btn-executive-action {
+        background-color: #1f2937;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        color: $text-secondary;
+        border-radius: 8px;
+
+        &:hover {
+            background-color: #374151;
+            color: #ffffff;
+        }
+    }
+
+    .btn-emerald {
+        background: linear-gradient(135deg, #10b981, #059669);
+        border: none;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+        transition: all 0.2s ease;
+
+        &:hover {
+            background: linear-gradient(135deg, #059669, #047857);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.5);
+            transform: translateY(-1px);
+        }
+    }
+}
+
+/* --------------------------------------------------------------------------
+   Scrollable Body & Loading
+   -------------------------------------------------------------------------- */
+.dashboard-scrollable {
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    &::-webkit-scrollbar {
+        width: 6px;
+    }
+    &::-webkit-scrollbar-track {
+        background: $bg-dashboard;
+    }
+    &::-webkit-scrollbar-thumb {
+        background: #334155;
+        border-radius: 3px;
+    }
+}
+
+.executive-loading-overlay {
+    background-color: rgba(11, 15, 25, 0.85);
+    backdrop-filter: blur(6px);
+    z-index: 50;
+}
+
+/* --------------------------------------------------------------------------
+   Executive Cards
+   -------------------------------------------------------------------------- */
+.executive-card {
+    background: $card-bg;
+    border: 1px solid $card-border;
+    border-radius: 14px;
+    box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.45);
+    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+
+    &:hover {
+        border-color: $card-hover-border;
+        box-shadow: 0 8px 30px -4px rgba(0, 0, 0, 0.6);
+    }
+}
+
+/* --------------------------------------------------------------------------
+   1. KPI Banner Grid
+   -------------------------------------------------------------------------- */
+.kpi-banner-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 1.15rem;
+
+    .kpi-card {
+        padding: 1.25rem;
+        cursor: pointer;
+
+        &:hover {
+            transform: translateY(-2px);
+        }
+
+        .kpi-label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: $text-secondary;
+        }
+
+        .kpi-number {
+            font-size: 1.85rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            line-height: 1.1;
+        }
+
+        .kpi-icon-pill {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+        }
+
+        .occupancy-progress-bar {
+            height: 5px;
+            background-color: #1f2937;
+
+            .progress-fill {
+                height: 100%;
+                transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+        }
+    }
+}
+
+/* --------------------------------------------------------------------------
+   2. Charts Section Grid
+   -------------------------------------------------------------------------- */
+.charts-section-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+
+    @media (max-width: 1024px) {
+        grid-template-columns: 1fr;
+    }
+
+    .chart-card {
+        padding: 1.35rem;
+
+        .chart-canvas-wrapper {
+            height: 275px;
+            width: 100%;
+        }
+    }
+}
+
+/* --------------------------------------------------------------------------
+   3. Directory Table
+   -------------------------------------------------------------------------- */
+.directory-card {
+    overflow: hidden;
+
+    .directory-table-wrapper {
+        max-height: 480px;
+        overflow-y: auto;
+    }
+
+    .executive-table {
+        background-color: transparent;
+
+        thead {
+            position: sticky;
+            top: 0;
+            background-color: #1a2234;
+            z-index: 5;
+
+            th {
+                color: #94a3b8;
+                font-size: 0.75rem;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.06em;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                padding: 0.85rem 0.75rem;
+            }
+        }
+
+        tbody {
+            .directory-row {
+                cursor: pointer;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+                transition: background-color 0.15s ease;
+
+                &:hover {
+                    background-color: rgba(255, 255, 255, 0.04);
+                }
+
+                td {
+                    padding: 0.95rem 0.75rem;
+                    font-size: 0.85rem;
+                    border: none;
+                }
+            }
+        }
+    }
+}
+
+/* --------------------------------------------------------------------------
+   Pills, Badges & Colors
+   -------------------------------------------------------------------------- */
+.text-emerald { color: $color-emerald !important; }
+.bg-emerald { background-color: $color-emerald !important; }
+.bg-emerald-subtle { background-color: rgba(16, 185, 129, 0.15) !important; color: $color-emerald !important; }
+
+.text-sky { color: $color-sky !important; }
+.bg-sky-subtle { background-color: rgba(56, 189, 248, 0.15) !important; color: $color-sky !important; }
+
+.text-violet { color: $color-violet !important; }
+.bg-violet-subtle { background-color: rgba(139, 92, 246, 0.15) !important; color: $color-violet !important; }
+
+.text-amber { color: $color-amber !important; }
+.bg-amber-subtle { background-color: rgba(245, 158, 11, 0.15) !important; color: $color-amber !important; }
+
+.bg-danger-subtle { background-color: rgba(239, 68, 68, 0.15) !important; color: $color-rose !important; }
+.bg-secondary-subtle { background-color: rgba(100, 116, 139, 0.2) !important; color: $color-slate !important; }
+
+.country-badge {
+    display: inline-block;
+    padding: 0.2rem 0.45rem;
+    background-color: #1f2937;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #e2e8f0;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 700;
+}
+
+.badge-running {
+    background-color: rgba(16, 185, 129, 0.15);
+    color: $color-emerald;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.badge-terminated {
+    background-color: rgba(239, 68, 68, 0.15);
+    color: $color-rose;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.badge-cancelled {
+    background-color: rgba(100, 116, 139, 0.2);
+    color: $color-slate;
+    border: 1px solid rgba(100, 116, 139, 0.3);
+}
+
+.badge-expired {
+    background-color: rgba(245, 158, 11, 0.15);
+    color: $color-amber;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.badge-danger {
+    background-color: rgba(239, 68, 68, 0.2);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.badge-warning {
+    background-color: rgba(245, 158, 11, 0.2);
+    color: #fbbf24;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.badge-success {
+    background-color: rgba(16, 185, 129, 0.2);
+    color: #34d399;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.btn-icon-subtle {
+    border: none;
+    background: transparent;
+    border-radius: 6px;
+    padding: 0.35rem 0.5rem;
+    transition: all 0.15s ease;
+
+    &:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+        color: #ffffff !important;
+    }
+}
+
+/* --------------------------------------------------------------------------
+   Pulse Animation Keyframes
+   -------------------------------------------------------------------------- */
+@keyframes pulse-ring {
+    0% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 8px rgba(16, 185, 129, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+    }
+}

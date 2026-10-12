@@ -57,6 +57,7 @@ class PropertyUnit(models.Model):
         string="Currency",
         default=lambda self: self.env.company.currency_id,
         required=True,
+    )
     contract_ids = fields.One2many(
         "property.contract",
         "property_id",

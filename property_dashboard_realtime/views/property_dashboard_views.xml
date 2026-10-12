@@ -25,8 +25,6 @@
                     <field name="area_sqft"/>
                     <field name="price" widget="monetary" options="{'currency_field': 'currency_id'}"/>
                     <field name="currency_id" column_invisible="True"/>
-                    <field name="current_tenant_id"/>
-                    <field name="active_contract_id"/>
                 </list>
             </field>
         </record>
@@ -52,8 +50,6 @@
                             <group>
                                 <field name="price" widget="monetary" options="{'currency_field': 'currency_id'}"/>
                                 <field name="currency_id" invisible="1"/>
-                                <field name="active_contract_id" readonly="1"/>
-                                <field name="current_tenant_id" readonly="1"/>
                             </group>
                         </group>
                         <notebook>
@@ -80,13 +76,12 @@
             <field name="name">property.unit.search</field>
             <field name="model">property.unit</field>
             <field name="arch" type="xml">
-                <search string="Search Units">
+                <search>
                     <field name="name"/>
                     <field name="unit_type"/>
-                    <field name="current_tenant_id"/>
                     <filter string="Occupied" name="filter_occupied" domain="[('status', '=', 'occupied')]"/>
                     <filter string="Vacant" name="filter_vacant" domain="[('status', '=', 'vacant')]"/>
-                    <group expand="0" string="Group By">
+                    <group>
                         <filter string="Unit Type" name="group_unit_type" context="{'group_by': 'unit_type'}"/>
                         <filter string="Status" name="group_status" context="{'group_by': 'status'}"/>
                     </group>
@@ -167,7 +162,7 @@
             <field name="name">property.contract.search</field>
             <field name="model">property.contract</field>
             <field name="arch" type="xml">
-                <search string="Search Contracts">
+                <search>
                     <field name="name"/>
                     <field name="property_id"/>
                     <field name="partner_id"/>
@@ -175,7 +170,7 @@
                     <filter string="Active Running" name="filter_running" domain="[('state', '=', 'running')]"/>
                     <filter string="Expired" name="filter_expired" domain="[('state', '=', 'expired')]"/>
                     <filter string="Terminated" name="filter_terminated" domain="[('state', '=', 'terminated')]"/>
-                    <group expand="0" string="Group By">
+                    <group>
                         <filter string="Status" name="group_state" context="{'group_by': 'state'}"/>
                         <filter string="Residential Type" name="group_type" context="{'group_by': 'residential_type'}"/>
                         <filter string="Tenant Country" name="group_country" context="{'group_by': 'tenant_country_id'}"/>

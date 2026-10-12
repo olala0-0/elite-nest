@@ -57,35 +57,19 @@ class PropertyUnit(models.Model):
         string="Currency",
         default=lambda self: self.env.company.currency_id,
         required=True,
-    )
     contract_ids = fields.One2many(
         "property.contract",
         "property_id",
         string="Contracts",
     )
-    active_contract_id = fields.Many2one(
-        "property.contract",
-        string="Active Lease Contract",
-        compute="_compute_active_contract",
-        store=True,
-    )
-    current_tenant_id = fields.Many2one(
-        "res.partner",
-        string="Current Tenant",
-        related="active_contract_id.partner_id",
-        store=True,
-    )
 
-    @api.depends("contract_ids.state", "contract_ids.end_date")
-    def _compute_active_contract(self):
+    def _sync_occupancy_status(self):
         for unit in self:
-            running = unit.contract_ids.filtered(lambda c: c.state == "running")
-            if running:
-                unit.active_contract_id = running[0]
-                unit.status = "occupied"
-            else:
-                unit.active_contract_id = False
-                unit.status = "vacant"
+            running = self.env["property.contract"].search_count([
+                ("property_id", "=", unit.id),
+                ("state", "=", "running"),
+            ])
+            unit.status = "occupied" if running > 0 else "vacant"
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -211,7 +195,7 @@ class PropertyContract(models.Model):
         records = super().create(vals_list)
         for record in records:
             if record.property_id:
-                record.property_id._compute_active_contract()
+                record.property_id._sync_occupancy_status()
         self._notify_dashboard_bus()
         return records
 
@@ -220,7 +204,7 @@ class PropertyContract(models.Model):
         if "state" in vals or "property_id" in vals:
             for record in self:
                 if record.property_id:
-                    record.property_id._compute_active_contract()
+                    record.property_id._sync_occupancy_status()
         self._notify_dashboard_bus()
         return res
 
@@ -228,7 +212,7 @@ class PropertyContract(models.Model):
         units = self.mapped("property_id")
         res = super().unlink()
         for unit in units:
-            unit._compute_active_contract()
+            unit._sync_occupancy_status()
         self._notify_dashboard_bus()
         return res
 

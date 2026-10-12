@@ -386,7 +386,23 @@ class RentContractMoveOut(models.Model):
             except Exception:
                 pass
 
-        # 2. Real-time pop-up notification via bus.bus
+        # 2. Real-time pop-up notification via bus.bus (requires clean plain text)
+        plain_message = message
+        try:
+            from odoo.tools import html2plaintext
+            plain_message = html2plaintext(message).strip()
+        except Exception:
+            pass
+        if '<' in plain_message and '>' in plain_message:
+            import re
+            plain_message = re.sub(r'<br\s*/?>', '\n', plain_message, flags=re.IGNORECASE)
+            plain_message = re.sub(r'<[^>]+>', '', plain_message).strip()
+
+        plain_title = title
+        if '<' in plain_title and '>' in plain_title:
+            import re
+            plain_title = re.sub(r'<[^>]+>', '', plain_title).strip()
+
         for partner in partners:
             try:
                 self.env['bus.bus']._sendone(
@@ -394,8 +410,8 @@ class RentContractMoveOut(models.Model):
                     'simple_notification',
                     {
                         'type': 'info',
-                        'title': title,
-                        'message': message,
+                        'title': plain_title,
+                        'message': plain_message,
                         'sticky': False,
                     }
                 )
@@ -406,8 +422,8 @@ class RentContractMoveOut(models.Model):
                         'mail.simple_notification',
                         {
                             'type': 'info',
-                            'title': title,
-                            'message': message,
+                            'title': plain_title,
+                            'message': plain_message,
                             'sticky': False,
                         }
                     )

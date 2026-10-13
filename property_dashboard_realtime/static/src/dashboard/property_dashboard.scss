@@ -1,33 +1,39 @@
 /* ==========================================================================
    PROPERTY REAL-TIME EXECUTIVE DASHBOARD (ODOO 19 ENTERPRISE OWL)
-   EXECUTIVE LAVENDER PALETTE DESIGN SYSTEM (#c2a9d9)
+   EXECUTIVE LAVENDER PALETTE WITH #c7c3c9 CANVAS BACKGROUND
    ========================================================================== */
 
 :root {
     --dash-primary-lavender: #c2a9d9;
+    --dash-lavender-accent: #8b68aa;
     --dash-lavender-light: #ece3f5;
     --dash-lavender-medium: #a88cc4;
     --dash-lavender-dark: #6a4f85;
-    --dash-bg-dark: #1b1622;
-    --dash-card-bg: #272031;
-    --dash-border-color: rgba(194, 169, 217, 0.22);
+    --dash-bg: #c7c3c9;
+    --dash-card-bg: #ffffff;
+    --dash-card-surface-alt: #f6f4f8;
+    --dash-border-color: rgba(92, 67, 117, 0.22);
+    --dash-text-primary: #1f1728;
+    --dash-text-secondary: #4d3d5e;
+    --dash-text-muted: #6e5e80;
 }
 
-$bg-dashboard: #1b1622;
-$card-bg: #272031;
-$card-surface-alt: #201a28;
-$card-border: rgba(194, 169, 217, 0.22);
-$card-hover-border: rgba(194, 169, 217, 0.45);
+$bg-dashboard: #c7c3c9;
+$card-bg: #ffffff;
+$card-surface-alt: #f6f4f8;
+$card-border: rgba(92, 67, 117, 0.22);
+$card-hover-border: rgba(139, 104, 170, 0.5);
 
 $lavender-primary: #c2a9d9;
+$lavender-accent: #8b68aa;
 $lavender-light: #ece3f5;
 $lavender-medium: #a88cc4;
 $lavender-dark: #6a4f85;
-$lavender-deep: #443754;
+$lavender-deep: #251c2e;
 
-$text-primary: #ece3f5;
-$text-secondary: #b8a8cc;
-$text-muted: #8e7b9e;
+$text-primary: #1f1728;
+$text-secondary: #4d3d5e;
+$text-muted: #6e5e80;
 
 .o_property_dashboard_container {
     background-color: $bg-dashboard;
@@ -37,15 +43,15 @@ $text-muted: #8e7b9e;
     transition: background-color 0.3s ease;
 
     &.pulse-active {
-        box-shadow: inset 0 0 40px rgba(194, 169, 217, 0.2);
+        box-shadow: inset 0 0 40px rgba(139, 104, 170, 0.25);
     }
 
     // Harmonize generic text colors inside container
     .text-dark {
-        color: $lavender-light !important;
+        color: $text-primary !important;
     }
     .text-secondary {
-        color: $lavender-medium !important;
+        color: $text-secondary !important;
     }
     .text-muted {
         color: $text-muted !important;
@@ -53,62 +59,62 @@ $text-muted: #8e7b9e;
 }
 
 /* --------------------------------------------------------------------------
-   Executive Topbar & Controls (Lavender Tinted Dark Theme)
+   Executive Topbar & Controls (Clean Topbar on #c7c3c9 Background)
    -------------------------------------------------------------------------- */
 .executive-topbar {
-    background-color: #1e1827;
-    border-bottom: 1px solid $card-border;
-    box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.25);
+    background-color: #ffffff;
+    border-bottom: 1px solid rgba(92, 67, 117, 0.2);
+    box-shadow: 0 2px 6px 0 rgba(31, 23, 40, 0.06);
     z-index: 20;
 
     .brand-badge {
-        background: linear-gradient(135deg, rgba(194, 169, 217, 0.25), rgba(106, 79, 133, 0.4));
-        border: 1px solid rgba(194, 169, 217, 0.35);
+        background: linear-gradient(135deg, rgba(194, 169, 217, 0.4), rgba(139, 104, 170, 0.25));
+        border: 1px solid rgba(139, 104, 170, 0.35);
         width: 44px;
         height: 44px;
-        color: $lavender-primary;
+        color: $lavender-dark;
     }
 
     .live-sync-badge {
-        background-color: rgba(194, 169, 217, 0.16);
-        color: #d4bfe8;
-        border: 1px solid rgba(194, 169, 217, 0.35);
+        background-color: rgba(194, 169, 217, 0.35);
+        color: #3d2358;
+        border: 1px solid rgba(139, 104, 170, 0.4);
         font-size: 0.75rem;
-        font-weight: 600;
+        font-weight: 700;
         padding: 0.35rem 0.65rem;
 
         .pulse-beacon {
             width: 8px;
             height: 8px;
             border-radius: 50%;
-            background-color: $lavender-primary;
-            box-shadow: 0 0 0 0 rgba(194, 169, 217, 0.7);
+            background-color: $lavender-accent;
+            box-shadow: 0 0 0 0 rgba(139, 104, 170, 0.7);
             animation: pulse-ring 2s infinite;
         }
     }
 
     .company-pill {
-        background-color: rgba(194, 169, 217, 0.1);
-        color: $lavender-light;
-        border: 1px solid rgba(194, 169, 217, 0.22);
+        background-color: #f1edf5;
+        color: $text-secondary;
+        border: 1px solid rgba(92, 67, 117, 0.25);
         font-size: 0.75rem;
         font-weight: 600;
         padding: 0.35rem 0.65rem;
     }
 
     .executive-select, .executive-input {
-        background-color: #251e2f;
-        border: 1px solid rgba(194, 169, 217, 0.25);
-        color: $lavender-light;
+        background-color: #ffffff;
+        border: 1px solid rgba(92, 67, 117, 0.3);
+        color: $text-primary;
         font-size: 0.825rem;
         border-radius: 8px;
         transition: all 0.2s ease;
 
         &:focus {
-            background-color: #2b2336;
-            border-color: $lavender-primary;
-            box-shadow: 0 0 0 3px rgba(194, 169, 217, 0.2);
-            color: $lavender-light;
+            background-color: #ffffff;
+            border-color: $lavender-accent;
+            box-shadow: 0 0 0 3px rgba(139, 104, 170, 0.2);
+            color: $text-primary;
         }
 
         &::placeholder {
@@ -116,8 +122,8 @@ $text-muted: #8e7b9e;
         }
 
         option {
-            background-color: #251e2f;
-            color: $lavender-light;
+            background-color: #ffffff;
+            color: $text-primary;
         }
     }
 
@@ -134,44 +140,44 @@ $text-muted: #8e7b9e;
     }
 
     .btn-executive-action {
-        background-color: #272031;
-        border: 1px solid $card-border;
-        color: $lavender-primary;
+        background-color: #ffffff;
+        border: 1px solid rgba(92, 67, 117, 0.25);
+        color: $lavender-dark;
         border-radius: 8px;
 
         &:hover {
-            background-color: #332a40;
-            color: $lavender-light;
-            border-color: $lavender-primary;
+            background-color: #f5f2f8;
+            color: $text-primary;
+            border-color: $lavender-accent;
         }
     }
 
-    .btn-emerald, .btn-lavender {
-        background: linear-gradient(135deg, #a88cc4, #6a4f85);
+    .btn-lavender, .btn-emerald {
+        background: linear-gradient(135deg, #8b68aa, #5c4375);
         color: #ffffff !important;
-        border: 1px solid rgba(194, 169, 217, 0.4);
+        border: none;
         border-radius: 8px;
-        box-shadow: 0 2px 8px rgba(106, 79, 133, 0.4);
+        box-shadow: 0 2px 8px rgba(92, 67, 117, 0.3);
         transition: all 0.2s ease;
 
         &:hover {
-            background: linear-gradient(135deg, #b89cd4, #7a5f95);
-            box-shadow: 0 4px 12px rgba(194, 169, 217, 0.4);
+            background: linear-gradient(135deg, #9d78bc, #6c5188);
+            box-shadow: 0 4px 12px rgba(92, 67, 117, 0.45);
             transform: translateY(-1px);
         }
     }
 
     .btn-outline-primary {
-        background-color: transparent;
-        border: 1px solid rgba(194, 169, 217, 0.4);
-        color: $lavender-primary !important;
+        background-color: #ffffff;
+        border: 1px solid $lavender-accent;
+        color: $lavender-dark !important;
         border-radius: 8px;
         transition: all 0.2s ease;
 
         &:hover {
-            background-color: rgba(194, 169, 217, 0.15);
-            border-color: $lavender-primary;
-            color: $lavender-light !important;
+            background-color: rgba(194, 169, 217, 0.25);
+            border-color: $lavender-dark;
+            color: $text-primary !important;
         }
     }
 }
@@ -187,37 +193,37 @@ $text-muted: #8e7b9e;
         width: 6px;
     }
     &::-webkit-scrollbar-track {
-        background: #1b1622;
+        background: #c7c3c9;
     }
     &::-webkit-scrollbar-thumb {
-        background: #443754;
+        background: #9d96a1;
         border-radius: 3px;
     }
 }
 
 .executive-loading-overlay {
-    background-color: rgba(27, 22, 34, 0.85);
+    background-color: rgba(199, 195, 201, 0.85);
     backdrop-filter: blur(4px);
     z-index: 50;
 
     .spinner-border {
-        color: $lavender-primary !important;
+        color: $lavender-dark !important;
     }
 }
 
 /* --------------------------------------------------------------------------
-   Executive Cards (Lavender Surface #272031)
+   Executive Cards (Crisp White on #c7c3c9 Background)
    -------------------------------------------------------------------------- */
 .executive-card {
     background: $card-bg;
     border: 1px solid $card-border;
     border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    box-shadow: 0 3px 10px rgba(31, 23, 40, 0.08), 0 1px 3px rgba(31, 23, 40, 0.04);
     transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 
     &:hover {
         border-color: $card-hover-border;
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+        box-shadow: 0 8px 22px rgba(31, 23, 40, 0.14);
     }
 }
 
@@ -239,7 +245,7 @@ $text-muted: #8e7b9e;
 
         .kpi-label {
             font-size: 0.775rem;
-            font-weight: 600;
+            font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.05em;
             color: $text-secondary;
@@ -247,10 +253,10 @@ $text-muted: #8e7b9e;
 
         .kpi-number {
             font-size: 1.85rem;
-            font-weight: 700;
+            font-weight: 800;
             letter-spacing: -0.02em;
             line-height: 1.1;
-            color: $lavender-light;
+            color: $text-primary;
         }
 
         .kpi-icon-pill {
@@ -261,18 +267,18 @@ $text-muted: #8e7b9e;
             align-items: center;
             justify-content: center;
             font-size: 1.05rem;
-            background-color: rgba(194, 169, 217, 0.12);
-            color: $lavender-primary;
-            border: 1px solid rgba(194, 169, 217, 0.2);
+            background-color: rgba(194, 169, 217, 0.35);
+            color: $lavender-dark;
+            border: 1px solid rgba(139, 104, 170, 0.3);
         }
 
         .occupancy-progress-bar {
             height: 6px;
-            background-color: rgba(194, 169, 217, 0.15);
+            background-color: #ece8f0;
 
             .progress-fill {
                 height: 100%;
-                background: linear-gradient(90deg, #6a4f85, #c2a9d9);
+                background: linear-gradient(90deg, #8b68aa, #c2a9d9);
                 transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
             }
         }
@@ -302,7 +308,7 @@ $text-muted: #8e7b9e;
 }
 
 /* --------------------------------------------------------------------------
-   3. Directory & Maintenance Tables (Lavender Dark Theme)
+   3. Directory & Maintenance Tables (White Cards)
    -------------------------------------------------------------------------- */
 .directory-card {
     overflow: hidden;
@@ -313,8 +319,8 @@ $text-muted: #8e7b9e;
     }
 
     .executive-table {
-        background-color: $card-bg;
-        color: $lavender-light;
+        background-color: #ffffff;
+        color: $text-primary;
         margin-bottom: 0;
 
         thead {
@@ -324,12 +330,12 @@ $text-muted: #8e7b9e;
             z-index: 5;
 
             th {
-                color: $lavender-medium;
+                color: $text-secondary;
                 font-size: 0.75rem;
                 font-weight: 700;
                 text-transform: uppercase;
                 letter-spacing: 0.06em;
-                border-bottom: 2px solid $card-border;
+                border-bottom: 2px solid rgba(92, 67, 117, 0.15);
                 padding: 0.85rem 0.75rem;
                 background-color: $card-surface-alt;
             }
@@ -338,17 +344,17 @@ $text-muted: #8e7b9e;
         tbody {
             .directory-row {
                 cursor: pointer;
-                border-bottom: 1px solid rgba(194, 169, 217, 0.1);
+                border-bottom: 1px solid rgba(92, 67, 117, 0.08);
                 transition: background-color 0.15s ease;
 
                 &:hover {
-                    background-color: #32293f;
+                    background-color: #f7f4f9;
                 }
 
                 td {
                     padding: 0.85rem 0.75rem;
                     font-size: 0.85rem;
-                    color: $lavender-light;
+                    color: $text-primary;
                     border: none;
                     vertical-align: middle;
                 }
@@ -358,69 +364,69 @@ $text-muted: #8e7b9e;
 }
 
 /* --------------------------------------------------------------------------
-   Pills, Badges & Labels (Harmonic Lavender Palette)
+   Pills, Badges & Labels (Lavender Harmonic Palette)
    -------------------------------------------------------------------------- */
 .text-emerald, .text-lavender {
-    color: $lavender-primary !important;
+    color: $lavender-dark !important;
 }
 .bg-emerald, .bg-lavender {
-    background-color: $lavender-primary !important;
-    color: #1b1622 !important;
+    background-color: $lavender-accent !important;
+    color: #ffffff !important;
 }
 .bg-emerald-subtle, .bg-lavender-subtle {
-    background-color: rgba(194, 169, 217, 0.16) !important;
-    color: #d4bfe8 !important;
-    border: 1px solid rgba(194, 169, 217, 0.35) !important;
+    background-color: rgba(194, 169, 217, 0.35) !important;
+    color: #3d2358 !important;
+    border: 1px solid rgba(139, 104, 170, 0.45) !important;
 }
 
 .text-sky {
-    color: #b399cc !important;
+    color: #5c4375 !important;
 }
 .bg-sky-subtle {
-    background-color: rgba(179, 153, 204, 0.18) !important;
-    color: #b399cc !important;
-    border: 1px solid rgba(179, 153, 204, 0.35) !important;
+    background-color: rgba(179, 153, 204, 0.3) !important;
+    color: #42245b !important;
+    border: 1px solid rgba(179, 153, 204, 0.5) !important;
 }
 
 .text-violet {
-    color: #d4bfe8 !important;
+    color: #5c4375 !important;
 }
 .bg-violet-subtle {
-    background-color: rgba(212, 191, 232, 0.18) !important;
-    color: #d4bfe8 !important;
-    border: 1px solid rgba(212, 191, 232, 0.35) !important;
+    background-color: rgba(212, 191, 232, 0.35) !important;
+    color: #3d2358 !important;
+    border: 1px solid rgba(139, 104, 170, 0.45) !important;
 }
 
 .text-amber {
-    color: #b399cc !important;
+    color: #6a4f85 !important;
 }
 .bg-amber-subtle {
-    background-color: rgba(179, 153, 204, 0.18) !important;
-    color: #b399cc !important;
-    border: 1px solid rgba(179, 153, 204, 0.35) !important;
+    background-color: rgba(179, 153, 204, 0.32) !important;
+    color: #4c2d68 !important;
+    border: 1px solid rgba(179, 153, 204, 0.5) !important;
 }
 
 .text-rose {
-    color: #d8aee0 !important;
+    color: #6d2459 !important;
 }
 .bg-danger-subtle {
-    background-color: rgba(140, 107, 153, 0.25) !important;
-    color: #e5c2ed !important;
-    border: 1px solid rgba(140, 107, 153, 0.45) !important;
+    background-color: rgba(140, 107, 153, 0.28) !important;
+    color: #541a4a !important;
+    border: 1px solid rgba(140, 107, 153, 0.55) !important;
 }
 
 .bg-secondary-subtle {
-    background-color: rgba(109, 97, 122, 0.25) !important;
-    color: #b8a8cc !important;
-    border: 1px solid rgba(109, 97, 122, 0.4) !important;
+    background-color: rgba(109, 97, 122, 0.18) !important;
+    color: #4d3d5e !important;
+    border: 1px solid rgba(109, 97, 122, 0.35) !important;
 }
 
 .country-badge {
     display: inline-block;
     padding: 0.15rem 0.45rem;
-    background-color: rgba(194, 169, 217, 0.15);
-    border: 1px solid rgba(194, 169, 217, 0.3);
-    color: $lavender-light;
+    background-color: #f1edf5;
+    border: 1px solid rgba(92, 67, 117, 0.25);
+    color: $text-primary;
     border-radius: 4px;
     font-size: 0.7rem;
     font-weight: 700;
@@ -428,80 +434,85 @@ $text-muted: #8e7b9e;
 
 /* Status Badges */
 .badge-running {
-    background-color: rgba(212, 191, 232, 0.18) !important;
-    color: #d4bfe8 !important;
-    border: 1px solid rgba(212, 191, 232, 0.38) !important;
-    font-weight: 600;
+    background-color: rgba(194, 169, 217, 0.4) !important;
+    color: #351b4c !important;
+    border: 1px solid rgba(139, 104, 170, 0.5) !important;
+    font-weight: 700;
 }
 
 .badge-terminated {
-    background-color: rgba(140, 107, 153, 0.25) !important;
-    color: #d8aee0 !important;
-    border: 1px solid rgba(140, 107, 153, 0.45) !important;
-    font-weight: 600;
+    background-color: rgba(140, 107, 153, 0.3) !important;
+    color: #541a4a !important;
+    border: 1px solid rgba(140, 107, 153, 0.55) !important;
+    font-weight: 700;
 }
 
 .badge-cancelled {
-    background-color: rgba(109, 97, 122, 0.25) !important;
-    color: #ad9dbf !important;
-    border: 1px solid rgba(109, 97, 122, 0.4) !important;
-    font-weight: 600;
+    background-color: rgba(109, 97, 122, 0.22) !important;
+    color: #43384a !important;
+    border: 1px solid rgba(109, 97, 122, 0.45) !important;
+    font-weight: 700;
 }
 
 .badge-expired {
-    background-color: rgba(179, 153, 204, 0.2) !important;
-    color: #b399cc !important;
-    border: 1px solid rgba(179, 153, 204, 0.4) !important;
-    font-weight: 600;
+    background-color: rgba(179, 153, 204, 0.35) !important;
+    color: #42245b !important;
+    border: 1px solid rgba(179, 153, 204, 0.55) !important;
+    font-weight: 700;
 }
 
 .badge-danger {
-    background-color: rgba(140, 107, 153, 0.3) !important;
-    color: #f1d5f7 !important;
-    border: 1px solid rgba(140, 107, 153, 0.5) !important;
+    background-color: rgba(140, 107, 153, 0.35) !important;
+    color: #4a1340 !important;
+    border: 1px solid rgba(140, 107, 153, 0.6) !important;
 }
 
 .badge-warning {
-    background-color: rgba(179, 153, 204, 0.22) !important;
-    color: #c7aee0 !important;
-    border: 1px solid rgba(179, 153, 204, 0.45) !important;
+    background-color: rgba(179, 153, 204, 0.35) !important;
+    color: #44245e !important;
+    border: 1px solid rgba(179, 153, 204, 0.55) !important;
 }
 
 .badge-success {
-    background-color: rgba(212, 191, 232, 0.22) !important;
-    color: #d4bfe8 !important;
-    border: 1px solid rgba(212, 191, 232, 0.45) !important;
+    background-color: rgba(194, 169, 217, 0.45) !important;
+    color: #301746 !important;
+    border: 1px solid rgba(139, 104, 170, 0.55) !important;
 }
 
 /* Residential Unit Type Badges (Tone 5) */
 .badge-type-studio {
-    background-color: rgba(229, 215, 242, 0.16) !important;
-    color: #e5d7f2 !important;
-    border: 1px solid rgba(229, 215, 242, 0.35) !important;
+    background-color: rgba(229, 215, 242, 0.85) !important;
+    color: #2f1a3f !important;
+    border: 1px solid rgba(194, 169, 217, 0.7) !important;
+    font-weight: 600;
 }
 
 .badge-type-1bed {
-    background-color: rgba(194, 169, 217, 0.16) !important;
-    color: #c2a9d9 !important;
-    border: 1px solid rgba(194, 169, 217, 0.35) !important;
+    background-color: rgba(194, 169, 217, 0.75) !important;
+    color: #2b143c !important;
+    border: 1px solid rgba(139, 104, 170, 0.55) !important;
+    font-weight: 600;
 }
 
 .badge-type-2bed {
-    background-color: rgba(158, 130, 186, 0.18) !important;
-    color: #9e82ba !important;
-    border: 1px solid rgba(158, 130, 186, 0.4) !important;
+    background-color: rgba(158, 130, 186, 0.65) !important;
+    color: #260f38 !important;
+    border: 1px solid rgba(139, 104, 170, 0.65) !important;
+    font-weight: 600;
 }
 
 .badge-type-3bed, .badge-type-penthouse {
-    background-color: rgba(125, 97, 153, 0.22) !important;
-    color: #bda3d9 !important;
-    border: 1px solid rgba(125, 97, 153, 0.45) !important;
+    background-color: rgba(125, 97, 153, 0.5) !important;
+    color: #1f0b2f !important;
+    border: 1px solid rgba(106, 79, 133, 0.65) !important;
+    font-weight: 600;
 }
 
 .badge-type-office {
-    background-color: rgba(92, 67, 117, 0.28) !important;
-    color: #cbb1e6 !important;
-    border: 1px solid rgba(92, 67, 117, 0.5) !important;
+    background-color: rgba(92, 67, 117, 0.45) !important;
+    color: #190628 !important;
+    border: 1px solid rgba(92, 67, 117, 0.65) !important;
+    font-weight: 600;
 }
 
 .btn-icon-subtle {
@@ -509,26 +520,26 @@ $text-muted: #8e7b9e;
     background: transparent;
     border-radius: 6px;
     padding: 0.35rem 0.5rem;
-    color: $lavender-primary;
+    color: $lavender-dark;
     transition: all 0.15s ease;
 
     &:hover {
-        background-color: rgba(194, 169, 217, 0.18);
-        color: $lavender-light !important;
+        background-color: rgba(194, 169, 217, 0.35);
+        color: $text-primary !important;
     }
 }
 
 /* --------------------------------------------------------------------------
-   Pulse Animation Keyframes (Lavender Beacon)
+   Pulse Animation Keyframes
    -------------------------------------------------------------------------- */
 @keyframes pulse-ring {
     0% {
-        box-shadow: 0 0 0 0 rgba(194, 169, 217, 0.7);
+        box-shadow: 0 0 0 0 rgba(139, 104, 170, 0.7);
     }
     70% {
-        box-shadow: 0 0 0 8px rgba(194, 169, 217, 0);
+        box-shadow: 0 0 0 8px rgba(139, 104, 170, 0);
     }
     100% {
-        box-shadow: 0 0 0 0 rgba(194, 169, 217, 0);
+        box-shadow: 0 0 0 0 rgba(139, 104, 170, 0);
     }
 }

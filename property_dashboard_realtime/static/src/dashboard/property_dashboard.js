@@ -222,7 +222,7 @@ export class PropertyDashboard extends Component {
     }
 
     /**
-     * 1. Donut Chart: Contracts by Status (Lavender Theme)
+     * 1. Donut Chart: Contracts by Status (Lavender Theme on White Card)
      */
     _renderStatusDonutChart() {
         if (!this.statusChartRef.el) return;
@@ -241,8 +241,8 @@ export class PropertyDashboard extends Component {
                 datasets: [
                     {
                         data: chartData.counts,
-                        backgroundColor: ["#d4bfe8", "#b399cc", "#8c6b99", "#5e426e"],
-                        borderColor: "#272031",
+                        backgroundColor: ["#8b68aa", "#b399cc", "#5c4375", "#3a254c"],
+                        borderColor: "#ffffff",
                         borderWidth: 3,
                         hoverOffset: 6,
                     },
@@ -256,18 +256,18 @@ export class PropertyDashboard extends Component {
                     legend: {
                         position: "bottom",
                         labels: {
-                            color: "#b8a8cc",
-                            font: { family: "Inter, sans-serif", size: 12, weight: "500" },
+                            color: "#4d3d5e",
+                            font: { family: "Inter, sans-serif", size: 12, weight: "600" },
                             usePointStyle: true,
                             pointStyle: "circle",
                             padding: 14,
                         },
                     },
                     tooltip: {
-                        backgroundColor: "#1b1622",
-                        titleColor: "#ece3f5",
+                        backgroundColor: "#251c2e",
+                        titleColor: "#ffffff",
                         bodyColor: "#c2a9d9",
-                        borderColor: "rgba(194, 169, 217, 0.25)",
+                        borderColor: "rgba(139, 104, 170, 0.35)",
                         borderWidth: 1,
                         padding: 12,
                         callbacks: {
@@ -285,7 +285,7 @@ export class PropertyDashboard extends Component {
     }
 
     /**
-     * 2. Horizontal Bar Chart: Tenant Nationalities (Lavender Theme)
+     * 2. Horizontal Bar Chart: Tenant Nationalities (Lavender Theme on White Card)
      */
     _renderNationalitiesBarChart() {
         if (!this.nationalitiesChartRef.el) return;
@@ -296,7 +296,7 @@ export class PropertyDashboard extends Component {
             this._chartInstances.nationalities.destroy();
         }
 
-        const lavenderPalette = ["#c2a9d9", "#b399cc", "#9e82ba", "#8c6b99", "#7d6199", "#6a4f85", "#5c4375", "#4a355e"];
+        const lavenderPalette = ["#8b68aa", "#9e82ba", "#b399cc", "#c2a9d9", "#6a4f85", "#5c4375", "#4a355e", "#3a254c"];
         const ctx = this.nationalitiesChartRef.el.getContext("2d");
         this._chartInstances.nationalities = new window.Chart(ctx, {
             type: "bar",
@@ -319,10 +319,10 @@ export class PropertyDashboard extends Component {
                 plugins: {
                     legend: { display: false },
                     tooltip: {
-                        backgroundColor: "#1b1622",
-                        titleColor: "#ece3f5",
+                        backgroundColor: "#251c2e",
+                        titleColor: "#ffffff",
                         bodyColor: "#c2a9d9",
-                        borderColor: "rgba(194, 169, 217, 0.25)",
+                        borderColor: "rgba(139, 104, 170, 0.35)",
                         borderWidth: 1,
                         padding: 12,
                         callbacks: {
@@ -336,12 +336,12 @@ export class PropertyDashboard extends Component {
                 },
                 scales: {
                     x: {
-                        grid: { color: "rgba(194, 169, 217, 0.08)" },
-                        ticks: { color: "#b8a8cc", font: { size: 11 }, precision: 0 },
+                        grid: { color: "rgba(92, 67, 117, 0.08)" },
+                        ticks: { color: "#4d3d5e", font: { size: 11 }, precision: 0 },
                     },
                     y: {
                         grid: { display: false },
-                        ticks: { color: "#ece3f5", font: { size: 12, weight: "500" } },
+                        ticks: { color: "#1f1728", font: { size: 12, weight: "600" } },
                     },
                 },
             },
@@ -349,7 +349,7 @@ export class PropertyDashboard extends Component {
     }
 
     /**
-     * 3. Bar / Benchmark Chart: Average Rent by Residential Type (Lavender Theme)
+     * 3. Bar / Benchmark Chart: Average Rent by Residential Type (Lavender Theme on White Card)
      */
     _renderAvgRentComboChart() {
         if (!this.avgRentChartRef.el) return;
@@ -370,8 +370,8 @@ export class PropertyDashboard extends Component {
                         type: "bar",
                         label: "Average Rent (AED)",
                         data: chartData.values,
-                        backgroundColor: "#c2a9d9",
-                        hoverBackgroundColor: "#d4bfe8",
+                        backgroundColor: "#8b68aa",
+                        hoverBackgroundColor: "#9d78bc",
                         borderRadius: 6,
                         barPercentage: 0.6,
                     },
@@ -379,10 +379,10 @@ export class PropertyDashboard extends Component {
                         type: "line",
                         label: "Target Benchmark (AED)",
                         data: chartData.benchmarks,
-                        borderColor: "#ece3f5",
-                        backgroundColor: "#ece3f5",
+                        borderColor: "#3a254c",
+                        backgroundColor: "#3a254c",
                         borderWidth: 2,
-                        pointBackgroundColor: "#b399cc",
+                        pointBackgroundColor: "#5c4375",
                         pointRadius: 4,
                     },
                 ],
@@ -394,17 +394,17 @@ export class PropertyDashboard extends Component {
                     legend: {
                         position: "top",
                         labels: {
-                            color: "#b8a8cc",
+                            color: "#4d3d5e",
                             usePointStyle: true,
                             pointStyle: "circle",
-                            font: { size: 12 },
+                            font: { size: 12, weight: "500" },
                         },
                     },
                     tooltip: {
-                        backgroundColor: "#1b1622",
-                        titleColor: "#ece3f5",
+                        backgroundColor: "#251c2e",
+                        titleColor: "#ffffff",
                         bodyColor: "#c2a9d9",
-                        borderColor: "rgba(194, 169, 217, 0.25)",
+                        borderColor: "rgba(139, 104, 170, 0.35)",
                         borderWidth: 1,
                         padding: 12,
                         callbacks: {
@@ -415,12 +415,12 @@ export class PropertyDashboard extends Component {
                 scales: {
                     x: {
                         grid: { display: false },
-                        ticks: { color: "#ece3f5", font: { size: 11, weight: "500" } },
+                        ticks: { color: "#1f1728", font: { size: 11, weight: "600" } },
                     },
                     y: {
-                        grid: { color: "rgba(194, 169, 217, 0.08)" },
+                        grid: { color: "rgba(92, 67, 117, 0.08)" },
                         ticks: {
-                            color: "#b8a8cc",
+                            color: "#4d3d5e",
                             callback: (v) => `${(v / 1000).toFixed(0)}k`,
                         },
                     },
@@ -430,7 +430,7 @@ export class PropertyDashboard extends Component {
     }
 
     /**
-     * 4. Revenue Timeline: Monthly Rent Trend (Lavender Theme)
+     * 4. Revenue Timeline: Monthly Rent Trend (Lavender Theme on White Card)
      */
     _renderRevenueTrendChart() {
         if (!this.revenueTrendChartRef.el) return;
@@ -443,8 +443,8 @@ export class PropertyDashboard extends Component {
 
         const ctx = this.revenueTrendChartRef.el.getContext("2d");
         const gradient = ctx.createLinearGradient(0, 0, 0, 260);
-        gradient.addColorStop(0, "rgba(194, 169, 217, 0.35)");
-        gradient.addColorStop(1, "rgba(194, 169, 217, 0.0)");
+        gradient.addColorStop(0, "rgba(139, 104, 170, 0.3)");
+        gradient.addColorStop(1, "rgba(139, 104, 170, 0.0)");
 
         this._chartInstances.revenueTrend = new window.Chart(ctx, {
             type: "line",
@@ -454,13 +454,13 @@ export class PropertyDashboard extends Component {
                     {
                         label: "Monthly Rent Cashflow (AED)",
                         data: chartData.values,
-                        borderColor: "#c2a9d9",
+                        borderColor: "#8b68aa",
                         borderWidth: 3,
                         backgroundColor: gradient,
                         fill: true,
                         tension: 0.35,
-                        pointBackgroundColor: "#c2a9d9",
-                        pointBorderColor: "#272031",
+                        pointBackgroundColor: "#8b68aa",
+                        pointBorderColor: "#ffffff",
                         pointBorderWidth: 2,
                         pointRadius: 4,
                         pointHoverRadius: 7,
@@ -473,10 +473,10 @@ export class PropertyDashboard extends Component {
                 plugins: {
                     legend: { display: false },
                     tooltip: {
-                        backgroundColor: "#1b1622",
-                        titleColor: "#ece3f5",
+                        backgroundColor: "#251c2e",
+                        titleColor: "#ffffff",
                         bodyColor: "#c2a9d9",
-                        borderColor: "rgba(194, 169, 217, 0.25)",
+                        borderColor: "rgba(139, 104, 170, 0.35)",
                         borderWidth: 1,
                         padding: 12,
                         callbacks: {
@@ -486,13 +486,13 @@ export class PropertyDashboard extends Component {
                 },
                 scales: {
                     x: {
-                        grid: { color: "rgba(194, 169, 217, 0.05)" },
-                        ticks: { color: "#b8a8cc", font: { size: 11 } },
+                        grid: { color: "rgba(92, 67, 117, 0.05)" },
+                        ticks: { color: "#4d3d5e", font: { size: 11 } },
                     },
                     y: {
-                        grid: { color: "rgba(194, 169, 217, 0.08)" },
+                        grid: { color: "rgba(92, 67, 117, 0.08)" },
                         ticks: {
-                            color: "#b8a8cc",
+                            color: "#4d3d5e",
                             callback: (v) => `${(v / 1000).toFixed(0)}k`,
                         },
                     },
@@ -502,7 +502,7 @@ export class PropertyDashboard extends Component {
     }
 
     /**
-     * 5. Maintenance Requests by Stage (Lavender Theme)
+     * 5. Maintenance Requests by Stage (Lavender Theme on White Card)
      */
     _renderMaintenanceChart() {
         if (!this.maintenanceChartRef.el) return;
@@ -522,7 +522,7 @@ export class PropertyDashboard extends Component {
                     {
                         label: "Requests",
                         data: chartData.counts,
-                        backgroundColor: ["#d4bfe8", "#c2a9d9", "#a88cc4", "#8c6b99", "#5e426e"],
+                        backgroundColor: ["#8b68aa", "#9e82ba", "#b399cc", "#6a4f85", "#4a355e"],
                         borderRadius: 6,
                         barThickness: 24,
                     },
@@ -534,10 +534,10 @@ export class PropertyDashboard extends Component {
                 plugins: {
                     legend: { display: false },
                     tooltip: {
-                        backgroundColor: "#1b1622",
-                        titleColor: "#ece3f5",
+                        backgroundColor: "#251c2e",
+                        titleColor: "#ffffff",
                         bodyColor: "#c2a9d9",
-                        borderColor: "rgba(194, 169, 217, 0.25)",
+                        borderColor: "rgba(139, 104, 170, 0.35)",
                         borderWidth: 1,
                         padding: 12,
                     },
@@ -545,11 +545,11 @@ export class PropertyDashboard extends Component {
                 scales: {
                     x: {
                         grid: { display: false },
-                        ticks: { color: "#ece3f5", font: { size: 11, weight: "500" } },
+                        ticks: { color: "#1f1728", font: { size: 11, weight: "600" } },
                     },
                     y: {
-                        grid: { color: "rgba(194, 169, 217, 0.08)" },
-                        ticks: { color: "#b8a8cc", precision: 0 },
+                        grid: { color: "rgba(92, 67, 117, 0.08)" },
+                        ticks: { color: "#4d3d5e", precision: 0 },
                     },
                 },
             },

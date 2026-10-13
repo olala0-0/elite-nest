@@ -1,16 +1,17 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
   <defs>
     <linearGradient id="gradBg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#0F172A"/>
-      <stop offset="100%" stop-color="#020617"/>
+      <stop offset="0%" stop-color="#272031"/>
+      <stop offset="100%" stop-color="#1b1622"/>
     </linearGradient>
-    <linearGradient id="gradEmerald" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#34D399"/>
-      <stop offset="100%" stop-color="#059669"/>
+    <linearGradient id="gradLavender" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ece3f5"/>
+      <stop offset="50%" stop-color="#c2a9d9"/>
+      <stop offset="100%" stop-color="#8c6b99"/>
     </linearGradient>
-    <linearGradient id="gradSky" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#38BDF8"/>
-      <stop offset="100%" stop-color="#0284C7"/>
+    <linearGradient id="gradTower" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#a88cc4"/>
+      <stop offset="100%" stop-color="#6a4f85"/>
     </linearGradient>
     <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
       <feGaussianBlur stdDeviation="3" result="blur" />
@@ -19,42 +20,41 @@
   </defs>
 
   <!-- Base Rounded Container -->
-  <rect width="100" height="100" rx="22" fill="url(#gradBg)" stroke="#1E293B" stroke-width="2"/>
+  <rect width="100" height="100" rx="22" fill="url(#gradBg)" stroke="rgba(194, 169, 217, 0.35)" stroke-width="2"/>
 
   <!-- Subtle Grid Accent -->
-  <line x1="20" y1="80" x2="80" y2="80" stroke="#334155" stroke-width="1.5" stroke-linecap="round"/>
-  <line x1="20" y1="62" x2="80" y2="62" stroke="#1E293B" stroke-width="1" stroke-dasharray="2,2"/>
-  <line x1="20" y1="44" x2="80" y2="44" stroke="#1E293B" stroke-width="1" stroke-dasharray="2,2"/>
+  <line x1="20" y1="80" x2="80" y2="80" stroke="rgba(194, 169, 217, 0.25)" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="20" y1="62" x2="80" y2="62" stroke="rgba(194, 169, 217, 0.12)" stroke-width="1" stroke-dasharray="2,2"/>
+  <line x1="20" y1="44" x2="80" y2="44" stroke="rgba(194, 169, 217, 0.12)" stroke-width="1" stroke-dasharray="2,2"/>
 
-  <!-- Modern Luxury High-Rise Silhouettes -->
+  <!-- Modern High-Rise Silhouettes in Lavender -->
   <!-- Tower 1 -->
-  <rect x="25" y="38" width="14" height="42" rx="3" fill="#1E293B" stroke="#475569" stroke-width="1"/>
-  <rect x="28" y="44" width="3" height="4" rx="1" fill="#64748B"/>
-  <rect x="33" y="44" width="3" height="4" rx="1" fill="#64748B"/>
-  <rect x="28" y="52" width="3" height="4" rx="1" fill="#64748B"/>
-  <rect x="33" y="52" width="3" height="4" rx="1" fill="#64748B"/>
-  <rect x="28" y="60" width="3" height="4" rx="1" fill="#64748B"/>
-  <rect x="33" y="60" width="3" height="4" rx="1" fill="#64748B"/>
+  <rect x="25" y="38" width="14" height="42" rx="3" fill="#32293f" stroke="rgba(194, 169, 217, 0.3)" stroke-width="1"/>
+  <rect x="28" y="44" width="3" height="4" rx="1" fill="#8c6b99"/>
+  <rect x="33" y="44" width="3" height="4" rx="1" fill="#8c6b99"/>
+  <rect x="28" y="52" width="3" height="4" rx="1" fill="#8c6b99"/>
+  <rect x="33" y="52" width="3" height="4" rx="1" fill="#8c6b99"/>
+  <rect x="28" y="60" width="3" height="4" rx="1" fill="#8c6b99"/>
+  <rect x="33" y="60" width="3" height="4" rx="1" fill="#8c6b99"/>
 
   <!-- Main Center Tower -->
-  <rect x="42" y="24" width="17" height="56" rx="4" fill="#0F172A" stroke="url(#gradSky)" stroke-width="1.5"/>
-  <rect x="46" y="30" width="3.5" height="4.5" rx="1" fill="#38BDF8" opacity="0.8"/>
-  <rect x="52" y="30" width="3.5" height="4.5" rx="1" fill="#38BDF8" opacity="0.8"/>
-  <rect x="46" y="38" width="3.5" height="4.5" rx="1" fill="#38BDF8" opacity="0.6"/>
-  <rect x="52" y="38" width="3.5" height="4.5" rx="1" fill="#38BDF8" opacity="0.6"/>
-  <rect x="46" y="46" width="3.5" height="4.5" rx="1" fill="#38BDF8" opacity="0.4"/>
-  <rect x="52" y="46" width="3.5" height="4.5" rx="1" fill="#38BDF8" opacity="0.4"/>
+  <rect x="42" y="24" width="17" height="56" rx="4" fill="#251e2f" stroke="url(#gradTower)" stroke-width="1.5"/>
+  <rect x="46" y="30" width="3.5" height="4.5" rx="1" fill="#c2a9d9" opacity="0.85"/>
+  <rect x="52" y="30" width="3.5" height="4.5" rx="1" fill="#c2a9d9" opacity="0.85"/>
+  <rect x="46" y="38" width="3.5" height="4.5" rx="1" fill="#c2a9d9" opacity="0.65"/>
+  <rect x="52" y="38" width="3.5" height="4.5" rx="1" fill="#c2a9d9" opacity="0.65"/>
+  <rect x="46" y="46" width="3.5" height="4.5" rx="1" fill="#c2a9d9" opacity="0.45"/>
+  <rect x="52" y="46" width="3.5" height="4.5" rx="1" fill="#c2a9d9" opacity="0.45"/>
 
-  <!-- Real-Time Dynamic Analytics Graph (Ascending Emerald Wave) -->
-  <path d="M 22 72 Q 38 68, 48 50 T 78 30" fill="none" stroke="url(#gradEmerald)" stroke-width="3.5" stroke-linecap="round" filter="url(#glow)"/>
+  <!-- Real-Time Dynamic Analytics Graph (Ascending Lavender Wave) -->
+  <path d="M 22 72 Q 38 68, 48 50 T 78 30" fill="none" stroke="url(#gradLavender)" stroke-width="3.5" stroke-linecap="round" filter="url(#glow)"/>
   
   <!-- Glowing Data Beacon Points -->
-  <circle cx="48" cy="50" r="3.5" fill="#34D399" stroke="#064E3B" stroke-width="1.5"/>
-  <circle cx="78" cy="30" r="4.5" fill="#10B981" stroke="#FFFFFF" stroke-width="1.5"/>
-  <circle cx="78" cy="30" r="8" fill="none" stroke="#10B981" stroke-width="1" opacity="0.6"/>
+  <circle cx="48" cy="50" r="3.5" fill="#d4bfe8" stroke="#6a4f85" stroke-width="1.5"/>
+  <circle cx="78" cy="30" r="4.5" fill="#ece3f5" stroke="#443754" stroke-width="1.5"/>
+  <circle cx="78" cy="30" r="8" fill="none" stroke="#c2a9d9" stroke-width="1" opacity="0.7"/>
 
-  <!-- Radio / Live Broadcast Waves (Real-Time indicator) -->
-  <path d="M 72 18 A 8 8 0 0 1 84 30" fill="none" stroke="#34D399" stroke-width="1.5" stroke-linecap="round" opacity="0.75"/>
-  <path d="M 75 14 A 13 13 0 0 1 89 28" fill="none" stroke="#34D399" stroke-width="1.5" stroke-linecap="round" opacity="0.45"/>
+  <!-- Real-Time Live Broadcast Waves -->
+  <path d="M 72 18 A 8 8 0 0 1 84 30" fill="none" stroke="#c2a9d9" stroke-width="1.5" stroke-linecap="round" opacity="0.8"/>
+  <path d="M 75 14 A 13 13 0 0 1 89 28" fill="none" stroke="#c2a9d9" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
 </svg>
-

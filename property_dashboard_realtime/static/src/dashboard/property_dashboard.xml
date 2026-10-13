@@ -5,16 +5,16 @@
         <div class="o_property_dashboard_container d-flex flex-column h-100" t-att-class="{'pulse-active': state.pulseEffect}">
 
             <!-- ========================================================= -->
-            <!-- EXECUTIVE TOPBAR                                          -->
+            <!-- EXECUTIVE TOPBAR (LAVENDER TINTED)                        -->
             <!-- ========================================================= -->
             <header class="executive-topbar px-4 py-3 d-flex flex-wrap justify-content-between align-items-center">
                 <div class="d-flex align-items-center gap-3">
                     <div class="brand-badge p-2 rounded-3 d-flex align-items-center justify-content-center">
-                        <i class="fa fa-building-o fs-4 text-emerald"/>
+                        <i class="fa fa-building-o fs-4" style="color: var(--dash-primary-lavender);"/>
                     </div>
                     <div>
                         <div class="d-flex align-items-center gap-2">
-                            <h4 class="mb-0 fw-bold text-dark tracking-wide">Property &amp; Contract Executive Dashboard</h4>
+                            <h4 class="mb-0 fw-bold tracking-wide" style="color: var(--dash-lavender-light);">Property &amp; Contract Executive Dashboard</h4>
                             <span class="badge rounded-pill live-sync-badge d-flex align-items-center gap-1">
                                 <span class="pulse-beacon"/>
                                 <span t-if="state.realtimeConnected">Live Real-Time</span>
@@ -25,8 +25,8 @@
                                 <span t-esc="state.multiCompany.active_company_name"/>
                             </span>
                         </div>
-                        <p class="mb-0 text-muted small">
-                            Odoo 19 Enterprise Multi-Company Command Center • Last updated: <span class="text-secondary fw-semibold" t-esc="state.lastUpdated or 'Just now'"/>
+                        <p class="mb-0 small" style="color: var(--dash-lavender-medium);">
+                            Odoo 19 Enterprise Multi-Company Command Center • Last updated: <span class="fw-semibold" style="color: var(--dash-primary-lavender);" t-esc="state.lastUpdated or 'Just now'"/>
                         </p>
                     </div>
                 </div>
@@ -71,7 +71,7 @@
                     <button class="btn btn-sm btn-executive-action" t-on-click="refreshDashboard" title="Refresh Live Data">
                         <i class="fa fa-refresh" t-att-class="{'fa-spin': state.loading}"/>
                     </button>
-                    <button class="btn btn-sm btn-emerald fw-semibold d-flex align-items-center gap-1" t-on-click="createContract">
+                    <button class="btn btn-sm btn-lavender fw-semibold d-flex align-items-center gap-1" t-on-click="createContract">
                         <i class="fa fa-plus-circle"/>
                         <span>New Contract</span>
                     </button>
@@ -89,8 +89,8 @@
 
                 <!-- Loading State Indicator -->
                 <div t-if="state.loading" class="executive-loading-overlay position-absolute top-0 start-0 w-100 h-100 d-flex flex-column justify-content-center align-items-center">
-                    <div class="spinner-border text-success mb-3" role="status"/>
-                    <span class="text-secondary small tracking-wider text-uppercase fw-semibold">Loading Live Property &amp; Contract Data...</span>
+                    <div class="spinner-border mb-3" role="status" style="color: var(--dash-primary-lavender);"/>
+                    <span class="small tracking-wider text-uppercase fw-semibold" style="color: var(--dash-lavender-medium);">Loading Real-Time Property &amp; Contract Data...</span>
                 </div>
 
                 <!-- 1. KPI SUMMARY CARDS -->
@@ -99,22 +99,22 @@
                     <div class="executive-card kpi-card" t-on-click="openAllProperties" title="Click to view Properties">
                         <div class="d-flex justify-content-between align-items-start mb-2">
                             <span class="kpi-label">Properties &amp; Occupancy</span>
-                            <span class="kpi-icon-pill bg-emerald-subtle">
-                                <i class="fa fa-building text-emerald"/>
+                            <span class="kpi-icon-pill">
+                                <i class="fa fa-building"/>
                             </span>
                         </div>
                         <div class="kpi-value-row d-flex align-items-baseline gap-2 mb-2">
                             <h3 class="kpi-number mb-0" t-esc="state.kpis.units_ratio_text"/>
-                            <span class="kpi-badge badge bg-emerald text-white fw-bold">
+                            <span class="kpi-badge badge bg-emerald text-dark fw-bold">
                                 <t t-esc="state.kpis.occupancy_rate"/>%
                             </span>
                         </div>
                         <div class="occupancy-progress-bar rounded-pill overflow-hidden">
                             <div class="progress-fill" t-attf-style="width: {{ state.kpis.occupancy_rate }}%;"/>
                         </div>
-                        <div class="d-flex justify-content-between text-muted small mt-2">
-                            <span>Occupied: <b class="text-dark" t-esc="state.kpis.occupied_units"/></span>
-                            <span>Total Properties: <b class="text-dark" t-esc="state.kpis.total_units"/></span>
+                        <div class="d-flex justify-content-between small mt-2" style="color: var(--dash-lavender-medium);">
+                            <span>Occupied: <b style="color: var(--dash-lavender-light);" t-esc="state.kpis.occupied_units"/></span>
+                            <span>Total Properties: <b style="color: var(--dash-lavender-light);" t-esc="state.kpis.total_units"/></span>
                         </div>
                     </div>
 
@@ -123,11 +123,11 @@
                         <div class="d-flex justify-content-between align-items-start mb-2">
                             <span class="kpi-label">Vacant Properties</span>
                             <span class="kpi-icon-pill" t-att-class="state.kpis.vacant_alert ? 'bg-danger-subtle' : 'bg-emerald-subtle'">
-                                <i class="fa fa-key" t-att-class="state.kpis.vacant_alert ? 'text-rose' : 'text-emerald'"/>
+                                <i class="fa fa-key" t-att-class="state.kpis.vacant_alert ? 'text-rose' : 'text-lavender'"/>
                             </span>
                         </div>
                         <div class="kpi-value-row d-flex align-items-baseline gap-2 mb-2">
-                            <h3 class="kpi-number mb-0" t-att-class="state.kpis.vacant_alert ? 'text-rose' : 'text-dark'" t-esc="state.kpis.vacant_units"/>
+                            <h3 class="kpi-number mb-0" t-att-class="state.kpis.vacant_alert ? 'text-rose' : ''" t-esc="state.kpis.vacant_units"/>
                             <span t-if="state.kpis.vacant_alert" class="badge rounded-pill bg-danger-subtle small">
                                 <i class="fa fa-exclamation-triangle me-1"/>Available
                             </span>
@@ -135,9 +135,9 @@
                                 100% Full
                             </span>
                         </div>
-                        <p class="text-muted small mb-0 mt-3">
+                        <p class="small mb-0 mt-3" style="color: var(--dash-lavender-medium);">
                             <span t-if="state.kpis.vacant_units > 0">
-                                <b class="text-dark" t-esc="state.kpis.vacant_units"/> properties vacant &amp; ready for contract leasing.
+                                <b style="color: var(--dash-lavender-light);" t-esc="state.kpis.vacant_units"/> properties vacant &amp; ready for leasing.
                             </span>
                             <span t-else="">All properties currently under active contract.</span>
                         </p>
@@ -147,17 +147,17 @@
                     <div class="executive-card kpi-card" t-on-click="openAllContracts" title="Click to view Rent Contracts">
                         <div class="d-flex justify-content-between align-items-start mb-2">
                             <span class="kpi-label">Active Contracts</span>
-                            <span class="kpi-icon-pill bg-violet-subtle">
-                                <i class="fa fa-file-text-o text-violet"/>
+                            <span class="kpi-icon-pill">
+                                <i class="fa fa-file-text-o"/>
                             </span>
                         </div>
                         <div class="kpi-value-row d-flex align-items-baseline gap-2 mb-2">
-                            <h3 class="kpi-number mb-0 text-dark" t-esc="state.kpis.active_contracts_count"/>
+                            <h3 class="kpi-number mb-0" t-esc="state.kpis.active_contracts_count"/>
                             <span class="badge rounded-pill bg-violet-subtle small">
                                 In Force
                             </span>
                         </div>
-                        <p class="text-muted small mb-0 mt-3">
+                        <p class="small mb-0 mt-3" style="color: var(--dash-lavender-medium);">
                             Active legally binding rent contracts generating revenue.
                         </p>
                     </div>
@@ -166,35 +166,35 @@
                     <div class="executive-card kpi-card">
                         <div class="d-flex justify-content-between align-items-start mb-2">
                             <span class="kpi-label">Total Contract Revenue</span>
-                            <span class="kpi-icon-pill bg-emerald-subtle">
-                                <i class="fa fa-money text-emerald"/>
+                            <span class="kpi-icon-pill">
+                                <i class="fa fa-money"/>
                             </span>
                         </div>
                         <div class="kpi-value-row d-flex align-items-baseline gap-2 mb-2">
-                            <h3 class="kpi-number mb-0 text-emerald fw-bold text-truncate" t-esc="state.kpis.total_rent_revenue_formatted"/>
+                            <h3 class="kpi-number mb-0 fw-bold text-truncate" style="color: var(--dash-primary-lavender);" t-esc="state.kpis.total_rent_revenue_formatted"/>
                         </div>
-                        <p class="text-muted small mb-0 mt-3">
+                        <p class="small mb-0 mt-3" style="color: var(--dash-lavender-medium);">
                             Total contracted annual rent stream formatted in AED.
                         </p>
                     </div>
 
-                    <!-- KPI 5: Maintenance Requests (New) -->
+                    <!-- KPI 5: Maintenance Requests -->
                     <div class="executive-card kpi-card" t-on-click="openAllMaintenance" title="Click to view Maintenance Requests">
                         <div class="d-flex justify-content-between align-items-start mb-2">
                             <span class="kpi-label">Maintenance Requests</span>
-                            <span class="kpi-icon-pill bg-sky-subtle">
-                                <i class="fa fa-wrench text-sky"/>
+                            <span class="kpi-icon-pill">
+                                <i class="fa fa-wrench"/>
                             </span>
                         </div>
                         <div class="kpi-value-row d-flex align-items-baseline gap-2 mb-2">
-                            <h3 class="kpi-number mb-0 text-dark" t-esc="state.kpis.maintenance_open"/>
+                            <h3 class="kpi-number mb-0" t-esc="state.kpis.maintenance_open"/>
                             <span class="badge rounded-pill bg-sky-subtle small">
                                 Open / Pending
                             </span>
                         </div>
-                        <div class="d-flex justify-content-between text-muted small mt-2">
-                            <span>Repaired: <b class="text-dark" t-esc="state.kpis.maintenance_repaired"/></span>
-                            <span>Total Requests: <b class="text-dark" t-esc="state.kpis.maintenance_total"/></span>
+                        <div class="d-flex justify-content-between small mt-2" style="color: var(--dash-lavender-medium);">
+                            <span>Repaired: <b style="color: var(--dash-lavender-light);" t-esc="state.kpis.maintenance_repaired"/></span>
+                            <span>Total Requests: <b style="color: var(--dash-lavender-light);" t-esc="state.kpis.maintenance_total"/></span>
                         </div>
                     </div>
                 </section>
@@ -205,10 +205,10 @@
                     <div class="executive-card chart-card">
                         <div class="chart-header d-flex justify-content-between align-items-center mb-3">
                             <div>
-                                <h6 class="mb-0 fw-bold text-dark">Contracts by Status</h6>
-                                <span class="text-muted small">Distribution across Running, Expired, Terminated, and Cancelled</span>
+                                <h6 class="mb-0 fw-bold" style="color: var(--dash-lavender-light);">Contracts by Status</h6>
+                                <span class="small" style="color: var(--dash-lavender-medium);">Distribution across Running, Expired, Terminated, and Cancelled</span>
                             </div>
-                            <span class="badge bg-secondary-subtle text-secondary small">Rent Contracts</span>
+                            <span class="badge bg-secondary-subtle small">Rent Contracts</span>
                         </div>
                         <div class="chart-canvas-wrapper position-relative">
                             <canvas t-ref="statusChart"/>
@@ -219,10 +219,10 @@
                     <div class="executive-card chart-card">
                         <div class="chart-header d-flex justify-content-between align-items-center mb-3">
                             <div>
-                                <h6 class="mb-0 fw-bold text-dark">Tenant Nationality Mix</h6>
-                                <span class="text-muted small">Top tenant countries &amp; portfolio share</span>
+                                <h6 class="mb-0 fw-bold" style="color: var(--dash-lavender-light);">Tenant Nationality Mix</h6>
+                                <span class="small" style="color: var(--dash-lavender-medium);">Top tenant countries &amp; portfolio share</span>
                             </div>
-                            <span class="badge bg-sky-subtle text-sky small">Active Contracts</span>
+                            <span class="badge bg-sky-subtle small">Active Contracts</span>
                         </div>
                         <div class="chart-canvas-wrapper position-relative">
                             <canvas t-ref="nationalitiesChart"/>
@@ -233,10 +233,10 @@
                     <div class="executive-card chart-card">
                         <div class="chart-header d-flex justify-content-between align-items-center mb-3">
                             <div>
-                                <h6 class="mb-0 fw-bold text-dark">Average Contract Rent vs Benchmark</h6>
-                                <span class="text-muted small">Actual average contract rent (AED) vs target benchmark by type</span>
+                                <h6 class="mb-0 fw-bold" style="color: var(--dash-lavender-light);">Average Contract Rent vs Benchmark</h6>
+                                <span class="small" style="color: var(--dash-lavender-medium);">Actual average contract rent (AED) vs target benchmark by type</span>
                             </div>
-                            <span class="badge bg-emerald-subtle text-emerald small">AED Pricing</span>
+                            <span class="badge bg-emerald-subtle small">AED Pricing</span>
                         </div>
                         <div class="chart-canvas-wrapper position-relative">
                             <canvas t-ref="avgRentChart"/>
@@ -247,10 +247,10 @@
                     <div class="executive-card chart-card">
                         <div class="chart-header d-flex justify-content-between align-items-center mb-3">
                             <div>
-                                <h6 class="mb-0 fw-bold text-dark">Monthly Contract Rent Inflows</h6>
-                                <span class="text-muted small">Aggregated contract rent timeline</span>
+                                <h6 class="mb-0 fw-bold" style="color: var(--dash-lavender-light);">Monthly Contract Rent Inflows</h6>
+                                <span class="small" style="color: var(--dash-lavender-medium);">Aggregated contract rent timeline</span>
                             </div>
-                            <span class="badge bg-sky-subtle text-sky small">Cashflow</span>
+                            <span class="badge bg-sky-subtle small">Cashflow</span>
                         </div>
                         <div class="chart-canvas-wrapper position-relative">
                             <canvas t-ref="revenueTrendChart"/>
@@ -260,17 +260,17 @@
 
                 <!-- 3. MAINTENANCE REQUESTS SECTION (Related to Properties) -->
                 <section t-if="state.recentMaintenance.length > 0" class="executive-card directory-card mb-4">
-                    <div class="directory-header d-flex flex-wrap justify-content-between align-items-center p-3 border-bottom">
+                    <div class="directory-header d-flex flex-wrap justify-content-between align-items-center p-3 border-bottom" style="border-color: var(--dash-border-color) !important;">
                         <div>
-                            <h6 class="mb-0 fw-bold text-dark d-flex align-items-center gap-2">
-                                <i class="fa fa-wrench text-sky"/>
+                            <h6 class="mb-0 fw-bold d-flex align-items-center gap-2" style="color: var(--dash-lavender-light);">
+                                <i class="fa fa-wrench" style="color: var(--dash-primary-lavender);"/>
                                 <span>Recent Unit Maintenance Requests</span>
-                                <span class="badge rounded-pill bg-sky-subtle text-sky ms-1" t-esc="state.recentMaintenance.length + ' Active'"/>
+                                <span class="badge rounded-pill bg-sky-subtle ms-1" t-esc="state.recentMaintenance.length + ' Active'"/>
                             </h6>
-                            <span class="text-muted small">Maintenance jobs and repair tickets linked to property units</span>
+                            <span class="small" style="color: var(--dash-lavender-medium);">Maintenance jobs and repair tickets linked to property units</span>
                         </div>
                         <div class="d-flex align-items-center gap-2">
-                            <button class="btn btn-sm btn-outline-secondary" t-on-click="openAllMaintenance">
+                            <button class="btn btn-sm btn-outline-primary" t-on-click="openAllMaintenance">
                                 View All Maintenance <i class="fa fa-arrow-right ms-1"/>
                             </button>
                         </div>
@@ -292,22 +292,22 @@
                             <tbody>
                                 <t t-foreach="state.recentMaintenance" t-as="m" t-key="m.id">
                                     <tr class="directory-row" t-on-click="() => this.openMaintenance(m.id)">
-                                        <td class="ps-4 fw-semibold text-dark">
+                                        <td class="ps-4 fw-semibold" style="color: var(--dash-lavender-light);">
                                             <span t-esc="m.name"/>
                                         </td>
                                         <td>
-                                            <span class="text-secondary fw-medium" t-esc="m.property_name"/>
+                                            <span class="fw-medium" style="color: var(--dash-lavender-medium);" t-esc="m.property_name"/>
                                         </td>
                                         <td>
                                             <span class="badge rounded-pill bg-sky-subtle" t-esc="m.stage_name"/>
                                         </td>
                                         <td>
-                                            <span t-if="m.priority === '3'" class="badge rounded-pill bg-danger-subtle text-danger">Urgent</span>
-                                            <span t-elif="m.priority === '2'" class="badge rounded-pill bg-amber-subtle text-amber">High</span>
+                                            <span t-if="m.priority === '3'" class="badge rounded-pill bg-danger-subtle">Urgent</span>
+                                            <span t-elif="m.priority === '2'" class="badge rounded-pill bg-amber-subtle">High</span>
                                             <span t-else="" class="badge rounded-pill bg-secondary-subtle">Normal</span>
                                         </td>
-                                        <td class="text-muted small" t-esc="m.request_date"/>
-                                        <td class="text-secondary" t-esc="m.technician"/>
+                                        <td class="small" style="color: var(--dash-lavender-medium);" t-esc="m.request_date"/>
+                                        <td style="color: var(--dash-lavender-medium);" t-esc="m.technician"/>
                                         <td class="text-end pe-4" t-on-click.stop="">
                                             <button class="btn btn-sm btn-icon-subtle" t-on-click="() => this.openMaintenance(m.id)" title="Open Request">
                                                 <i class="fa fa-external-link"/>
@@ -322,17 +322,17 @@
 
                 <!-- 4. RECENT CONTRACT DIRECTORY TABLE -->
                 <section class="executive-card directory-card mb-3">
-                    <div class="directory-header d-flex flex-wrap justify-content-between align-items-center p-3 border-bottom">
+                    <div class="directory-header d-flex flex-wrap justify-content-between align-items-center p-3 border-bottom" style="border-color: var(--dash-border-color) !important;">
                         <div>
-                            <h6 class="mb-0 fw-bold text-dark d-flex align-items-center gap-2">
-                                <i class="fa fa-list-alt text-emerald"/>
+                            <h6 class="mb-0 fw-bold d-flex align-items-center gap-2" style="color: var(--dash-lavender-light);">
+                                <i class="fa fa-list-alt" style="color: var(--dash-primary-lavender);"/>
                                 <span>Recent Rent Contracts Directory</span>
-                                <span class="badge rounded-pill bg-secondary-subtle text-secondary ms-1" t-esc="state.recentContracts.length + ' Records'"/>
+                                <span class="badge rounded-pill bg-secondary-subtle ms-1" t-esc="state.recentContracts.length + ' Records'"/>
                             </h6>
-                            <span class="text-muted small">Live contracts with comparative price benchmarks and validity tracking</span>
+                            <span class="small" style="color: var(--dash-lavender-medium);">Live contracts with comparative price benchmarks and validity tracking</span>
                         </div>
                         <div class="d-flex align-items-center gap-2">
-                            <button class="btn btn-sm btn-outline-secondary" t-on-click="openAllContracts">
+                            <button class="btn btn-sm btn-outline-primary" t-on-click="openAllContracts">
                                 View All Contracts <i class="fa fa-arrow-right ms-1"/>
                             </button>
                         </div>
@@ -360,11 +360,11 @@
                             <tbody>
                                 <t t-if="state.recentContracts.length === 0">
                                     <tr>
-                                        <td colspan="12" class="text-center py-5 text-muted">
-                                            <i class="fa fa-folder-open-o fs-1 mb-2 d-block text-secondary"/>
+                                        <td colspan="12" class="text-center py-5" style="color: var(--dash-lavender-medium);">
+                                            <i class="fa fa-folder-open-o fs-1 mb-2 d-block" style="color: var(--dash-lavender-dark);"/>
                                             No contracts found matching the selected criteria.
                                             <div class="mt-3">
-                                                <button class="btn btn-sm btn-emerald" t-on-click="createContract">
+                                                <button class="btn btn-sm btn-lavender" t-on-click="createContract">
                                                     Create New Contract
                                                 </button>
                                             </div>
@@ -376,42 +376,56 @@
                                         <tr class="directory-row" t-on-click="() => this.openContract(contract.id)">
                                             <!-- Sequence -->
                                             <td class="ps-4">
-                                                <span class="fw-semibold text-emerald font-monospace" t-esc="contract.name"/>
+                                                <span class="fw-semibold font-monospace" style="color: var(--dash-primary-lavender);" t-esc="contract.name"/>
                                             </td>
 
                                             <!-- Property Unit -->
                                             <td>
                                                 <div class="d-flex align-items-center gap-2">
-                                                    <i class="fa fa-home text-muted"/>
-                                                    <span class="fw-semibold text-dark" t-esc="contract.unit_name"/>
+                                                    <i class="fa fa-home" style="color: var(--dash-lavender-medium);"/>
+                                                    <span class="fw-semibold" style="color: var(--dash-lavender-light);" t-esc="contract.unit_name"/>
                                                 </div>
                                             </td>
 
-                                            <!-- Residential Type -->
+                                            <!-- Residential Type (Tone 5 Badges) -->
                                             <td>
-                                                <span class="badge rounded-pill bg-secondary-subtle small px-2 py-1" t-esc="contract.unit_type"/>
+                                                <span t-if="contract.unit_type.toLowerCase().includes('studio')"
+                                                      class="badge rounded-pill small px-2 py-1 badge-type-studio"
+                                                      t-esc="contract.unit_type"/>
+                                                <span t-elif="contract.unit_type.toLowerCase().includes('1')"
+                                                      class="badge rounded-pill small px-2 py-1 badge-type-1bed"
+                                                      t-esc="contract.unit_type"/>
+                                                <span t-elif="contract.unit_type.toLowerCase().includes('2')"
+                                                      class="badge rounded-pill small px-2 py-1 badge-type-2bed"
+                                                      t-esc="contract.unit_type"/>
+                                                <span t-elif="contract.unit_type.toLowerCase().includes('office')"
+                                                      class="badge rounded-pill small px-2 py-1 badge-type-office"
+                                                      t-esc="contract.unit_type"/>
+                                                <span t-else=""
+                                                      class="badge rounded-pill small px-2 py-1 badge-type-3bed"
+                                                      t-esc="contract.unit_type"/>
                                             </td>
 
                                             <!-- Tenant Name -->
                                             <td>
-                                                <span class="text-dark fw-medium" t-esc="contract.tenant_name"/>
+                                                <span class="fw-medium" style="color: var(--dash-lavender-light);" t-esc="contract.tenant_name"/>
                                             </td>
 
                                             <!-- Nationality -->
                                             <td>
                                                 <div class="d-flex align-items-center gap-2">
                                                     <span class="country-badge text-uppercase font-monospace" t-esc="contract.tenant_country_code"/>
-                                                    <span class="text-secondary small" t-esc="contract.tenant_country_name"/>
+                                                    <span class="small" style="color: var(--dash-lavender-medium);" t-esc="contract.tenant_country_name"/>
                                                 </div>
                                             </td>
 
                                             <!-- Rent Amount -->
-                                            <td class="text-end fw-bold text-dark">
+                                            <td class="text-end fw-bold" style="color: var(--dash-lavender-light);">
                                                 <span t-esc="contract.rent_amount_formatted"/>
                                             </td>
 
                                             <!-- Benchmark Avg -->
-                                            <td class="text-end text-muted small">
+                                            <td class="text-end small" style="color: var(--dash-lavender-medium);">
                                                 <span t-esc="contract.benchmark_rent_formatted"/>
                                             </td>
 
@@ -424,7 +438,7 @@
 
                                             <!-- Dates -->
                                             <td>
-                                                <div class="text-secondary small font-monospace">
+                                                <div class="small font-monospace" style="color: var(--dash-lavender-medium);">
                                                     <span t-esc="contract.start_date"/> → <span t-esc="contract.end_date"/>
                                                 </div>
                                             </td>
@@ -436,7 +450,7 @@
                                                       t-esc="contract.days_remaining + ' d'"/>
                                             </td>
 
-                                            <!-- Status -->
+                                            <!-- Status (Tones 1-4) -->
                                             <td class="text-center">
                                                 <span class="badge rounded-pill"
                                                       t-att-class="contract.state_badge_class"

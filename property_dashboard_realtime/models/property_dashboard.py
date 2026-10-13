@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
+import logging
 from datetime import date, timedelta
 from dateutil.relativedelta import relativedelta
 from collections import defaultdict
 from odoo import api, fields, models, _
 from odoo.exceptions import ValidationError
+
+_logger = logging.getLogger(__name__)
 
 
 RESIDENTIAL_TYPES = [
@@ -244,31 +247,73 @@ class PropertyContract(models.Model):
     # OPTIMIZED DASHBOARD RPC METRICS (MULTI-COMPANY & LIVE PROPERTY/CONTRACTS)
     # =========================================================================
     @api.model
-    def get_dashboard_metrics(self, filters=None):
+    def get_dashboard_metrics(self, filters=None, **kwargs):
         """
         Calculates executive metrics directly from the live property management
         database (property.detail, rent.contract, maintenance.request) with
         full Multi-Company scoping (self.env.companies).
         """
-        filters = filters or {}
-        residential_type_filter = filters.get("residential_type")
-        state_filter = filters.get("state")
-        search_query = (filters.get("search") or "").strip().lower()
+        allowed_companies = self.env.companies.ids or [self.env.company.id]
+        try:
+            filters = filters or {}
+            search_query = (filters.get("search") or "").strip().lower()
 
-        # Multi-company filter: support all active selected companies in Odoo header
-        allowed_companies = self.env.companies.ids
-        company_domain = ["|", ("company_id", "=", False), ("company_id", "in", allowed_companies)]
+            # Multi-company filter: support all active selected companies in Odoo header
+            company_domain = ["|", ("company_id", "=", False), ("company_id", "in", allowed_companies)]
 
-        has_eg_property = "property.detail" in self.env and "rent.contract" in self.env
+            has_eg_property = "property.detail" in self.env and "rent.contract" in self.env
 
-        if has_eg_property:
-            return self._get_eg_property_metrics(filters, company_domain, search_query)
-        else:
-            return self._get_standalone_metrics(filters, company_domain, search_query)
+            if has_eg_property:
+                return self._get_eg_property_metrics(filters, company_domain, search_query, allowed_companies)
+            else:
+                return self._get_standalone_metrics(filters, company_domain, search_query, allowed_companies)
+        except Exception as e:
+            _logger.exception("Error in get_dashboard_metrics: %s", e)
+            return self._get_empty_dashboard_payload(allowed_companies)
 
     @api.model
-    def _get_eg_property_metrics(self, filters, company_domain, search_query):
+    def _get_empty_dashboard_payload(self, allowed_companies):
+        """Safe fallback payload preventing RPC crash and providing clean zero state"""
+        return {
+            "is_eg_property": True,
+            "currency": {"name": "AED", "symbol": "AED", "position": "before"},
+            "multi_company": {
+                "active_company_name": self.env.company.name,
+                "allowed_companies_count": len(allowed_companies),
+                "is_multi": len(allowed_companies) > 1,
+            },
+            "kpis": {
+                "total_units": 0,
+                "occupied_units": 0,
+                "vacant_units": 0,
+                "draft_units": 0,
+                "occupancy_rate": 0.0,
+                "units_ratio_text": "0 / 0",
+                "vacant_alert": False,
+                "vacant_alert_status": "info",
+                "active_contracts_count": 0,
+                "total_rent_revenue": 0.0,
+                "total_rent_revenue_formatted": "AED 0.00",
+                "distinct_nationalities_count": 0,
+                "maintenance_total": 0,
+                "maintenance_open": 0,
+                "maintenance_repaired": 0,
+            },
+            "charts": {
+                "contracts_by_status": {"labels": ["Running", "Expired", "Terminated", "Cancelled"], "counts": [0, 0, 0, 0], "percentages": [0, 0, 0, 0], "colors": ["#d4bfe8", "#b399cc", "#8c6b99", "#5e426e"]},
+                "tenant_nationalities": {"labels": [], "counts": [], "percentages": [], "codes": []},
+                "avg_rent_by_unit_type": {"labels": ["Studio", "1 Bed", "2 Bed", "3 Bed", "Office"], "values": [0, 0, 0, 0, 0], "benchmarks": [0, 0, 0, 0, 0]},
+                "revenue_trends": {"labels": [], "values": []},
+                "maintenance_by_stage": {"labels": [], "counts": []},
+            },
+            "recent_contracts": [],
+            "recent_maintenance": [],
+        }
+
+    @api.model
+    def _get_eg_property_metrics(self, filters, company_domain, search_query, allowed_companies=None):
         """Live metrics from eg_property_management (property.detail, rent.contract, maintenance.request)"""
+        allowed_companies = allowed_companies or self.env.companies.ids or [self.env.company.id]
         residential_type_filter = filters.get("residential_type")
         state_filter = filters.get("state")
 
@@ -279,84 +324,114 @@ class PropertyContract(models.Model):
         # 1. Properties
         prop_domain = list(company_domain)
         if residential_type_filter and residential_type_filter != "all":
-            prop_domain.append(("residential_type", "ilike", residential_type_filter))
+            if "residential_type" in PropDetail._fields:
+                prop_domain.append(("residential_type", "ilike", residential_type_filter))
+            elif "residential_type_id" in PropDetail._fields:
+                prop_domain.append(("residential_type_id.name", "ilike", residential_type_filter))
 
         properties = PropDetail.search(prop_domain)
         total_units = len(properties)
-        occupied_units = len(properties.filtered(lambda p: p.state in ("on_rent", "rent", "occupied")))
-        vacant_units = len(properties.filtered(lambda p: p.state in ("available", "vacant")))
-        draft_units = len(properties.filtered(lambda p: p.state == "draft"))
+        occupied_units = len(properties.filtered(lambda p: (p.state or "") in ("on_rent", "rent", "occupied")))
+        vacant_units = len(properties.filtered(lambda p: (p.state or "") in ("available", "vacant")))
+        draft_units = len(properties.filtered(lambda p: (p.state or "") == "draft"))
         if vacant_units == 0 and total_units > occupied_units:
-            vacant_units = total_units - occupied_units - draft_units
+            vacant_units = max(total_units - occupied_units - draft_units, 0)
 
         occupancy_rate = round((occupied_units / total_units * 100.0), 1) if total_units > 0 else 0.0
 
         # 2. Rent Contracts
         contract_domain = list(company_domain)
         if residential_type_filter and residential_type_filter != "all":
-            contract_domain.append(("residential_type", "ilike", residential_type_filter))
+            if "residential_type" in RentContract._fields:
+                contract_domain.append(("residential_type", "ilike", residential_type_filter))
+            elif "residential_type_id" in RentContract._fields:
+                contract_domain.append(("residential_type_id.name", "ilike", residential_type_filter))
 
         all_contracts = RentContract.search(contract_domain)
-        running_contracts = all_contracts.filtered(lambda c: c.state == "running")
-        expired_contracts = all_contracts.filtered(lambda c: c.state in ("expire", "expired"))
-        terminated_contracts = all_contracts.filtered(lambda c: c.state in ("close", "terminated"))
-        cancelled_contracts = all_contracts.filtered(lambda c: c.state in ("cancel", "cancelled"))
+        running_contracts = all_contracts.filtered(lambda c: (c.state or "") == "running")
+        expired_contracts = all_contracts.filtered(lambda c: (c.state or "") in ("expire", "expired"))
+        terminated_contracts = all_contracts.filtered(lambda c: (c.state or "") in ("close", "terminated"))
+        cancelled_contracts = all_contracts.filtered(lambda c: (c.state or "") in ("cancel", "cancelled"))
 
         active_contracts_count = len(running_contracts)
-        total_rent_revenue = sum(running_contracts.mapped("rent"))
+        total_rent_revenue = sum(float(c.rent or 0.0) for c in running_contracts)
 
-        # Distinct nationalities
+        # Distinct nationalities & mapping
         countries = set()
+        nat_counts = defaultdict(int)
+        code_map = {}
         for c in running_contracts:
             partner = getattr(c, "tenant_id", False) or getattr(c, "partner_id", False)
             if partner and partner.country_id:
+                cname = partner.country_id.name or "United Arab Emirates"
+                ccode = (partner.country_id.code or "ae").lower()
                 countries.add(partner.country_id.id)
+            else:
+                cname = "United Arab Emirates"
+                ccode = "ae"
+            nat_counts[cname] += 1
+            code_map[cname] = ccode
         distinct_nationalities_count = len(countries)
 
-        # 3. Maintenance Requests (Related to properties)
+        sorted_nat = sorted(nat_counts.items(), key=lambda x: x[1], reverse=True)[:8]
+        act_total = len(running_contracts) or 1
+        tenant_nationalities = {
+            "labels": [item[0] for item in sorted_nat],
+            "counts": [item[1] for item in sorted_nat],
+            "percentages": [round((item[1] / act_total) * 100.0, 1) for item in sorted_nat],
+            "codes": [code_map.get(item[0], "ae") for item in sorted_nat],
+        }
+
+        # 3. Maintenance Requests (Safely scoped to properties)
         m_total = 0
         m_open = 0
-        m_in_progress = 0
         m_repaired = 0
         recent_maintenance_data = []
         maintenance_by_stage_labels = []
         maintenance_by_stage_counts = []
 
-        if MaintenanceRequest:
-            m_domain = list(company_domain)
-            # Filter by properties in scope
-            if properties:
+        if MaintenanceRequest is not None:
+            m_domain = []
+            if "company_id" in MaintenanceRequest._fields:
+                m_domain.extend(company_domain)
+            if properties and "property_id" in MaintenanceRequest._fields:
                 m_domain.append(("property_id", "in", properties.ids))
-            maintenance_recs = MaintenanceRequest.search(m_domain)
-            m_total = len(maintenance_recs)
+            try:
+                maintenance_recs = MaintenanceRequest.search(m_domain)
+                m_total = len(maintenance_recs)
 
-            open_recs = maintenance_recs.filtered(lambda m: not (m.stage_id and m.stage_id.done))
-            m_open = len(open_recs)
-            m_repaired = m_total - m_open
+                def is_stage_done(stage):
+                    if not stage:
+                        return False
+                    return bool(getattr(stage, "done", getattr(stage, "fold", False)))
 
-            # Stage distribution
-            stage_counts = defaultdict(int)
-            for m in maintenance_recs:
-                s_name = m.stage_id.name if m.stage_id else _("New Request")
-                stage_counts[s_name] += 1
-            maintenance_by_stage_labels = list(stage_counts.keys())
-            maintenance_by_stage_counts = list(stage_counts.values())
+                open_recs = maintenance_recs.filtered(lambda m: not is_stage_done(m.stage_id))
+                m_open = len(open_recs)
+                m_repaired = max(m_total - m_open, 0)
 
-            # Top 10 recent open requests
-            for m in open_recs[:10]:
-                recent_maintenance_data.append({
-                    "id": m.id,
-                    "name": m.name or _("Maintenance Request"),
-                    "property_name": m.property_id.name if m.property_id else _("General Property"),
-                    "stage_name": m.stage_id.name if m.stage_id else _("In Progress"),
-                    "stage_done": bool(m.stage_id and m.stage_id.done),
-                    "priority": m.priority or "1",
-                    "request_date": m.request_date.strftime("%Y-%m-%d") if getattr(m, "request_date", False) else "-",
-                    "technician": m.user_id.name if m.user_id else _("Unassigned"),
-                })
+                stage_counts = defaultdict(int)
+                for m in maintenance_recs:
+                    s_name = m.stage_id.name if m.stage_id else _("New Request")
+                    stage_counts[s_name] += 1
+                maintenance_by_stage_labels = list(stage_counts.keys())
+                maintenance_by_stage_counts = list(stage_counts.values())
+
+                for m in open_recs[:10]:
+                    recent_maintenance_data.append({
+                        "id": m.id,
+                        "name": m.name or _("Maintenance Request"),
+                        "property_name": m.property_id.name if getattr(m, "property_id", False) else _("General Property"),
+                        "stage_name": m.stage_id.name if m.stage_id else _("In Progress"),
+                        "stage_done": is_stage_done(m.stage_id),
+                        "priority": str(getattr(m, "priority", "1") or "1"),
+                        "request_date": m.request_date.strftime("%Y-%m-%d") if getattr(m, "request_date", False) else "-",
+                        "technician": m.user_id.name if getattr(m, "user_id", False) else _("Unassigned"),
+                    })
+            except Exception as me:
+                _logger.warning("Error fetching maintenance requests: %s", me)
 
         # --- Chart Aggregations ---
-        # A. Contracts by Status
+        # A. Contracts by Status (Executive Lavender/Plum Palette)
         status_counts = {
             "Running": len(running_contracts),
             "Expired": len(expired_contracts),
@@ -368,40 +443,18 @@ class PropertyContract(models.Model):
             "labels": ["Running", "Expired", "Terminated", "Cancelled"],
             "counts": [status_counts["Running"], status_counts["Expired"], status_counts["Terminated"], status_counts["Cancelled"]],
             "percentages": [round((v / total_c) * 100.0, 1) for v in [status_counts["Running"], status_counts["Expired"], status_counts["Terminated"], status_counts["Cancelled"]]],
-            "colors": ["#10B981", "#F59E0B", "#EF4444", "#64748B"],
+            "colors": ["#d4bfe8", "#b399cc", "#8c6b99", "#5e426e"],
         }
 
-        # B. Tenant Nationalities
-        nat_counts = defaultdict(int)
-        code_map = {}
-        for c in running_contracts:
-            partner = getattr(c, "tenant_id", False) or getattr(c, "partner_id", False)
-            if partner and partner.country_id:
-                cname = partner.country_id.name
-                ccode = (partner.country_id.code or "ae").lower()
-            else:
-                cname = "United Arab Emirates"
-                ccode = "ae"
-            nat_counts[cname] += 1
-            code_map[cname] = ccode
-
-        sorted_nat = sorted(nat_counts.items(), key=lambda x: x[1], reverse=True)[:8]
-        act_total = len(running_contracts) or 1
-        tenant_nationalities = {
-            "labels": [item[0] for item in sorted_nat],
-            "counts": [item[1] for item in sorted_nat],
-            "percentages": [round((item[1] / act_total) * 100.0, 1) for item in sorted_nat],
-            "codes": [code_map.get(item[0], "ae") for item in sorted_nat],
-        }
-
-        # C. Average Rent by Residential Type
+        # B. Average Rent by Residential Type
         type_rents = defaultdict(list)
         for c in running_contracts:
+            rent_val = float(c.rent or 0.0)
             rtype = c.residential_type or (c.residential_type_id.name if hasattr(c, "residential_type_id") and c.residential_type_id else "Commercial")
-            type_rents[rtype].append(c.rent)
+            type_rents[rtype or "Residential"].append(rent_val)
 
         avg_rent_labels = list(type_rents.keys())[:8] if type_rents else ["1 Bed", "2 Bed", "3 Bed", "Studio", "Office"]
-        avg_rent_values = [round(sum(type_rents[t]) / len(type_rents[t]), 2) if type_rents[t] else 95000.0 for t in avg_rent_labels]
+        avg_rent_values = [round(sum(type_rents[t]) / len(type_rents[t]), 2) if type_rents.get(t) else 95000.0 for t in avg_rent_labels]
         benchmarks = [round(v * 0.96, 2) for v in avg_rent_values]
 
         avg_rent_by_unit_type = {
@@ -410,7 +463,7 @@ class PropertyContract(models.Model):
             "benchmarks": benchmarks,
         }
 
-        # D. Revenue Timeline
+        # C. Revenue Timeline
         monthly_trends = defaultdict(float)
         today = fields.Date.today()
         month_keys = []
@@ -423,12 +476,14 @@ class PropertyContract(models.Model):
             monthly_trends[k] = 0.0
 
         for c in running_contracts:
+            rent_val = float(c.rent or 0.0)
+            dur_val = int(getattr(c, "duration", 12) or 12)
             if c.start_date:
                 k = c.start_date.strftime("%Y-%m")
                 if k in monthly_trends:
-                    monthly_trends[k] += c.rent
-                else:
-                    monthly_trends[month_keys[-1]] += (c.rent / (c.duration or 12))
+                    monthly_trends[k] += rent_val
+                elif month_keys:
+                    monthly_trends[month_keys[-1]] += (rent_val / dur_val)
 
         revenue_trends = {
             "labels": month_labels,
@@ -450,12 +505,15 @@ class PropertyContract(models.Model):
             dir_domain.append(("state", "=", "running"))
 
         if residential_type_filter and residential_type_filter != "all":
-            dir_domain.append(("residential_type", "ilike", residential_type_filter))
+            if "residential_type" in RentContract._fields:
+                dir_domain.append(("residential_type", "ilike", residential_type_filter))
+            elif "residential_type_id" in RentContract._fields:
+                dir_domain.append(("residential_type_id.name", "ilike", residential_type_filter))
 
         dir_records = RentContract.search(dir_domain, order="id desc", limit=100)
         recent_contracts = []
 
-        type_avg_map = {t: (sum(type_rents[t]) / len(type_rents[t])) if type_rents[t] else 100000.0 for t in type_rents}
+        type_avg_map = {t: (sum(type_rents[t]) / len(type_rents[t])) if type_rents.get(t) else 100000.0 for t in type_rents}
 
         for c in dir_records:
             prop_name = c.property_id.name if c.property_id else "N/A"
@@ -469,11 +527,13 @@ class PropertyContract(models.Model):
                     continue
 
             rtype = c.residential_type or "Residential"
-            b_avg = type_avg_map.get(rtype, c.rent or 1.0)
-            diff_pct = round(((c.rent - b_avg) / b_avg * 100.0), 1) if b_avg else 0.0
+            rent_val = float(c.rent or 0.0)
+            b_avg = float(type_avg_map.get(rtype, rent_val or 1.0) or 1.0)
+            diff_pct = round(((rent_val - b_avg) / b_avg * 100.0), 1) if b_avg > 0 else 0.0
 
-            c_days = getattr(c, "remaining_days", 0)
-            status_lbl = "Running" if c.state == "running" else ("Expired" if c.state in ("expire", "expired") else ("Terminated" if c.state in ("close", "terminated") else "Cancelled"))
+            c_days = int(getattr(c, "remaining_days", 0) or 0)
+            c_state = c.state or ""
+            status_lbl = "Running" if c_state == "running" else ("Expired" if c_state in ("expire", "expired") else ("Terminated" if c_state in ("close", "terminated") else "Cancelled"))
             badge_cls = "badge-running" if status_lbl == "Running" else ("badge-expired" if status_lbl == "Expired" else ("badge-terminated" if status_lbl == "Terminated" else "badge-cancelled"))
 
             country_name = tenant_partner.country_id.name if (tenant_partner and tenant_partner.country_id) else "United Arab Emirates"
@@ -481,7 +541,7 @@ class PropertyContract(models.Model):
 
             recent_contracts.append({
                 "id": c.id,
-                "name": c.name,
+                "name": c.name or _("Contract"),
                 "property_id": c.property_id.id if c.property_id else False,
                 "unit_name": prop_name,
                 "residential_type": rtype,
@@ -489,8 +549,8 @@ class PropertyContract(models.Model):
                 "tenant_name": tenant_name,
                 "tenant_country_name": country_name,
                 "tenant_country_code": country_code,
-                "rent_amount": c.rent,
-                "rent_amount_formatted": f"AED {c.rent:,.2f}",
+                "rent_amount": rent_val,
+                "rent_amount_formatted": f"AED {rent_val:,.2f}",
                 "benchmark_rent": b_avg,
                 "benchmark_rent_formatted": f"AED {b_avg:,.2f}",
                 "benchmark_diff_pct": f"{'+' if diff_pct > 0 else ''}{diff_pct}%",
@@ -499,7 +559,7 @@ class PropertyContract(models.Model):
                 "end_date": c.end_date.strftime("%Y-%m-%d") if c.end_date else "-",
                 "days_remaining": c_days,
                 "days_remaining_class": "badge-danger" if c_days <= 30 else ("badge-warning" if c_days <= 60 else "badge-success"),
-                "state": c.state,
+                "state": c_state,
                 "state_label": status_lbl,
                 "state_badge_class": badge_cls,
                 "model_name": "rent.contract",
@@ -549,8 +609,9 @@ class PropertyContract(models.Model):
         }
 
     @api.model
-    def _get_standalone_metrics(self, filters, company_domain, search_query):
+    def _get_standalone_metrics(self, filters, company_domain, search_query, allowed_companies=None):
         """Fallback for standalone property.unit and property.contract"""
+        allowed_companies = allowed_companies or self.env.companies.ids or [self.env.company.id]
         residential_type_filter = filters.get("residential_type")
         state_filter = filters.get("state")
 

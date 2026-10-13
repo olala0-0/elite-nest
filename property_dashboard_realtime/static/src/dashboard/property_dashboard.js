@@ -21,6 +21,7 @@ export class PropertyDashboard extends Component {
         this.nationalitiesChartRef = useRef("nationalitiesChart");
         this.avgRentChartRef = useRef("avgRentChart");
         this.revenueTrendChartRef = useRef("revenueTrendChart");
+        this.maintenanceChartRef = useRef("maintenanceChart");
 
         this._chartInstances = {};
         this._busCleanups = [];
@@ -34,10 +35,17 @@ export class PropertyDashboard extends Component {
             contractState: "all",
             searchQuery: "",
             pulseEffect: false,
+            isEgProperty: true,
+            multiCompany: {
+                active_company_name: "",
+                allowed_companies_count: 1,
+                is_multi: false,
+            },
             kpis: {
                 total_units: 0,
                 occupied_units: 0,
                 vacant_units: 0,
+                draft_units: 0,
                 occupancy_rate: 0,
                 units_ratio_text: "0 / 0",
                 vacant_alert: false,
@@ -46,14 +54,19 @@ export class PropertyDashboard extends Component {
                 total_rent_revenue: 0,
                 total_rent_revenue_formatted: "AED 0.00",
                 distinct_nationalities_count: 0,
+                maintenance_total: 0,
+                maintenance_open: 0,
+                maintenance_repaired: 0,
             },
             charts: {
                 contracts_by_status: { labels: [], counts: [], percentages: [], colors: [] },
                 tenant_nationalities: { labels: [], counts: [], percentages: [], codes: [] },
                 avg_rent_by_unit_type: { labels: [], values: [], benchmarks: [] },
                 revenue_trends: { labels: [], values: [] },
+                maintenance_by_stage: { labels: [], counts: [] },
             },
             recentContracts: [],
+            recentMaintenance: [],
         });
 
         onWillStart(async () => {
@@ -79,10 +92,6 @@ export class PropertyDashboard extends Component {
         });
     }
 
-    /**
-     * Ensures Chart.js is loaded in the browser.
-     * Tries native Odoo 19 asset bundle or fallback paths.
-     */
     async _ensureChartLib() {
         if (window.Chart) return;
         try {
@@ -91,9 +100,7 @@ export class PropertyDashboard extends Component {
                 window.Chart = chartMod.Chart;
                 return;
             }
-        } catch (e) {
-            // Proceed to asset loader
-        }
+        } catch (e) {}
 
         const candidateScripts = [
             "/web/static/lib/Chart/Chart.js",
@@ -104,15 +111,10 @@ export class PropertyDashboard extends Component {
             try {
                 await loadJS(src);
                 if (window.Chart) return;
-            } catch (err) {
-                // Continue to next candidate
-            }
+            } catch (err) {}
         }
     }
 
-    /**
-     * Subscribes to Odoo 19 bus.bus real-time channel.
-     */
     _setupBus() {
         if (!this.busService) return;
         try {
@@ -140,7 +142,7 @@ export class PropertyDashboard extends Component {
 
             this.state.realtimeConnected = true;
         } catch (err) {
-            console.warn("[PropertyDashboard] Bus subscription error:", err);
+            console.warn("[PropertyDashboard] Bus setup warning:", err);
         }
     }
 
@@ -154,22 +156,17 @@ export class PropertyDashboard extends Component {
     }
 
     _onRealtimeBusEvent() {
-        // Trigger subtle flash animation
         this.state.pulseEffect = true;
         setTimeout(() => {
             this.state.pulseEffect = false;
         }, 1200);
 
-        // Debounce reload
         if (this._debounceTimer) clearTimeout(this._debounceTimer);
         this._debounceTimer = setTimeout(() => {
             this.loadDashboardData(false);
         }, 300);
     }
 
-    /**
-     * Loads metrics from property.contract RPC
-     */
     async loadDashboardData(showSpinner = false) {
         if (showSpinner) {
             this.state.loading = true;
@@ -183,13 +180,16 @@ export class PropertyDashboard extends Component {
 
             const data = await this.orm.call("property.contract", "get_dashboard_metrics", [filters]);
 
+            this.state.isEgProperty = data.is_eg_property;
+            this.state.multiCompany = data.multi_company || {};
             this.state.kpis = data.kpis;
             this.state.charts = data.charts;
-            this.state.recentContracts = data.recent_contracts;
+            this.state.recentContracts = data.recent_contracts || [];
+            this.state.recentMaintenance = data.recent_maintenance || [];
             this.state.lastUpdated = new Date().toLocaleTimeString();
         } catch (err) {
             console.error("[PropertyDashboard] Error loading metrics:", err);
-            this.notification.add("Failed to load property dashboard metrics.", {
+            this.notification.add("Failed to load real-time property metrics.", {
                 type: "danger",
             });
         } finally {
@@ -198,7 +198,7 @@ export class PropertyDashboard extends Component {
     }
 
     // =========================================================================
-    // CHART.JS RENDERING ENGINE
+    // LIGHT-MODE CHART.JS ENGINE
     // =========================================================================
     _destroyCharts() {
         for (const key of Object.keys(this._chartInstances)) {
@@ -218,10 +218,11 @@ export class PropertyDashboard extends Component {
         this._renderNationalitiesBarChart();
         this._renderAvgRentComboChart();
         this._renderRevenueTrendChart();
+        this._renderMaintenanceChart();
     }
 
     /**
-     * 1. Donut Chart: Contracts by Status
+     * 1. Donut Chart: Contracts by Status (Light Theme)
      */
     _renderStatusDonutChart() {
         if (!this.statusChartRef.el) return;
@@ -240,8 +241,8 @@ export class PropertyDashboard extends Component {
                 datasets: [
                     {
                         data: chartData.counts,
-                        backgroundColor: chartData.colors || ["#10B981", "#EF4444", "#64748B", "#F59E0B"],
-                        borderColor: "#111827",
+                        backgroundColor: chartData.colors || ["#10B981", "#F59E0B", "#EF4444", "#64748B"],
+                        borderColor: "#FFFFFF",
                         borderWidth: 3,
                         hoverOffset: 6,
                     },
@@ -250,23 +251,23 @@ export class PropertyDashboard extends Component {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                cutout: "70%",
+                cutout: "68%",
                 plugins: {
                     legend: {
                         position: "bottom",
                         labels: {
-                            color: "#94A3B8",
-                            font: { family: "Inter, sans-serif", size: 12 },
+                            color: "#475569",
+                            font: { family: "Inter, sans-serif", size: 12, weight: "500" },
                             usePointStyle: true,
                             pointStyle: "circle",
-                            padding: 16,
+                            padding: 14,
                         },
                     },
                     tooltip: {
-                        backgroundColor: "rgba(15, 23, 42, 0.95)",
-                        titleColor: "#F8FAFC",
-                        bodyColor: "#94A3B8",
-                        borderColor: "rgba(255, 255, 255, 0.1)",
+                        backgroundColor: "#0F172A",
+                        titleColor: "#FFFFFF",
+                        bodyColor: "#CBD5E1",
+                        borderColor: "#E2E8F0",
                         borderWidth: 1,
                         padding: 12,
                         callbacks: {
@@ -274,7 +275,7 @@ export class PropertyDashboard extends Component {
                                 const total = context.dataset.data.reduce((a, b) => a + b, 0) || 1;
                                 const val = context.raw;
                                 const pct = ((val / total) * 100).toFixed(1);
-                                return ` ${context.label}: ${val} leases (${pct}%)`;
+                                return ` ${context.label}: ${val} contracts (${pct}%)`;
                             },
                         },
                     },
@@ -284,7 +285,7 @@ export class PropertyDashboard extends Component {
     }
 
     /**
-     * 2. Horizontal Bar Chart: Tenant Nationalities
+     * 2. Horizontal Bar Chart: Tenant Nationalities (Light Theme)
      */
     _renderNationalitiesBarChart() {
         if (!this.nationalitiesChartRef.el) return;
@@ -302,9 +303,9 @@ export class PropertyDashboard extends Component {
                 labels: chartData.labels,
                 datasets: [
                     {
-                        label: "Active Leases",
+                        label: "Active Contracts",
                         data: chartData.counts,
-                        backgroundColor: "#38BDF8",
+                        backgroundColor: "#0284C7",
                         borderRadius: 6,
                         barThickness: 16,
                     },
@@ -317,29 +318,27 @@ export class PropertyDashboard extends Component {
                 plugins: {
                     legend: { display: false },
                     tooltip: {
-                        backgroundColor: "rgba(15, 23, 42, 0.95)",
-                        titleColor: "#F8FAFC",
-                        bodyColor: "#94A3B8",
-                        borderColor: "rgba(255, 255, 255, 0.1)",
-                        borderWidth: 1,
+                        backgroundColor: "#0F172A",
+                        titleColor: "#FFFFFF",
+                        bodyColor: "#CBD5E1",
                         padding: 12,
                         callbacks: {
                             label: (context) => {
                                 const idx = context.dataIndex;
                                 const pct = chartData.percentages[idx] || 0;
-                                return ` ${context.raw} Leases (${pct}% portfolio share)`;
+                                return ` ${context.raw} Contracts (${pct}% portfolio share)`;
                             },
                         },
                     },
                 },
                 scales: {
                     x: {
-                        grid: { color: "rgba(255, 255, 255, 0.05)" },
+                        grid: { color: "rgba(0, 0, 0, 0.05)" },
                         ticks: { color: "#64748B", font: { size: 11 }, precision: 0 },
                     },
                     y: {
                         grid: { display: false },
-                        ticks: { color: "#CBD5E1", font: { size: 12, weight: "500" } },
+                        ticks: { color: "#1E293B", font: { size: 12, weight: "500" } },
                     },
                 },
             },
@@ -347,7 +346,7 @@ export class PropertyDashboard extends Component {
     }
 
     /**
-     * 3. Bar / Line Combo Chart: Average Rent by Unit Type vs Benchmark
+     * 3. Bar / Benchmark Chart: Average Rent by Residential Type (Light Theme)
      */
     _renderAvgRentComboChart() {
         if (!this.avgRentChartRef.el) return;
@@ -366,24 +365,21 @@ export class PropertyDashboard extends Component {
                 datasets: [
                     {
                         type: "bar",
-                        label: "Actual Avg Rent (AED)",
+                        label: "Average Rent (AED)",
                         data: chartData.values,
-                        backgroundColor: "#10B981",
+                        backgroundColor: "#059669",
                         borderRadius: 6,
                         barPercentage: 0.6,
-                        order: 2,
                     },
                     {
                         type: "line",
-                        label: "Benchmark Price (AED)",
+                        label: "Target Benchmark (AED)",
                         data: chartData.benchmarks,
-                        borderColor: "#F59E0B",
-                        backgroundColor: "#F59E0B",
+                        borderColor: "#D97706",
+                        backgroundColor: "#D97706",
                         borderWidth: 2,
-                        pointBackgroundColor: "#F59E0B",
+                        pointBackgroundColor: "#D97706",
                         pointRadius: 4,
-                        pointHoverRadius: 6,
-                        order: 1,
                     },
                 ],
             },
@@ -394,18 +390,16 @@ export class PropertyDashboard extends Component {
                     legend: {
                         position: "top",
                         labels: {
-                            color: "#94A3B8",
+                            color: "#475569",
                             usePointStyle: true,
                             pointStyle: "circle",
                             font: { size: 12 },
                         },
                     },
                     tooltip: {
-                        backgroundColor: "rgba(15, 23, 42, 0.95)",
-                        titleColor: "#F8FAFC",
-                        bodyColor: "#94A3B8",
-                        borderColor: "rgba(255, 255, 255, 0.1)",
-                        borderWidth: 1,
+                        backgroundColor: "#0F172A",
+                        titleColor: "#FFFFFF",
+                        bodyColor: "#CBD5E1",
                         padding: 12,
                         callbacks: {
                             label: (context) => ` ${context.dataset.label}: AED ${Number(context.raw).toLocaleString()}`,
@@ -415,10 +409,10 @@ export class PropertyDashboard extends Component {
                 scales: {
                     x: {
                         grid: { display: false },
-                        ticks: { color: "#CBD5E1", font: { size: 11 } },
+                        ticks: { color: "#334155", font: { size: 11, weight: "500" } },
                     },
                     y: {
-                        grid: { color: "rgba(255, 255, 255, 0.05)" },
+                        grid: { color: "rgba(0, 0, 0, 0.05)" },
                         ticks: {
                             color: "#64748B",
                             callback: (v) => `${(v / 1000).toFixed(0)}k`,
@@ -430,7 +424,7 @@ export class PropertyDashboard extends Component {
     }
 
     /**
-     * 4. Revenue Timeline: Monthly rent collection line/area
+     * 4. Revenue Timeline: Monthly Rent Trend (Light Theme)
      */
     _renderRevenueTrendChart() {
         if (!this.revenueTrendChartRef.el) return;
@@ -443,8 +437,8 @@ export class PropertyDashboard extends Component {
 
         const ctx = this.revenueTrendChartRef.el.getContext("2d");
         const gradient = ctx.createLinearGradient(0, 0, 0, 260);
-        gradient.addColorStop(0, "rgba(56, 189, 248, 0.35)");
-        gradient.addColorStop(1, "rgba(56, 189, 248, 0.0)");
+        gradient.addColorStop(0, "rgba(2, 132, 199, 0.25)");
+        gradient.addColorStop(1, "rgba(2, 132, 199, 0.0)");
 
         this._chartInstances.revenueTrend = new window.Chart(ctx, {
             type: "line",
@@ -452,15 +446,15 @@ export class PropertyDashboard extends Component {
                 labels: chartData.labels,
                 datasets: [
                     {
-                        label: "Monthly Lease Rent (AED)",
+                        label: "Monthly Rent Cashflow (AED)",
                         data: chartData.values,
-                        borderColor: "#38BDF8",
+                        borderColor: "#0284C7",
                         borderWidth: 3,
                         backgroundColor: gradient,
                         fill: true,
                         tension: 0.35,
-                        pointBackgroundColor: "#38BDF8",
-                        pointBorderColor: "#0F172A",
+                        pointBackgroundColor: "#0284C7",
+                        pointBorderColor: "#FFFFFF",
                         pointBorderWidth: 2,
                         pointRadius: 4,
                         pointHoverRadius: 7,
@@ -473,11 +467,9 @@ export class PropertyDashboard extends Component {
                 plugins: {
                     legend: { display: false },
                     tooltip: {
-                        backgroundColor: "rgba(15, 23, 42, 0.95)",
-                        titleColor: "#F8FAFC",
-                        bodyColor: "#94A3B8",
-                        borderColor: "rgba(255, 255, 255, 0.1)",
-                        borderWidth: 1,
+                        backgroundColor: "#0F172A",
+                        titleColor: "#FFFFFF",
+                        bodyColor: "#CBD5E1",
                         padding: 12,
                         callbacks: {
                             label: (context) => ` Rent: AED ${Number(context.raw).toLocaleString()}`,
@@ -486,11 +478,11 @@ export class PropertyDashboard extends Component {
                 },
                 scales: {
                     x: {
-                        grid: { color: "rgba(255, 255, 255, 0.05)" },
-                        ticks: { color: "#CBD5E1", font: { size: 11 } },
+                        grid: { color: "rgba(0, 0, 0, 0.04)" },
+                        ticks: { color: "#334155", font: { size: 11 } },
                     },
                     y: {
-                        grid: { color: "rgba(255, 255, 255, 0.05)" },
+                        grid: { color: "rgba(0, 0, 0, 0.05)" },
                         ticks: {
                             color: "#64748B",
                             callback: (v) => `${(v / 1000).toFixed(0)}k`,
@@ -501,8 +493,61 @@ export class PropertyDashboard extends Component {
         });
     }
 
+    /**
+     * 5. Maintenance Requests by Stage (Light Theme)
+     */
+    _renderMaintenanceChart() {
+        if (!this.maintenanceChartRef.el) return;
+        const chartData = this.state.charts.maintenance_by_stage;
+        if (!chartData || !chartData.labels || chartData.labels.length === 0) return;
+
+        if (this._chartInstances.maintenance) {
+            this._chartInstances.maintenance.destroy();
+        }
+
+        const ctx = this.maintenanceChartRef.el.getContext("2d");
+        this._chartInstances.maintenance = new window.Chart(ctx, {
+            type: "bar",
+            data: {
+                labels: chartData.labels,
+                datasets: [
+                    {
+                        label: "Requests",
+                        data: chartData.counts,
+                        backgroundColor: ["#F59E0B", "#3B82F6", "#10B981", "#8B5CF6", "#EF4444"],
+                        borderRadius: 6,
+                        barThickness: 24,
+                    },
+                ],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: "#0F172A",
+                        titleColor: "#FFFFFF",
+                        bodyColor: "#CBD5E1",
+                        padding: 12,
+                    },
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: "#334155", font: { size: 11, weight: "500" } },
+                    },
+                    y: {
+                        grid: { color: "rgba(0, 0, 0, 0.05)" },
+                        ticks: { color: "#64748B", precision: 0 },
+                    },
+                },
+            },
+        });
+    }
+
     // =========================================================================
-    // UI INTERACTION HANDLERS
+    // UI INTERACTION HANDLERS & ACTIONS
     // =========================================================================
     onFilterResidentialType(ev) {
         this.state.residentialType = ev.target.value;
@@ -533,69 +578,90 @@ export class PropertyDashboard extends Component {
 
     openContract(contractId) {
         if (!contractId) return;
+        const resModel = this.state.isEgProperty ? "rent.contract" : "property.contract";
         this.action.doAction({
             type: "ir.actions.act_window",
-            res_model: "property.contract",
+            res_model: resModel,
             res_id: contractId,
             views: [[false, "form"]],
             target: "current",
         });
     }
 
-    openUnit(unitId) {
-        if (!unitId) return;
+    openProperty(propertyId) {
+        if (!propertyId) return;
+        const resModel = this.state.isEgProperty ? "property.detail" : "property.unit";
         this.action.doAction({
             type: "ir.actions.act_window",
-            res_model: "property.unit",
-            res_id: unitId,
+            res_model: resModel,
+            res_id: propertyId,
             views: [[false, "form"]],
             target: "current",
         });
     }
 
     openAllContracts() {
+        const resModel = this.state.isEgProperty ? "rent.contract" : "property.contract";
         this.action.doAction({
             type: "ir.actions.act_window",
-            name: "Lease Contracts",
-            res_model: "property.contract",
+            name: "Rent Contracts",
+            res_model: resModel,
             views: [[false, "list"], [false, "form"]],
             target: "current",
         });
     }
 
-    openAllUnits() {
+    openAllProperties() {
+        const resModel = this.state.isEgProperty ? "property.detail" : "property.unit";
         this.action.doAction({
             type: "ir.actions.act_window",
-            name: "Property Units",
-            res_model: "property.unit",
-            views: [[false, "list"], [false, "form"]],
+            name: "Properties",
+            res_model: resModel,
+            views: [[false, "list"], [false, "form"], [false, "kanban"]],
             target: "current",
         });
     }
 
-    createContract() {
+    openMaintenance(maintenanceId) {
+        if (!maintenanceId) return;
         this.action.doAction({
             type: "ir.actions.act_window",
-            name: "New Lease Contract",
-            res_model: "property.contract",
+            res_model: "maintenance.request",
+            res_id: maintenanceId,
             views: [[false, "form"]],
             target: "current",
         });
     }
 
-    async seedDemoData() {
-        this.state.loading = true;
-        try {
-            await this.orm.call("property.contract", "action_seed_demo_data", []);
-            this.notification.add("Executive Dubai sample portfolio successfully seeded!", {
-                type: "success",
-            });
-            await this.loadDashboardData(true);
-        } catch (err) {
-            console.error("Seed error:", err);
-            this.notification.add("Failed to load sample portfolio.", { type: "danger" });
-            this.state.loading = false;
-        }
+    openAllMaintenance() {
+        this.action.doAction({
+            type: "ir.actions.act_window",
+            name: "Maintenance Requests",
+            res_model: "maintenance.request",
+            views: [[false, "list"], [false, "form"], [false, "kanban"]],
+            target: "current",
+        });
+    }
+
+    createContract() {
+        const resModel = this.state.isEgProperty ? "rent.contract" : "property.contract";
+        this.action.doAction({
+            type: "ir.actions.act_window",
+            name: "New Rent Contract",
+            res_model: resModel,
+            views: [[false, "form"]],
+            target: "current",
+        });
+    }
+
+    createMaintenance() {
+        this.action.doAction({
+            type: "ir.actions.act_window",
+            name: "New Maintenance Request",
+            res_model: "maintenance.request",
+            views: [[false, "form"]],
+            target: "current",
+        });
     }
 }
 

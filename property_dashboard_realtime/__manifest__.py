@@ -11,6 +11,7 @@
         "base",
         "web",
         "bus",
+        "eg_property_management",
     ],
     "data": [
         "security/ir.model.access.csv",

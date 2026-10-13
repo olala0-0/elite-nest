@@ -180,13 +180,13 @@
         </record>
 
         <record id="action_property_contract" model="ir.actions.act_window">
-            <field name="name">Contracts</field>
+            <field name="name">Rent Contracts</field>
             <field name="res_model">property.contract</field>
             <field name="view_mode">list,form</field>
             <field name="search_view_id" ref="view_property_contract_search"/>
             <field name="help" type="html">
                 <p class="o_view_nocontent_smiling_face">
-                    Create a new Lease Contract
+                    Create a new Rent Contract
                 </p>
             </field>
         </record>
@@ -209,16 +209,22 @@
                   sequence="1"/>
 
         <menuitem id="menu_property_units"
-                  name="Units"
+                  name="Properties"
                   parent="menu_property_dashboard_root"
-                  action="action_property_unit"
+                  action="eg_property_management.action_property_detail"
                   sequence="10"/>
 
         <menuitem id="menu_property_contracts"
-                  name="Lease Contracts"
+                  name="Rent Contracts"
                   parent="menu_property_dashboard_root"
-                  action="action_property_contract"
+                  action="eg_property_management.action_rent_contracts"
                   sequence="20"/>
+
+        <menuitem id="menu_property_maintenance"
+                  name="Maintenance"
+                  parent="menu_property_dashboard_root"
+                  action="maintenance.hr_equipment_request_action"
+                  sequence="30"/>
 
     </data>
 </odoo>

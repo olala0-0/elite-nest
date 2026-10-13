@@ -192,6 +192,174 @@
         </record>
 
         <!-- ========================================================= -->
+        <!-- FACILITY WORK ORDERS (PROPERTY MAINTENANCE) VIEWS         -->
+        <!-- ========================================================= -->
+        <record id="view_property_maintenance_request_list" model="ir.ui.view">
+            <field name="name">property.maintenance.request.list</field>
+            <field name="model">property.maintenance.request</field>
+            <field name="arch" type="xml">
+                <list string="Facility Work Orders" decoration-danger="priority == 'critical'" decoration-warning="priority == 'high'">
+                    <field name="name"/>
+                    <field name="title"/>
+                    <field name="property_id"/>
+                    <field name="facility_type" widget="badge"/>
+                    <field name="priority" widget="badge" decoration-danger="priority == 'critical'" decoration-warning="priority == 'high'" decoration-info="priority == 'normal'"/>
+                    <field name="assigned_team"/>
+                    <field name="response_time_hrs"/>
+                    <field name="sla_met" widget="boolean_toggle"/>
+                    <field name="state" widget="badge" decoration-success="state == 'completed'" decoration-info="state == 'in_progress'" decoration-warning="state == 'scheduled'"/>
+                    <field name="request_date"/>
+                </list>
+            </field>
+        </record>
+
+        <record id="view_property_maintenance_request_form" model="ir.ui.view">
+            <field name="name">property.maintenance.request.form</field>
+            <field name="model">property.maintenance.request</field>
+            <field name="arch" type="xml">
+                <form string="Facility Work Order">
+                    <header>
+                        <field name="state" widget="statusbar" statusbar_visible="draft,scheduled,in_progress,completed,cancelled"/>
+                    </header>
+                    <sheet>
+                        <div class="oe_title">
+                            <label for="name" class="oe_edit_only" string="Work Order Reference"/>
+                            <h1><field name="name"/></h1>
+                        </div>
+                        <group>
+                            <group string="Task Details">
+                                <field name="title"/>
+                                <field name="property_id"/>
+                                <field name="facility_type"/>
+                                <field name="priority"/>
+                            </group>
+                            <group string="SLA &amp; Assignment">
+                                <field name="assigned_team"/>
+                                <field name="technician_id"/>
+                                <field name="response_time_hrs"/>
+                                <field name="sla_met"/>
+                                <field name="cost" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                                <field name="currency_id" invisible="1"/>
+                                <field name="request_date"/>
+                                <field name="scheduled_date"/>
+                                <field name="completion_date"/>
+                            </group>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_property_maintenance_request" model="ir.actions.act_window">
+            <field name="name">Facility Work Orders</field>
+            <field name="res_model">property.maintenance.request</field>
+            <field name="view_mode">list,form</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Create a new facility work order
+                </p>
+            </field>
+        </record>
+
+        <!-- ========================================================= -->
+        <!-- PROPERTY UTILITIES & ESG VIEWS                            -->
+        <!-- ========================================================= -->
+        <record id="view_property_utilities_list" model="ir.ui.view">
+            <field name="name">property.utilities.list</field>
+            <field name="model">property.utilities</field>
+            <field name="arch" type="xml">
+                <list string="Property Utilities &amp; ESG">
+                    <field name="name"/>
+                    <field name="property_id"/>
+                    <field name="utility_type" widget="badge"/>
+                    <field name="billing_period"/>
+                    <field name="amount" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                    <field name="change_rate"/>
+                    <field name="currency_id" column_invisible="True"/>
+                </list>
+            </field>
+        </record>
+
+        <record id="view_property_utilities_form" model="ir.ui.view">
+            <field name="name">property.utilities.form</field>
+            <field name="model">property.utilities</field>
+            <field name="arch" type="xml">
+                <form string="Utility Bill / ESG Record">
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="name"/>
+                                <field name="property_id"/>
+                                <field name="utility_type"/>
+                            </group>
+                            <group>
+                                <field name="billing_period"/>
+                                <field name="amount" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                                <field name="change_rate"/>
+                                <field name="currency_id" invisible="1"/>
+                            </group>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_property_utilities" model="ir.actions.act_window">
+            <field name="name">Property Utilities &amp; ESG</field>
+            <field name="res_model">property.utilities</field>
+            <field name="view_mode">list,form</field>
+        </record>
+
+        <!-- ========================================================= -->
+        <!-- FACILITY ASSET HEALTH VIEWS                               -->
+        <!-- ========================================================= -->
+        <record id="view_property_asset_list" model="ir.ui.view">
+            <field name="name">property.asset.list</field>
+            <field name="model">property.asset</field>
+            <field name="arch" type="xml">
+                <list string="Facility Asset Health" decoration-danger="status == 'critical'" decoration-warning="status == 'warning'" decoration-success="status == 'good'">
+                    <field name="name"/>
+                    <field name="health_index" widget="progressbar"/>
+                    <field name="location_id"/>
+                    <field name="property_id"/>
+                    <field name="status" widget="badge" decoration-success="status == 'good'" decoration-warning="status == 'warning'" decoration-danger="status == 'critical'"/>
+                    <field name="last_inspection"/>
+                    <field name="next_maintenance"/>
+                </list>
+            </field>
+        </record>
+
+        <record id="view_property_asset_form" model="ir.ui.view">
+            <field name="name">property.asset.form</field>
+            <field name="model">property.asset</field>
+            <field name="arch" type="xml">
+                <form string="Facility Asset">
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="name"/>
+                                <field name="health_index"/>
+                                <field name="location_id"/>
+                            </group>
+                            <group>
+                                <field name="property_id"/>
+                                <field name="status"/>
+                                <field name="last_inspection"/>
+                                <field name="next_maintenance"/>
+                            </group>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_property_asset" model="ir.actions.act_window">
+            <field name="name">Facility Assets</field>
+            <field name="res_model">property.asset</field>
+            <field name="view_mode">list,form</field>
+        </record>
+
+        <!-- ========================================================= -->
         <!-- STANDALONE APP MENU ARCHITECTURE                         -->
         <!-- ========================================================= -->
         <!-- Standalone top-level App icon on Odoo Enterprise App Switcher -->
@@ -220,11 +388,23 @@
                   action="eg_property_management.action_rent_contracts"
                   sequence="20"/>
 
-        <menuitem id="menu_property_maintenance"
-                  name="Maintenance"
+        <menuitem id="menu_facility_work_orders"
+                  name="Facility Work Orders"
                   parent="menu_property_dashboard_root"
-                  action="maintenance.hr_equipment_request_action"
+                  action="action_property_maintenance_request"
                   sequence="30"/>
+
+        <menuitem id="menu_facility_assets"
+                  name="Asset Health"
+                  parent="menu_property_dashboard_root"
+                  action="action_property_asset"
+                  sequence="40"/>
+
+        <menuitem id="menu_property_utilities_nav"
+                  name="Utilities &amp; ESG"
+                  parent="menu_property_dashboard_root"
+                  action="action_property_utilities"
+                  sequence="50"/>
 
     </data>
 </odoo>

@@ -1,6 +1,6 @@
 /* ==========================================================================
    PROPERTY REAL-TIME EXECUTIVE DASHBOARD (ODOO 19 ENTERPRISE OWL)
-   EXECUTIVE LAVENDER PALETTE WITH #c7c3c9 CANVAS BACKGROUND
+   EXECUTIVE FACILITY & PROPERTY MANAGEMENT PALETTE (#f6f3f9 CANVAS)
    ========================================================================== */
 
 :root {
@@ -9,19 +9,21 @@
     --dash-lavender-light: #ece3f5;
     --dash-lavender-medium: #a88cc4;
     --dash-lavender-dark: #6a4f85;
-    --dash-bg: #c7c3c9;
+    --dash-violet-deep: #503966;
+    --dash-violet-subtle: #72538f;
+    --dash-bg: #f6f3f9;
     --dash-card-bg: #ffffff;
-    --dash-card-surface-alt: #f6f4f8;
-    --dash-border-color: rgba(92, 67, 117, 0.22);
+    --dash-card-surface-alt: #faf8fc;
+    --dash-border-color: rgba(194, 169, 217, 0.22);
     --dash-text-primary: #1f1728;
     --dash-text-secondary: #4d3d5e;
     --dash-text-muted: #6e5e80;
 }
 
-$bg-dashboard: #c7c3c9;
+$bg-dashboard: #f6f3f9;
 $card-bg: #ffffff;
-$card-surface-alt: #f6f4f8;
-$card-border: rgba(92, 67, 117, 0.22);
+$card-surface-alt: #faf8fc;
+$card-border: rgba(194, 169, 217, 0.22);
 $card-hover-border: rgba(139, 104, 170, 0.5);
 
 $lavender-primary: #c2a9d9;
@@ -29,7 +31,8 @@ $lavender-accent: #8b68aa;
 $lavender-light: #ece3f5;
 $lavender-medium: #a88cc4;
 $lavender-dark: #6a4f85;
-$lavender-deep: #251c2e;
+$violet-deep: #503966;
+$violet-subtle: #72538f;
 
 $text-primary: #1f1728;
 $text-secondary: #4d3d5e;
@@ -43,10 +46,9 @@ $text-muted: #6e5e80;
     transition: background-color 0.3s ease;
 
     &.pulse-active {
-        box-shadow: inset 0 0 40px rgba(139, 104, 170, 0.25);
+        box-shadow: inset 0 0 40px rgba(139, 104, 170, 0.2);
     }
 
-    // Harmonize generic text colors inside container
     .text-dark {
         color: $text-primary !important;
     }
@@ -59,26 +61,26 @@ $text-muted: #6e5e80;
 }
 
 /* --------------------------------------------------------------------------
-   Executive Topbar & Controls (Clean Topbar on #c7c3c9 Background)
+   Executive Topbar & Controls (Clean Elevated White on #f6f3f9 Background)
    -------------------------------------------------------------------------- */
 .executive-topbar {
     background-color: #ffffff;
-    border-bottom: 1px solid rgba(92, 67, 117, 0.2);
-    box-shadow: 0 2px 6px 0 rgba(31, 23, 40, 0.06);
+    border-bottom: 1px solid rgba(194, 169, 217, 0.25);
+    box-shadow: 0 2px 8px 0 rgba(80, 57, 102, 0.05);
     z-index: 20;
 
     .brand-badge {
-        background: linear-gradient(135deg, rgba(194, 169, 217, 0.4), rgba(139, 104, 170, 0.25));
-        border: 1px solid rgba(139, 104, 170, 0.35);
+        background: linear-gradient(135deg, rgba(194, 169, 217, 0.35), rgba(139, 104, 170, 0.2));
+        border: 1px solid rgba(139, 104, 170, 0.3);
         width: 44px;
         height: 44px;
-        color: $lavender-dark;
+        color: $violet-deep;
     }
 
     .live-sync-badge {
-        background-color: rgba(194, 169, 217, 0.35);
-        color: #3d2358;
-        border: 1px solid rgba(139, 104, 170, 0.4);
+        background-color: rgba(194, 169, 217, 0.25);
+        color: $violet-deep;
+        border: 1px solid rgba(139, 104, 170, 0.35);
         font-size: 0.75rem;
         font-weight: 700;
         padding: 0.35rem 0.65rem;
@@ -94,9 +96,9 @@ $text-muted: #6e5e80;
     }
 
     .company-pill {
-        background-color: #f1edf5;
+        background-color: #f6f3f9;
         color: $text-secondary;
-        border: 1px solid rgba(92, 67, 117, 0.25);
+        border: 1px solid rgba(194, 169, 217, 0.3);
         font-size: 0.75rem;
         font-weight: 600;
         padding: 0.35rem 0.65rem;
@@ -104,7 +106,7 @@ $text-muted: #6e5e80;
 
     .executive-select, .executive-input {
         background-color: #ffffff;
-        border: 1px solid rgba(92, 67, 117, 0.3);
+        border: 1px solid rgba(194, 169, 217, 0.4);
         color: $text-primary;
         font-size: 0.825rem;
         border-radius: 8px;
@@ -113,7 +115,7 @@ $text-muted: #6e5e80;
         &:focus {
             background-color: #ffffff;
             border-color: $lavender-accent;
-            box-shadow: 0 0 0 3px rgba(139, 104, 170, 0.2);
+            box-shadow: 0 0 0 3px rgba(139, 104, 170, 0.15);
             color: $text-primary;
         }
 
@@ -128,7 +130,7 @@ $text-muted: #6e5e80;
     }
 
     .search-input-wrapper {
-        min-width: 200px;
+        min-width: 190px;
 
         .search-icon {
             left: 10px;
@@ -141,397 +143,529 @@ $text-muted: #6e5e80;
 
     .btn-executive-action {
         background-color: #ffffff;
-        border: 1px solid rgba(92, 67, 117, 0.25);
-        color: $lavender-dark;
+        border: 1px solid rgba(194, 169, 217, 0.35);
+        color: $violet-deep;
         border-radius: 8px;
 
         &:hover {
-            background-color: #f5f2f8;
+            background-color: #f6f3f9;
             color: $text-primary;
             border-color: $lavender-accent;
         }
     }
 
-    .btn-lavender, .btn-emerald {
-        background: linear-gradient(135deg, #8b68aa, #5c4375);
+    .btn-lavender {
+        background: linear-gradient(135deg, #8b68aa, #503966);
         color: #ffffff !important;
         border: none;
         border-radius: 8px;
-        box-shadow: 0 2px 8px rgba(92, 67, 117, 0.3);
+        box-shadow: 0 2px 8px rgba(80, 57, 102, 0.25);
         transition: all 0.2s ease;
 
         &:hover {
-            background: linear-gradient(135deg, #9d78bc, #6c5188);
-            box-shadow: 0 4px 12px rgba(92, 67, 117, 0.45);
+            background: linear-gradient(135deg, #9d78bc, #60437b);
             transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(80, 57, 102, 0.35);
         }
     }
 
-    .btn-outline-primary {
+    .btn-violet-outline {
         background-color: #ffffff;
-        border: 1px solid $lavender-accent;
-        color: $lavender-dark !important;
+        border: 1px solid rgba(139, 104, 170, 0.5);
+        color: $violet-deep !important;
         border-radius: 8px;
         transition: all 0.2s ease;
 
         &:hover {
-            background-color: rgba(194, 169, 217, 0.25);
-            border-color: $lavender-dark;
-            color: $text-primary !important;
+            background-color: #ece3f5;
+            border-color: $lavender-accent;
+            color: $violet-deep !important;
         }
     }
 }
 
 /* --------------------------------------------------------------------------
-   Scrollable Body & Loading
+   Scrollable Viewport & Loading Overlay
    -------------------------------------------------------------------------- */
 .dashboard-scrollable {
     overflow-y: auto;
     overflow-x: hidden;
-
-    &::-webkit-scrollbar {
-        width: 6px;
-    }
-    &::-webkit-scrollbar-track {
-        background: #c7c3c9;
-    }
-    &::-webkit-scrollbar-thumb {
-        background: #9d96a1;
-        border-radius: 3px;
-    }
+    height: 100%;
 }
 
 .executive-loading-overlay {
-    background-color: rgba(199, 195, 201, 0.85);
+    background-color: rgba(246, 243, 249, 0.85);
     backdrop-filter: blur(4px);
     z-index: 50;
-
-    .spinner-border {
-        color: $lavender-dark !important;
-    }
 }
 
 /* --------------------------------------------------------------------------
-   Executive Cards (Crisp White on #c7c3c9 Background)
+   Executive Card Base Styles (Elevated White Cards on #f6f3f9 Canvas)
    -------------------------------------------------------------------------- */
 .executive-card {
-    background: $card-bg;
+    background-color: $card-bg;
     border: 1px solid $card-border;
-    border-radius: 12px;
-    box-shadow: 0 3px 10px rgba(31, 23, 40, 0.08), 0 1px 3px rgba(31, 23, 40, 0.04);
-    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    border-radius: 14px;
+    box-shadow: 0 4px 16px 0 rgba(80, 57, 102, 0.04);
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+    overflow: hidden;
 
     &:hover {
         border-color: $card-hover-border;
-        box-shadow: 0 8px 22px rgba(31, 23, 40, 0.14);
+        box-shadow: 0 6px 20px 0 rgba(80, 57, 102, 0.08);
     }
 }
 
 /* --------------------------------------------------------------------------
-   1. KPI Banner Grid
+   1. KPI Summary Cards Grid (6 Updated Cards)
    -------------------------------------------------------------------------- */
-.kpi-banner-grid {
+.kpi-banner-grid-6 {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 1rem;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 1.15rem;
 
-    .kpi-card {
-        padding: 1.25rem;
-        cursor: pointer;
+    @media (max-width: 1400px) {
+        grid-template-columns: repeat(3, 1fr);
+    }
 
-        &:hover {
-            transform: translateY(-2px);
+    @media (max-width: 768px) {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    @media (max-width: 540px) {
+        grid-template-columns: 1fr;
+    }
+}
+
+.kpi-card {
+    padding: 1.25rem;
+    display: flex;
+    flex-column: column;
+    justify-content: space-between;
+    cursor: pointer;
+
+    .kpi-label {
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: $text-secondary;
+    }
+
+    .kpi-icon-pill {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.95rem;
+        background-color: rgba(194, 169, 217, 0.18);
+        color: $violet-deep;
+    }
+
+    .kpi-number {
+        font-size: 1.55rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        color: $text-primary;
+    }
+
+    .occupancy-progress-bar {
+        height: 6px;
+        background-color: #ede7f3;
+        width: 100%;
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #c2a9d9, #8b68aa);
+            border-radius: 999px;
+            transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+    }
+}
+
+/* --------------------------------------------------------------------------
+   2. Analytical Charts Grid (Top 4 Panels)
+   -------------------------------------------------------------------------- */
+.charts-grid-4 {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.25rem;
+
+    @media (max-width: 1400px) {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    @media (max-width: 768px) {
+        grid-template-columns: 1fr;
+    }
+}
+
+.chart-card {
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+
+    .chart-header {
+        h6 {
+            color: $text-primary;
+            font-size: 0.95rem;
+        }
+        span.small {
+            color: $text-secondary;
+            font-size: 0.775rem;
+        }
+    }
+
+    .chart-canvas-wrapper {
+        min-height: 230px;
+        height: 230px;
+        width: 100%;
+    }
+
+    .gauge-wrapper {
+        min-height: 230px;
+        height: 230px;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+
+        .gauge-inner-stats {
+            position: absolute;
+            top: 55%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+
+            .gauge-percent {
+                font-size: 1.85rem;
+                font-weight: 800;
+                color: $violet-deep;
+                line-height: 1;
+            }
+
+            .gauge-sublabel {
+                font-size: 0.725rem;
+                font-weight: 600;
+                color: $text-secondary;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+            }
         }
 
-        .kpi-label {
+        .gauge-footer {
+            margin-top: -10px;
+            font-size: 0.8rem;
+            color: $text-secondary;
+        }
+    }
+}
+
+/* --------------------------------------------------------------------------
+   3. Middle Section: Financials & Operational Trackers (4 Panels)
+   -------------------------------------------------------------------------- */
+.middle-section-grid-4 {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.25rem;
+
+    @media (max-width: 1400px) {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    @media (max-width: 768px) {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Asset Health Progress Bars */
+.asset-health-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+
+    .asset-item {
+        .asset-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.825rem;
+            margin-bottom: 0.35rem;
+
+            .asset-name {
+                font-weight: 600;
+                color: $text-primary;
+            }
+            .asset-score {
+                font-weight: 700;
+                color: $violet-deep;
+            }
+        }
+
+        .asset-bar {
+            height: 7px;
+            background-color: #ede7f3;
+            border-radius: 999px;
+            overflow: hidden;
+
+            .asset-fill {
+                height: 100%;
+                border-radius: 999px;
+                transition: width 0.8s ease;
+            }
+        }
+    }
+}
+
+/* Upcoming Expiries & Maintenance Tracker */
+.expiries-tracker-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+
+    .tracker-box {
+        background-color: $card-surface-alt;
+        border: 1px solid rgba(194, 169, 217, 0.2);
+        border-radius: 10px;
+        padding: 0.85rem 1rem;
+
+        .tracker-title {
             font-size: 0.775rem;
             font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
+            letter-spacing: 0.04em;
             color: $text-secondary;
-        }
-
-        .kpi-number {
-            font-size: 1.85rem;
-            font-weight: 800;
-            letter-spacing: -0.02em;
-            line-height: 1.1;
-            color: $text-primary;
-        }
-
-        .kpi-icon-pill {
-            width: 38px;
-            height: 38px;
-            border-radius: 10px;
-            display: inline-flex;
+            margin-bottom: 0.5rem;
+            display: flex;
+            justify-content: space-between;
             align-items: center;
-            justify-content: center;
-            font-size: 1.05rem;
-            background-color: rgba(194, 169, 217, 0.35);
-            color: $lavender-dark;
-            border: 1px solid rgba(139, 104, 170, 0.3);
         }
 
-        .occupancy-progress-bar {
-            height: 6px;
-            background-color: #ece8f0;
+        .expiry-counts-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 0.5rem;
 
-            .progress-fill {
-                height: 100%;
-                background: linear-gradient(90deg, #8b68aa, #c2a9d9);
-                transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            .count-pill {
+                flex: 1;
+                background-color: #ffffff;
+                border: 1px solid rgba(194, 169, 217, 0.25);
+                border-radius: 8px;
+                padding: 0.4rem 0.5rem;
+                text-align: center;
+
+                .days-tag {
+                    font-size: 0.675rem;
+                    color: $text-muted;
+                    display: block;
+                    font-weight: 600;
+                }
+                .days-val {
+                    font-size: 1.05rem;
+                    font-weight: 800;
+                    color: $violet-deep;
+                }
             }
         }
     }
 }
 
 /* --------------------------------------------------------------------------
-   2. Charts Section Grid
+   4. Bottom Detailed Dual Tables (Side-by-Side 50/50 Grid)
    -------------------------------------------------------------------------- */
-.charts-section-grid {
+.dual-tables-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1.15rem;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
 
-    @media (max-width: 1024px) {
+    @media (max-width: 1100px) {
         grid-template-columns: 1fr;
     }
-
-    .chart-card {
-        padding: 1.25rem;
-
-        .chart-canvas-wrapper {
-            height: 275px;
-            width: 100%;
-        }
-    }
 }
 
-/* --------------------------------------------------------------------------
-   3. Directory & Maintenance Tables (White Cards)
-   -------------------------------------------------------------------------- */
 .directory-card {
-    overflow: hidden;
+    .directory-header {
+        background-color: #ffffff;
+        h6 {
+            font-size: 0.95rem;
+        }
+    }
 
     .directory-table-wrapper {
-        max-height: 520px;
+        max-height: 480px;
         overflow-y: auto;
     }
+}
 
-    .executive-table {
-        background-color: #ffffff;
-        color: $text-primary;
-        margin-bottom: 0;
+.executive-table {
+    border-collapse: separate;
+    border-spacing: 0;
 
-        thead {
-            position: sticky;
-            top: 0;
-            background-color: $card-surface-alt;
-            z-index: 5;
+    thead th {
+        background-color: $card-surface-alt;
+        color: $text-secondary;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        border-bottom: 1px solid rgba(194, 169, 217, 0.2);
+        padding: 0.75rem 0.85rem;
+        white-space: nowrap;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
 
-            th {
-                color: $text-secondary;
-                font-size: 0.75rem;
-                font-weight: 700;
-                text-transform: uppercase;
-                letter-spacing: 0.06em;
-                border-bottom: 2px solid rgba(92, 67, 117, 0.15);
-                padding: 0.85rem 0.75rem;
-                background-color: $card-surface-alt;
-            }
+    tbody tr {
+        transition: background-color 0.15s ease;
+        border-bottom: 1px solid rgba(194, 169, 217, 0.12);
+
+        &:hover {
+            background-color: #faf7fc;
+            cursor: pointer;
         }
 
-        tbody {
-            .directory-row {
-                cursor: pointer;
-                border-bottom: 1px solid rgba(92, 67, 117, 0.08);
-                transition: background-color 0.15s ease;
-
-                &:hover {
-                    background-color: #f7f4f9;
-                }
-
-                td {
-                    padding: 0.85rem 0.75rem;
-                    font-size: 0.85rem;
-                    color: $text-primary;
-                    border: none;
-                    vertical-align: middle;
-                }
-            }
+        td {
+            padding: 0.75rem 0.85rem;
+            font-size: 0.825rem;
+            color: $text-primary;
+            vertical-align: middle;
+            border-bottom: 1px solid rgba(194, 169, 217, 0.12);
         }
     }
 }
 
 /* --------------------------------------------------------------------------
-   Pills, Badges & Labels (Lavender Harmonic Palette)
+   Priority Badges & Status Pills
    -------------------------------------------------------------------------- */
-.text-emerald, .text-lavender {
-    color: $lavender-dark !important;
-}
-.bg-emerald, .bg-lavender {
-    background-color: $lavender-accent !important;
-    color: #ffffff !important;
-}
-.bg-emerald-subtle, .bg-lavender-subtle {
-    background-color: rgba(194, 169, 217, 0.35) !important;
-    color: #3d2358 !important;
-    border: 1px solid rgba(139, 104, 170, 0.45) !important;
+.badge-critical {
+    background-color: #fce8e8 !important;
+    color: #991b1b !important;
+    border: 1px solid rgba(153, 27, 27, 0.25) !important;
+    font-weight: 700;
+    font-size: 0.725rem;
+    padding: 0.25rem 0.6rem;
 }
 
-.text-sky {
+.badge-high {
+    background-color: #fff1e5 !important;
+    color: #c2410c !important;
+    border: 1px solid rgba(194, 65, 12, 0.25) !important;
+    font-weight: 700;
+    font-size: 0.725rem;
+    padding: 0.25rem 0.6rem;
+}
+
+.badge-normal {
+    background-color: #f1ecf7 !important;
+    color: $text-secondary !important;
+    border: 1px solid rgba(194, 169, 217, 0.3) !important;
+    font-weight: 600;
+    font-size: 0.725rem;
+    padding: 0.25rem 0.6rem;
+}
+
+.badge-running {
+    background-color: #e8f5e9 !important;
+    color: #1b5e20 !important;
+    border: 1px solid rgba(27, 94, 32, 0.25) !important;
+}
+
+.badge-expired {
+    background-color: #fff8e1 !important;
+    color: #b78103 !important;
+    border: 1px solid rgba(183, 129, 3, 0.25) !important;
+}
+
+.badge-terminated {
+    background-color: #fbebee !important;
+    color: #a82435 !important;
+    border: 1px solid rgba(168, 36, 53, 0.25) !important;
+}
+
+.badge-cancelled {
+    background-color: #ede7f3 !important;
     color: #5c4375 !important;
-}
-.bg-sky-subtle {
-    background-color: rgba(179, 153, 204, 0.3) !important;
-    color: #42245b !important;
-    border: 1px solid rgba(179, 153, 204, 0.5) !important;
+    border: 1px solid rgba(92, 67, 117, 0.25) !important;
 }
 
-.text-violet {
-    color: #5c4375 !important;
+/* Unit Type Badges */
+.badge-type-studio {
+    background-color: #f3e8ff !important;
+    color: #6b21a8 !important;
 }
-.bg-violet-subtle {
-    background-color: rgba(212, 191, 232, 0.35) !important;
-    color: #3d2358 !important;
-    border: 1px solid rgba(139, 104, 170, 0.45) !important;
+.badge-type-1bed {
+    background-color: #ede9fe !important;
+    color: #5b21b6 !important;
 }
-
-.text-amber {
-    color: #6a4f85 !important;
+.badge-type-2bed {
+    background-color: #e0e7ff !important;
+    color: #3730a3 !important;
 }
-.bg-amber-subtle {
-    background-color: rgba(179, 153, 204, 0.32) !important;
-    color: #4c2d68 !important;
-    border: 1px solid rgba(179, 153, 204, 0.5) !important;
+.badge-type-3bed {
+    background-color: #e0f2fe !important;
+    color: #075985 !important;
 }
-
-.text-rose {
-    color: #6d2459 !important;
-}
-.bg-danger-subtle {
-    background-color: rgba(140, 107, 153, 0.28) !important;
-    color: #541a4a !important;
-    border: 1px solid rgba(140, 107, 153, 0.55) !important;
-}
-
-.bg-secondary-subtle {
-    background-color: rgba(109, 97, 122, 0.18) !important;
-    color: #4d3d5e !important;
-    border: 1px solid rgba(109, 97, 122, 0.35) !important;
+.badge-type-office {
+    background-color: #f1f5f9 !important;
+    color: #334155 !important;
 }
 
 .country-badge {
     display: inline-block;
-    padding: 0.15rem 0.45rem;
-    background-color: #f1edf5;
-    border: 1px solid rgba(92, 67, 117, 0.25);
-    color: $text-primary;
+    padding: 0.15rem 0.4rem;
     border-radius: 4px;
-    font-size: 0.7rem;
+    background-color: #f1edf5;
+    border: 1px solid rgba(194, 169, 217, 0.3);
+    font-size: 0.725rem;
     font-weight: 700;
-}
-
-/* Status Badges */
-.badge-running {
-    background-color: rgba(194, 169, 217, 0.4) !important;
-    color: #351b4c !important;
-    border: 1px solid rgba(139, 104, 170, 0.5) !important;
-    font-weight: 700;
-}
-
-.badge-terminated {
-    background-color: rgba(140, 107, 153, 0.3) !important;
-    color: #541a4a !important;
-    border: 1px solid rgba(140, 107, 153, 0.55) !important;
-    font-weight: 700;
-}
-
-.badge-cancelled {
-    background-color: rgba(109, 97, 122, 0.22) !important;
-    color: #43384a !important;
-    border: 1px solid rgba(109, 97, 122, 0.45) !important;
-    font-weight: 700;
-}
-
-.badge-expired {
-    background-color: rgba(179, 153, 204, 0.35) !important;
-    color: #42245b !important;
-    border: 1px solid rgba(179, 153, 204, 0.55) !important;
-    font-weight: 700;
-}
-
-.badge-danger {
-    background-color: rgba(140, 107, 153, 0.35) !important;
-    color: #4a1340 !important;
-    border: 1px solid rgba(140, 107, 153, 0.6) !important;
-}
-
-.badge-warning {
-    background-color: rgba(179, 153, 204, 0.35) !important;
-    color: #44245e !important;
-    border: 1px solid rgba(179, 153, 204, 0.55) !important;
-}
-
-.badge-success {
-    background-color: rgba(194, 169, 217, 0.45) !important;
-    color: #301746 !important;
-    border: 1px solid rgba(139, 104, 170, 0.55) !important;
-}
-
-/* Residential Unit Type Badges (Tone 5) */
-.badge-type-studio {
-    background-color: rgba(229, 215, 242, 0.85) !important;
-    color: #2f1a3f !important;
-    border: 1px solid rgba(194, 169, 217, 0.7) !important;
-    font-weight: 600;
-}
-
-.badge-type-1bed {
-    background-color: rgba(194, 169, 217, 0.75) !important;
-    color: #2b143c !important;
-    border: 1px solid rgba(139, 104, 170, 0.55) !important;
-    font-weight: 600;
-}
-
-.badge-type-2bed {
-    background-color: rgba(158, 130, 186, 0.65) !important;
-    color: #260f38 !important;
-    border: 1px solid rgba(139, 104, 170, 0.65) !important;
-    font-weight: 600;
-}
-
-.badge-type-3bed, .badge-type-penthouse {
-    background-color: rgba(125, 97, 153, 0.5) !important;
-    color: #1f0b2f !important;
-    border: 1px solid rgba(106, 79, 133, 0.65) !important;
-    font-weight: 600;
-}
-
-.badge-type-office {
-    background-color: rgba(92, 67, 117, 0.45) !important;
-    color: #190628 !important;
-    border: 1px solid rgba(92, 67, 117, 0.65) !important;
-    font-weight: 600;
+    color: $violet-deep;
 }
 
 .btn-icon-subtle {
-    border: none;
     background: transparent;
+    border: none;
+    color: $text-secondary;
+    padding: 0.25rem 0.5rem;
     border-radius: 6px;
-    padding: 0.35rem 0.5rem;
-    color: $lavender-dark;
     transition: all 0.15s ease;
 
     &:hover {
-        background-color: rgba(194, 169, 217, 0.35);
-        color: $text-primary !important;
+        background-color: #ece3f5;
+        color: $violet-deep;
     }
 }
 
-/* --------------------------------------------------------------------------
-   Pulse Animation Keyframes
-   -------------------------------------------------------------------------- */
+/* Subtle utility badges */
+.bg-violet-subtle {
+    background-color: rgba(194, 169, 217, 0.25) !important;
+    color: $violet-deep !important;
+    border: 1px solid rgba(139, 104, 170, 0.3);
+}
+
+.bg-emerald-subtle {
+    background-color: #e8f5e9 !important;
+    color: #1b5e20 !important;
+    border: 1px solid rgba(27, 94, 32, 0.25);
+}
+
+.bg-danger-subtle {
+    background-color: #fce8e8 !important;
+    color: #991b1b !important;
+    border: 1px solid rgba(153, 27, 27, 0.25);
+}
+
+.bg-sky-subtle {
+    background-color: #e0f2fe !important;
+    color: #0369a1 !important;
+    border: 1px solid rgba(3, 105, 161, 0.25);
+}
+
 @keyframes pulse-ring {
     0% {
         box-shadow: 0 0 0 0 rgba(139, 104, 170, 0.7);

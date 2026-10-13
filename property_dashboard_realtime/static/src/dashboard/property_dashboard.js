@@ -34,11 +34,12 @@ export class PropertyDashboard extends Component {
             lastUpdated: "",
             residentialType: "all",
             contractState: "all",
-            buildingBlock: "all",
+            projectId: "all",
             facilityType: "all",
             searchQuery: "",
             pulseEffect: false,
             isEgProperty: true,
+            availableProjects: [],
             multiCompany: {
                 active_company_name: "",
                 allowed_companies_count: 1,
@@ -195,7 +196,7 @@ export class PropertyDashboard extends Component {
             const filters = {
                 residential_type: this.state.residentialType,
                 state: this.state.contractState,
-                building_block: this.state.buildingBlock,
+                project_id: this.state.projectId,
                 facility_type: this.state.facilityType,
                 search: this.state.searchQuery,
             };
@@ -206,6 +207,7 @@ export class PropertyDashboard extends Component {
             this.state.multiCompany = data.multi_company || {};
             this.state.kpis = data.kpis;
             this.state.charts = data.charts;
+            this.state.availableProjects = data.available_projects || [];
             this.state.assetHealth = data.asset_health || [];
             this.state.upcomingExpiries = data.upcoming_expiries || {
                 lease_expiries: { next_30_days: 8, next_60_days: 15, next_90_days: 24, urgent_label: "8 Expiring soon" },
@@ -672,8 +674,8 @@ export class PropertyDashboard extends Component {
         this.loadDashboardData(true);
     }
 
-    onFilterBuilding(ev) {
-        this.state.buildingBlock = ev.target.value;
+    onFilterProject(ev) {
+        this.state.projectId = ev.target.value;
         this.loadDashboardData(true);
     }
 

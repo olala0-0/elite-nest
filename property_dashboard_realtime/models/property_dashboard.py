@@ -406,6 +406,7 @@ class PropertyContract(models.Model):
                 {"id": 5, "ticket": "WO-2026-089", "unit_name": "Downtown Heights 301", "type": "Thermostat Failure", "facility_type": "HVAC", "priority": "normal", "priority_badge": "badge-normal", "assigned_team": "HVAC General", "status": "In Progress", "response_time": "4.2 hrs"},
             ],
             "recent_contracts": [],
+            "available_projects": [],
         }
 
     @api.model
@@ -414,15 +415,27 @@ class PropertyContract(models.Model):
         allowed_companies = allowed_companies or self.env.companies.ids or [self.env.company.id]
         residential_type_filter = filters.get("residential_type")
         state_filter = filters.get("state")
-        building_filter = filters.get("building_block")
+        project_filter = filters.get("project_id")
         facility_filter = filters.get("facility_type")
 
         PropDetail = self.env["property.detail"]
         RentContract = self.env["rent.contract"]
+        PropertyProject = self.env.get("property.project")
         MaintenanceRequest = self.env.get("maintenance.request")
         PropertyMaintWO = self.env.get("property.maintenance.request")
         PropertyUtils = self.env.get("property.utilities")
         PropertyAssets = self.env.get("property.asset")
+
+        # Load live projects from property.project
+        available_projects = []
+        if PropertyProject is not None:
+            try:
+                proj_domain = list(company_domain)
+                proj_recs = PropertyProject.search(proj_domain, order="name asc")
+                for p in proj_recs:
+                    available_projects.append({"id": p.id, "name": p.name})
+            except Exception as pe:
+                _logger.warning("Error fetching property.project: %s", pe)
 
         # 1. Properties Scoping
         prop_domain = list(company_domain)
@@ -432,8 +445,15 @@ class PropertyContract(models.Model):
             elif "residential_type_id" in PropDetail._fields:
                 prop_domain.append(("residential_type_id.name", "ilike", residential_type_filter))
 
-        if building_filter and building_filter != "all":
-            prop_domain.append(("name", "ilike", building_filter))
+        if project_filter and str(project_filter) != "all":
+            try:
+                p_id = int(project_filter)
+                if "project_id" in PropDetail._fields:
+                    prop_domain.append(("project_id", "=", p_id))
+                elif "sub_project_id" in PropDetail._fields:
+                    prop_domain.append(("sub_project_id.project_id", "=", p_id))
+            except (ValueError, TypeError):
+                pass
 
         properties = PropDetail.search(prop_domain)
         raw_total_units = len(properties)
@@ -458,6 +478,13 @@ class PropertyContract(models.Model):
                 contract_domain.append(("residential_type", "ilike", residential_type_filter))
             elif "residential_type_id" in RentContract._fields:
                 contract_domain.append(("residential_type_id.name", "ilike", residential_type_filter))
+
+        if project_filter and str(project_filter) != "all":
+            try:
+                p_id = int(project_filter)
+                contract_domain.append(("property_id.project_id", "=", p_id))
+            except (ValueError, TypeError):
+                pass
 
         all_contracts = RentContract.search(contract_domain)
         running_contracts = all_contracts.filtered(lambda c: (c.state or "") == "running")
@@ -735,18 +762,32 @@ class PropertyContract(models.Model):
             elif "residential_type_id" in RentContract._fields:
                 dir_domain.append(("residential_type_id.name", "ilike", residential_type_filter))
 
+        if project_filter and str(project_filter) != "all":
+            try:
+                p_id = int(project_filter)
+                dir_domain.append(("property_id.project_id", "=", p_id))
+            except (ValueError, TypeError):
+                pass
+
         dir_records = RentContract.search(dir_domain, order="id desc", limit=100)
         recent_contracts = []
         type_avg_map = {t: (sum(type_rents[t]) / len(type_rents[t])) if type_rents.get(t) else 85000.0 for t in type_rents}
 
         for c in dir_records:
             prop_name = c.property_id.name if c.property_id else "N/A"
+            proj_name = ""
+            if c.property_id:
+                if getattr(c.property_id, "project_id", False):
+                    proj_name = c.property_id.project_id.name
+                elif getattr(c.property_id, "sub_project_id", False) and c.property_id.sub_project_id.project_id:
+                    proj_name = c.property_id.sub_project_id.project_id.name
+
             tenant_partner = getattr(c, "tenant_id", False) or getattr(c, "partner_id", False)
             tenant_name = tenant_partner.name if tenant_partner else "N/A"
             ref_name = c.name or ""
 
             if search_query:
-                combined = f"{ref_name} {prop_name} {tenant_name}".lower()
+                combined = f"{ref_name} {prop_name} {tenant_name} {proj_name}".lower()
                 if search_query not in combined:
                     continue
 
@@ -768,6 +809,7 @@ class PropertyContract(models.Model):
                 "name": c.name or _("Contract"),
                 "property_id": c.property_id.id if c.property_id else False,
                 "unit_name": prop_name,
+                "project_name": proj_name,
                 "residential_type": rtype,
                 "unit_type": rtype,
                 "tenant_name": tenant_name,
@@ -795,12 +837,12 @@ class PropertyContract(models.Model):
         # If zero contracts in DB, provide realistic executive rows
         if not recent_contracts:
             sample_units = [
-                ("Burj Crown 1204", "2 Bed", "Fatima Al-Nuaimi", "United Arab Emirates", "ae", 115000.0, 110000.0, 4.5, "2025-11-01", "2026-10-31", 201, "Running", "badge-running"),
-                ("Marina Gate 2801", "Penthouse", "Alexander Wright", "United Kingdom", "gb", 275000.0, 260000.0, 5.8, "2026-01-15", "2027-01-14", 276, "Running", "badge-running"),
-                ("Downtown Heights 506", "1 Bed", "Rajesh Sharma", "India", "in", 74000.0, 72000.0, 2.8, "2025-08-10", "2026-08-09", 118, "Running", "badge-running"),
-                ("Palm View Villa 14", "3 Bed", "Karim Mansoor", "Egypt", "eg", 155000.0, 148000.0, 4.7, "2025-10-01", "2026-09-30", 170, "Running", "badge-running"),
-                ("Burj Crown 0802", "Studio", "Arben Hoxha", "Albania", "al", 49000.0, 48000.0, 2.1, "2026-03-01", "2027-02-28", 321, "Running", "badge-running"),
-                ("Business Bay Tower 902", "Commercial Office", "Liam Van Der Merwe", "South Africa", "za", 135000.0, 130000.0, 3.8, "2025-05-15", "2026-05-14", 31, "Running", "badge-running"),
+                ("Burj Crown 1204", "Burj Crown Tower", "2 Bed", "Fatima Al-Nuaimi", "United Arab Emirates", "ae", 115000.0, 110000.0, 4.5, "2025-11-01", "2026-10-31", 201, "Running", "badge-running"),
+                ("Marina Gate 2801", "Marina Gate Residence", "Penthouse", "Alexander Wright", "United Kingdom", "gb", 275000.0, 260000.0, 5.8, "2026-01-15", "2027-01-14", 276, "Running", "badge-running"),
+                ("Downtown Heights 506", "Downtown Heights", "1 Bed", "Rajesh Sharma", "India", "in", 74000.0, 72000.0, 2.8, "2025-08-10", "2026-08-09", 118, "Running", "badge-running"),
+                ("Palm View Villa 14", "Palm View Luxury", "3 Bed", "Karim Mansoor", "Egypt", "eg", 155000.0, 148000.0, 4.7, "2025-10-01", "2026-09-30", 170, "Running", "badge-running"),
+                ("Burj Crown 0802", "Burj Crown Tower", "Studio", "Arben Hoxha", "Albania", "al", 49000.0, 48000.0, 2.1, "2026-03-01", "2027-02-28", 321, "Running", "badge-running"),
+                ("Business Bay Tower 902", "Business Bay Commercial", "Commercial Office", "Liam Van Der Merwe", "South Africa", "za", 135000.0, 130000.0, 3.8, "2025-05-15", "2026-05-14", 31, "Running", "badge-running"),
             ]
             for idx, item in enumerate(sample_units, start=1):
                 recent_contracts.append({
@@ -808,24 +850,25 @@ class PropertyContract(models.Model):
                     "name": f"PLC/2026/{idx:04d}",
                     "property_id": False,
                     "unit_name": item[0],
-                    "residential_type": item[1],
-                    "unit_type": item[1],
-                    "tenant_name": item[2],
-                    "tenant_country_name": item[3],
-                    "tenant_country_code": item[4],
-                    "rent_amount": item[5],
-                    "rent_amount_formatted": f"AED {item[5]:,.2f}",
-                    "benchmark_rent": item[6],
-                    "benchmark_rent_formatted": f"AED {item[6]:,.2f}",
-                    "benchmark_diff_pct": f"+{item[7]}%",
+                    "project_name": item[1],
+                    "residential_type": item[2],
+                    "unit_type": item[2],
+                    "tenant_name": item[3],
+                    "tenant_country_name": item[4],
+                    "tenant_country_code": item[5],
+                    "rent_amount": item[6],
+                    "rent_amount_formatted": f"AED {item[6]:,.2f}",
+                    "benchmark_rent": item[7],
+                    "benchmark_rent_formatted": f"AED {item[7]:,.2f}",
+                    "benchmark_diff_pct": f"+{item[8]}%",
                     "benchmark_diff_positive": True,
-                    "start_date": item[8],
-                    "end_date": item[9],
-                    "days_remaining": item[10],
-                    "days_remaining_class": "badge-danger" if item[10] <= 30 else ("badge-warning" if item[10] <= 60 else "badge-success"),
+                    "start_date": item[9],
+                    "end_date": item[10],
+                    "days_remaining": item[11],
+                    "days_remaining_class": "badge-danger" if item[11] <= 30 else ("badge-warning" if item[11] <= 60 else "badge-success"),
                     "state": "running",
-                    "state_label": item[11],
-                    "state_badge_class": item[12],
+                    "state_label": item[12],
+                    "state_badge_class": item[13],
                     "model_name": "rent.contract",
                 })
 
@@ -879,6 +922,7 @@ class PropertyContract(models.Model):
             "upcoming_expiries": upcoming_expiries,
             "work_orders_urgent": urgent_wo_list,
             "recent_contracts": recent_contracts,
+            "available_projects": available_projects,
         }
 
     @api.model

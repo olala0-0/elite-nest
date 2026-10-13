@@ -57,14 +57,13 @@
                         </select>
                     </div>
 
-                    <!-- Filter 3: Building / Block -->
+                    <!-- Filter 3: Project Filter (Linked to property.project) -->
                     <div class="filter-group">
-                        <select class="form-select form-select-sm executive-select" t-on-change="onFilterBuilding" t-att-value="state.buildingBlock">
-                            <option value="all">All Buildings / Blocks</option>
-                            <option value="burj_crown">Burj Crown Tower</option>
-                            <option value="marina_gate">Marina Gate Residence</option>
-                            <option value="palm_view">Palm View Luxury</option>
-                            <option value="downtown_heights">Downtown Heights</option>
+                        <select class="form-select form-select-sm executive-select" t-on-change="onFilterProject" t-att-value="state.projectId">
+                            <option value="all">All Projects</option>
+                            <t t-foreach="state.availableProjects" t-as="proj" t-key="proj.id">
+                                <option t-att-value="proj.id" t-esc="proj.name"/>
+                            </t>
                         </select>
                     </div>
 
@@ -454,7 +453,11 @@
                                                     <span class="fw-semibold font-monospace" style="color: var(--dash-lavender-accent);" t-esc="c.name"/>
                                                 </td>
                                                 <td>
-                                                    <span class="fw-semibold" t-esc="c.unit_name"/>
+                                                    <div class="fw-semibold" t-esc="c.unit_name"/>
+                                                    <div t-if="c.project_name" class="small text-muted d-flex align-items-center gap-1" style="font-size: 0.725rem;">
+                                                        <i class="fa fa-folder-open-o" style="color: var(--dash-lavender-accent);"/>
+                                                        <span t-esc="c.project_name"/>
+                                                    </div>
                                                 </td>
                                                 <td>
                                                     <span class="badge rounded-pill small px-2 py-1 badge-type-1bed" t-esc="c.unit_type"/>
@@ -525,7 +528,13 @@
                                         <t t-foreach="state.workOrdersUrgent" t-as="wo" t-key="wo.id">
                                             <tr t-on-click="() => this.openWorkOrder(wo.id)">
                                                 <td class="ps-3 font-monospace fw-semibold" style="color: var(--dash-violet-deep);" t-esc="wo.ticket"/>
-                                                <td class="fw-semibold" t-esc="wo.unit_name"/>
+                                                <td>
+                                                    <div class="fw-semibold" t-esc="wo.unit_name"/>
+                                                    <div t-if="wo.project_name" class="small text-muted d-flex align-items-center gap-1" style="font-size: 0.725rem;">
+                                                        <i class="fa fa-folder-open-o" style="color: var(--dash-lavender-accent);"/>
+                                                        <span t-esc="wo.project_name"/>
+                                                    </div>
+                                                </td>
                                                 <td>
                                                     <span class="fw-medium" t-esc="wo.type"/>
                                                 </td>

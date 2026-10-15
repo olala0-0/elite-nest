@@ -11,7 +11,6 @@
                 <a href="#" class="nav-tab-item active" t-on-click.prevent="openAllContracts">Rent Contracts</a>
                 <a href="#" class="nav-tab-item" t-on-click.prevent="openAllWorkOrders">Facility Work Orders</a>
                 <a href="#" class="nav-tab-item" t-on-click.prevent="openAssets">Asset Health</a>
-                <a href="#" class="nav-tab-item" t-on-click.prevent="openUtilities">Utilities &amp; ESG</a>
             </nav>
 
             <!-- ========================================================= -->
@@ -125,8 +124,8 @@
                     <span class="small tracking-wider text-uppercase fw-semibold" style="color: var(--dash-text-secondary);">Loading Real-Time Property &amp; Facility Metrics...</span>
                 </div>
 
-                <!-- 1. EXPANDED KPI ROW (6 CARDS) -->
-                <section class="kpi-banner-grid-6 mb-4">
+                <!-- 1. EXPANDED KPI ROW (5 CARDS) -->
+                <section class="kpi-banner-grid-5 mb-4">
                     <!-- KPI 1: OCCUPANCY -->
                     <div class="executive-card kpi-card" t-on-click="openAllProperties" title="Click to view Properties">
                         <div class="d-flex justify-content-between align-items-start mb-2">
@@ -199,26 +198,7 @@
                         </div>
                     </div>
 
-                    <!-- KPI 5: UTILITIES & ESG (CONDITIONALLY RENDERED) -->
-                    <div t-if="state.has_utility_data" class="executive-card kpi-card" t-on-click="openUtilities" title="Click to view Utilities &amp; ESG">
-                        <div class="d-flex justify-content-between align-items-start mb-2">
-                            <span class="kpi-label">Utilities &amp; ESG</span>
-                            <span class="kpi-icon-pill">
-                                <i class="fa fa-bolt"/>
-                            </span>
-                        </div>
-                        <div class="kpi-value-row d-flex align-items-baseline gap-2 mb-2">
-                            <h3 class="kpi-number mb-0 fw-bold" style="color: var(--dash-text-primary);" t-esc="state.kpis.utility_cost_formatted"/>
-                            <span class="badge rounded-pill bg-emerald-subtle small fw-bold">
-                                <i class="fa fa-arrow-down me-1"/> <t t-esc="state.kpis.utility_change_formatted"/>
-                            </span>
-                        </div>
-                        <p class="small mb-0 mt-3" style="color: var(--dash-text-secondary);">
-                            <t t-esc="state.kpis.utility_subtitle or 'Energy &amp; Water costs'"/>
-                        </p>
-                    </div>
-
-                    <!-- KPI 6: VENDOR TASKS -->
+                    <!-- KPI 5: VENDOR TASKS -->
                     <div class="executive-card kpi-card" t-on-click="openAllWorkOrders" title="Click to view Vendor Tasks">
                         <div class="d-flex justify-content-between align-items-start mb-2">
                             <span class="kpi-label">Vendor Tasks</span>

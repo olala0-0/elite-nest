@@ -249,6 +249,24 @@ $text-muted: #6e5e80;
 /* --------------------------------------------------------------------------
    1. KPI Summary Cards Grid (6 Updated Cards)
    -------------------------------------------------------------------------- */
+.kpi-banner-grid-5 {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 1.15rem;
+
+    @media (max-width: 1400px) {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    @media (max-width: 768px) {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    @media (max-width: 540px) {
+        grid-template-columns: 1fr;
+    }
+}
+
 .kpi-banner-grid-6 {
     display: grid;
     grid-template-columns: repeat(6, 1fr);

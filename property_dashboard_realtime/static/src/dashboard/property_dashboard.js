@@ -38,7 +38,7 @@ export class PropertyDashboard extends Component {
             facilityType: "all",
             searchQuery: "",
             pulseEffect: false,
-            isEgProperty: true,
+            has_utility_data: true,
             availableProjects: [],
             multiCompany: {
                 active_company_name: "",
@@ -52,7 +52,6 @@ export class PropertyDashboard extends Component {
                 occupancy_rate: 94.8,
                 units_ratio_text: "183 / 193",
                 vacant_badge: "Vacant: 10",
-                vacant_alert: true,
                 active_contracts_count: 163,
                 active_contracts_subtitle: "8 properties vacant & ready for leasing",
                 total_rent_revenue: 8731639.0,
@@ -67,7 +66,6 @@ export class PropertyDashboard extends Component {
                 utility_cost: 42150.0,
                 utility_cost_formatted: "AED 42,150.00",
                 utility_subtitle: "Energy & Water costs",
-                utility_change_rate: -2.1,
                 utility_change_formatted: "-2.1%",
                 vendor_tasks_count: 8,
                 vendor_tasks_badge: "Pending",
@@ -77,13 +75,19 @@ export class PropertyDashboard extends Component {
                 contracts_by_status: { labels: [], counts: [], percentages: [], colors: [] },
                 tenant_nationalities: { labels: [], counts: [], percentages: [], codes: [] },
                 facility_work_orders: { labels: [], counts: [], percentages: [], colors: [] },
-                sla_data: { sla_met_pct: 89.2, sla_unmet_pct: 10.8, avg_response_hours: 3.4, gauge_values: [89.2, 10.8], colors: ["#8b68aa", "#e8e1f0"] },
+                sla_data: {
+                    sla_met_pct: 89.2,
+                    sla_unmet_pct: 10.8,
+                    avg_response_hours: 3.4,
+                    gauge_values: [89.2, 10.8],
+                    colors: ["#8b68aa", "#e8e1f0"],
+                },
                 avg_rent_by_unit_type: { labels: [], values: [], benchmarks: [] },
                 revenue_vs_maintenance: { labels: [], rent_inflows: [], maintenance_opex: [] },
             },
             assetHealth: [],
             upcomingExpiries: {
-                lease_expiries: { next_30_days: 8, next_60_days: 15, next_90_days: 24, urgent_label: "8 Expiring soon" },
+                lease_expiries: { next_30_days: 15, next_60_days: 67, next_90_days: 1, urgent_label: "15 EXPIRING SOON" },
                 planned_maintenance: { overhauls_pending: 12, overhauls_label: "12 major overhauls pending" },
             },
             workOrdersUrgent: [],
@@ -163,7 +167,7 @@ export class PropertyDashboard extends Component {
 
             this.state.realtimeConnected = true;
         } catch (err) {
-            console.warn("[PropertyDashboard] Bus setup warning:", err);
+            console.warn("[PropertyDashboard] Bus subscription error:", err);
         }
     }
 
@@ -188,6 +192,9 @@ export class PropertyDashboard extends Component {
         }, 300);
     }
 
+    /**
+     * Loads metrics from 100% read-only helper model
+     */
     async loadDashboardData(showSpinner = false) {
         if (showSpinner) {
             this.state.loading = true;
@@ -195,39 +202,34 @@ export class PropertyDashboard extends Component {
         try {
             const filters = {
                 residential_type: this.state.residentialType,
-                state: this.state.contractState,
+                contract_state: this.state.contractState,
                 project_id: this.state.projectId,
                 facility_type: this.state.facilityType,
                 search: this.state.searchQuery,
             };
 
-            const data = await this.orm.call("property.contract", "get_dashboard_metrics", [filters]);
+            const data = await this.orm.call("property.dashboard.helper", "get_dashboard_metrics", [filters]);
 
-            this.state.isEgProperty = data.is_eg_property;
-            this.state.multiCompany = data.multi_company || {};
             this.state.kpis = data.kpis;
             this.state.charts = data.charts;
-            this.state.availableProjects = data.available_projects || [];
             this.state.assetHealth = data.asset_health || [];
-            this.state.upcomingExpiries = data.upcoming_expiries || {
-                lease_expiries: { next_30_days: 8, next_60_days: 15, next_90_days: 24, urgent_label: "8 Expiring soon" },
-                planned_maintenance: { overhauls_pending: 12, overhauls_label: "12 major overhauls pending" },
-            };
+            this.state.upcomingExpiries = data.upcoming_expiries || this.state.upcomingExpiries;
             this.state.workOrdersUrgent = data.work_orders_urgent || [];
             this.state.recentContracts = data.recent_contracts || [];
+            this.state.availableProjects = data.available_projects || [];
+            this.state.multiCompany = data.multi_company || this.state.multiCompany;
+            this.state.has_utility_data = data.has_utility_data !== false;
             this.state.lastUpdated = new Date().toLocaleTimeString();
         } catch (err) {
             console.error("[PropertyDashboard] Error loading metrics:", err);
-            this.notification.add("Failed to load real-time property metrics.", {
-                type: "danger",
-            });
+            this.notification.add("Failed to load real-time property metrics.", { type: "danger" });
         } finally {
             this.state.loading = false;
         }
     }
 
     // =========================================================================
-    // CHART.JS ENGINE (PALETTE: #c2a9d9 & VIOLET ON #ffffff CARDS)
+    // CHART.JS RENDERING ENGINE
     // =========================================================================
     _destroyCharts() {
         for (const key of Object.keys(this._chartInstances)) {
@@ -271,10 +273,10 @@ export class PropertyDashboard extends Component {
                 datasets: [
                     {
                         data: chartData.counts,
-                        backgroundColor: ["#8b68aa", "#b399cc", "#503966", "#3a254c"],
+                        backgroundColor: chartData.colors || ["#8b68aa", "#b399cc", "#5c4375", "#3a254c"],
                         borderColor: "#ffffff",
-                        borderWidth: 3,
-                        hoverOffset: 6,
+                        borderWidth: 2,
+                        hoverOffset: 4,
                     },
                 ],
             },
@@ -287,18 +289,16 @@ export class PropertyDashboard extends Component {
                         position: "bottom",
                         labels: {
                             color: "#4d3d5e",
-                            font: { family: "Inter, sans-serif", size: 11, weight: "600" },
+                            font: { family: "Inter, sans-serif", size: 11, weight: "500" },
                             usePointStyle: true,
                             pointStyle: "circle",
-                            padding: 10,
+                            padding: 12,
                         },
                     },
                     tooltip: {
                         backgroundColor: "#251c2e",
                         titleColor: "#ffffff",
                         bodyColor: "#c2a9d9",
-                        borderColor: "rgba(139, 104, 170, 0.35)",
-                        borderWidth: 1,
                         padding: 10,
                         callbacks: {
                             label: (context) => {
@@ -326,7 +326,6 @@ export class PropertyDashboard extends Component {
             this._chartInstances.nationalities.destroy();
         }
 
-        const palette = ["#503966", "#72538f", "#8b68aa", "#9e82ba", "#b399cc", "#c2a9d9"];
         const ctx = this.nationalitiesChartRef.el.getContext("2d");
         this._chartInstances.nationalities = new window.Chart(ctx, {
             type: "bar",
@@ -336,8 +335,9 @@ export class PropertyDashboard extends Component {
                     {
                         label: "Active Leases",
                         data: chartData.counts,
-                        backgroundColor: chartData.labels.map((_, i) => palette[i % palette.length]),
-                        borderRadius: 6,
+                        backgroundColor: "#503966",
+                        hoverBackgroundColor: "#72538f",
+                        borderRadius: 5,
                         barThickness: 14,
                     },
                 ],
@@ -352,14 +352,12 @@ export class PropertyDashboard extends Component {
                         backgroundColor: "#251c2e",
                         titleColor: "#ffffff",
                         bodyColor: "#c2a9d9",
-                        borderColor: "rgba(139, 104, 170, 0.35)",
-                        borderWidth: 1,
                         padding: 10,
                         callbacks: {
                             label: (context) => {
                                 const idx = context.dataIndex;
-                                const pct = chartData.percentages ? chartData.percentages[idx] : 0;
-                                return ` ${context.raw} Leases (${pct}%)`;
+                                const pct = chartData.percentages[idx] || 0;
+                                return ` ${context.raw} Leases (${pct}% share)`;
                             },
                         },
                     },
@@ -367,11 +365,11 @@ export class PropertyDashboard extends Component {
                 scales: {
                     x: {
                         grid: { color: "rgba(194, 169, 217, 0.15)" },
-                        ticks: { color: "#4d3d5e", font: { size: 10 }, precision: 0 },
+                        ticks: { color: "#4d3d5e", font: { size: 10 } },
                     },
                     y: {
                         grid: { display: false },
-                        ticks: { color: "#1f1728", font: { size: 11, weight: "600" } },
+                        ticks: { color: "#1f1728", font: { size: 11, weight: "500" } },
                     },
                 },
             },
@@ -379,7 +377,7 @@ export class PropertyDashboard extends Component {
     }
 
     /**
-     * 3. NEW: Facility & Work Order Status (Split/Stacked Doughnut)
+     * 3. Donut Chart: Facility & Work Orders Distribution
      */
     _renderFacilityWorkOrdersChart() {
         if (!this.facilityWorkOrdersChartRef.el) return;
@@ -400,41 +398,30 @@ export class PropertyDashboard extends Component {
                         data: chartData.counts,
                         backgroundColor: chartData.colors || ["#503966", "#72538f", "#8b68aa", "#a88cc4", "#c2a9d9"],
                         borderColor: "#ffffff",
-                        borderWidth: 3,
-                        hoverOffset: 6,
+                        borderWidth: 2,
                     },
                 ],
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                cutout: "65%",
+                cutout: "66%",
                 plugins: {
                     legend: {
                         position: "bottom",
                         labels: {
                             color: "#4d3d5e",
-                            font: { family: "Inter, sans-serif", size: 11, weight: "600" },
+                            font: { family: "Inter, sans-serif", size: 11 },
                             usePointStyle: true,
                             pointStyle: "circle",
-                            padding: 8,
+                            padding: 10,
                         },
                     },
                     tooltip: {
                         backgroundColor: "#251c2e",
                         titleColor: "#ffffff",
                         bodyColor: "#c2a9d9",
-                        borderColor: "rgba(139, 104, 170, 0.35)",
-                        borderWidth: 1,
                         padding: 10,
-                        callbacks: {
-                            label: (context) => {
-                                const total = context.dataset.data.reduce((a, b) => a + b, 0) || 1;
-                                const val = context.raw;
-                                const pct = ((val / total) * 100).toFixed(1);
-                                return ` ${context.label}: ${val} Work Orders (${pct}%)`;
-                            },
-                        },
                     },
                 },
             },
@@ -442,11 +429,11 @@ export class PropertyDashboard extends Component {
     }
 
     /**
-     * 4. NEW: SLA Resolution Rate Half-Gauge Chart
+     * 4. Semi-Circle Gauge Chart: SLA Resolution Rate
      */
     _renderSlaGaugeChart() {
         if (!this.slaGaugeChartRef.el) return;
-        const sla = this.state.charts.sla_data || { sla_met_pct: 89.2, sla_unmet_pct: 10.8 };
+        const slaData = this.state.charts.sla_data || { sla_met_pct: 89.2, sla_unmet_pct: 10.8 };
 
         if (this._chartInstances.slaGauge) {
             this._chartInstances.slaGauge.destroy();
@@ -456,21 +443,22 @@ export class PropertyDashboard extends Component {
         this._chartInstances.slaGauge = new window.Chart(ctx, {
             type: "doughnut",
             data: {
-                labels: ["SLA Met", "Pending / Outside SLA"],
+                labels: ["SLA Met", "SLA Breached / Pending"],
                 datasets: [
                     {
-                        data: [sla.sla_met_pct, sla.sla_unmet_pct],
-                        backgroundColor: ["#8b68aa", "#ede7f3"],
-                        borderWidth: 0,
+                        data: [slaData.sla_met_pct, slaData.sla_unmet_pct],
+                        backgroundColor: ["#503966", "#e8e1f0"],
+                        borderColor: ["#ffffff", "#ffffff"],
+                        borderWidth: 2,
                     },
                 ],
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                rotation: -90,
+                rotation: 270,
                 circumference: 180,
-                cutout: "76%",
+                cutout: "75%",
                 plugins: {
                     legend: { display: false },
                     tooltip: {
@@ -487,7 +475,7 @@ export class PropertyDashboard extends Component {
     }
 
     /**
-     * 5. Bar / Benchmark: Average Rent vs Benchmark by Type
+     * 5. Combo Bar: Average Rent vs Benchmark by Unit Type
      */
     _renderAvgRentComboChart() {
         if (!this.avgRentChartRef.el) return;
@@ -566,7 +554,7 @@ export class PropertyDashboard extends Component {
     }
 
     /**
-     * 6. NEW: Dual Chart - Monthly Revenue vs Maintenance OPEX
+     * 6. Dual Chart: Monthly Revenue vs Maintenance OPEX
      */
     _renderRevVsMaintChart() {
         if (!this.revVsMaintChartRef.el) return;
@@ -662,7 +650,7 @@ export class PropertyDashboard extends Component {
     }
 
     // =========================================================================
-    // UI INTERACTION HANDLERS & WINDOW ACTIONS
+    // UI INTERACTION HANDLERS & STANDARD WINDOW ACTIONS
     // =========================================================================
     onFilterResidentialType(ev) {
         this.state.residentialType = ev.target.value;
@@ -703,10 +691,9 @@ export class PropertyDashboard extends Component {
 
     openContract(contractId) {
         if (!contractId) return;
-        const resModel = this.state.isEgProperty ? "rent.contract" : "property.contract";
         this.action.doAction({
             type: "ir.actions.act_window",
-            res_model: resModel,
+            res_model: "rent.contract",
             res_id: contractId,
             views: [[false, "form"]],
             target: "current",
@@ -715,10 +702,9 @@ export class PropertyDashboard extends Component {
 
     openProperty(propertyId) {
         if (!propertyId) return;
-        const resModel = this.state.isEgProperty ? "property.detail" : "property.unit";
         this.action.doAction({
             type: "ir.actions.act_window",
-            res_model: resModel,
+            res_model: "property.detail",
             res_id: propertyId,
             views: [[false, "form"]],
             target: "current",
@@ -726,32 +712,38 @@ export class PropertyDashboard extends Component {
     }
 
     openAllContracts() {
-        const resModel = this.state.isEgProperty ? "rent.contract" : "property.contract";
-        this.action.doAction({
-            type: "ir.actions.act_window",
-            name: "Rent Contracts",
-            res_model: resModel,
-            views: [[false, "list"], [false, "form"]],
-            target: "current",
-        });
+        try {
+            this.action.doAction("eg_property_management.action_rent_contracts");
+        } catch (e) {
+            this.action.doAction({
+                type: "ir.actions.act_window",
+                name: "Rent Contracts",
+                res_model: "rent.contract",
+                views: [[false, "list"], [false, "form"]],
+                target: "current",
+            });
+        }
     }
 
     openAllProperties() {
-        const resModel = this.state.isEgProperty ? "property.detail" : "property.unit";
-        this.action.doAction({
-            type: "ir.actions.act_window",
-            name: "Properties",
-            res_model: resModel,
-            views: [[false, "list"], [false, "form"], [false, "kanban"]],
-            target: "current",
-        });
+        try {
+            this.action.doAction("eg_property_management.action_property_detail");
+        } catch (e) {
+            this.action.doAction({
+                type: "ir.actions.act_window",
+                name: "Properties",
+                res_model: "property.detail",
+                views: [[false, "kanban"], [false, "list"], [false, "form"]],
+                target: "current",
+            });
+        }
     }
 
     openWorkOrder(woId) {
         if (!woId) return;
         this.action.doAction({
             type: "ir.actions.act_window",
-            res_model: "property.maintenance.request",
+            res_model: "maintenance.request",
             res_id: woId,
             views: [[false, "form"]],
             target: "current",
@@ -759,54 +751,88 @@ export class PropertyDashboard extends Component {
     }
 
     openAllWorkOrders() {
-        this.action.doAction({
-            type: "ir.actions.act_window",
-            name: "Facility Work Orders",
-            res_model: "property.maintenance.request",
-            views: [[false, "list"], [false, "form"]],
-            target: "current",
-        });
+        try {
+            this.action.doAction("maintenance.hr_equipment_request_action");
+        } catch (e) {
+            this.action.doAction({
+                type: "ir.actions.act_window",
+                name: "Facility Work Orders",
+                res_model: "maintenance.request",
+                views: [[false, "kanban"], [false, "list"], [false, "form"]],
+                target: "current",
+            });
+        }
     }
 
     openUtilities() {
-        this.action.doAction({
-            type: "ir.actions.act_window",
-            name: "Property Utilities & ESG",
-            res_model: "property.utilities",
-            views: [[false, "list"], [false, "form"]],
-            target: "current",
-        });
+        try {
+            this.action.doAction({
+                type: "ir.actions.act_window",
+                name: "Property Utilities & ESG",
+                res_model: "property.utility.service",
+                views: [[false, "list"], [false, "form"]],
+                target: "current",
+            });
+        } catch (e) {
+            this.action.doAction({
+                type: "ir.actions.act_window",
+                name: "Utility Expenses",
+                res_model: "account.move",
+                domain: [["move_type", "in", ["in_invoice", "entry"]]],
+                views: [[false, "list"], [false, "form"]],
+                target: "current",
+            });
+        }
     }
 
     openAssets() {
-        this.action.doAction({
-            type: "ir.actions.act_window",
-            name: "Facility Asset Health",
-            res_model: "property.asset",
-            views: [[false, "list"], [false, "form"]],
-            target: "current",
-        });
+        try {
+            this.action.doAction("maintenance.hr_equipment_action");
+        } catch (e) {
+            try {
+                this.action.doAction("asset_management.action_asset_management");
+            } catch (err) {
+                this.action.doAction({
+                    type: "ir.actions.act_window",
+                    name: "Equipment & Assets",
+                    res_model: "maintenance.equipment",
+                    views: [[false, "kanban"], [false, "list"], [false, "form"]],
+                    target: "current",
+                });
+            }
+        }
     }
 
     createContract() {
-        const resModel = this.state.isEgProperty ? "rent.contract" : "property.contract";
-        this.action.doAction({
-            type: "ir.actions.act_window",
-            name: "New Rent Contract",
-            res_model: resModel,
-            views: [[false, "form"]],
-            target: "current",
-        });
+        try {
+            this.action.doAction("eg_property_management.action_rent_contracts", {
+                viewType: "form",
+            });
+        } catch (e) {
+            this.action.doAction({
+                type: "ir.actions.act_window",
+                name: "New Rent Contract",
+                res_model: "rent.contract",
+                views: [[false, "form"]],
+                target: "current",
+            });
+        }
     }
 
     createWorkOrder() {
-        this.action.doAction({
-            type: "ir.actions.act_window",
-            name: "New Facility Work Order",
-            res_model: "property.maintenance.request",
-            views: [[false, "form"]],
-            target: "current",
-        });
+        try {
+            this.action.doAction("maintenance.hr_equipment_request_action", {
+                viewType: "form",
+            });
+        } catch (e) {
+            this.action.doAction({
+                type: "ir.actions.act_window",
+                name: "New Facility Work Order",
+                res_model: "maintenance.request",
+                views: [[false, "form"]],
+                target: "current",
+            });
+        }
     }
 }
 

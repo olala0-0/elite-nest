@@ -1,6 +1,1 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-access_property_unit_user,property.unit.user,model_property_unit,base.group_user,1,1,1,1
-access_property_contract_user,property.contract.user,model_property_contract,base.group_user,1,1,1,1
-access_property_maintenance_request_user,property.maintenance.request.user,model_property_maintenance_request,base.group_user,1,1,1,1
-access_property_utilities_user,property.utilities.user,model_property_utilities,base.group_user,1,1,1,1
-access_property_asset_user,property.asset.user,model_property_asset,base.group_user,1,1,1,1

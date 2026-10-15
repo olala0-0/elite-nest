@@ -5,6 +5,16 @@
         <div class="o_property_dashboard_container d-flex flex-column h-100" t-att-class="{'pulse-active': state.pulseEffect}">
 
             <!-- ========================================================= -->
+            <!-- TOP BREADCRUMB NAVIGATION TABS (FROM SCREENSHOT)          -->
+            <!-- ========================================================= -->
+            <nav class="executive-nav-tabs px-4 pt-2 pb-1 d-flex align-items-center gap-4">
+                <a href="#" class="nav-tab-item active" t-on-click.prevent="openAllContracts">Rent Contracts</a>
+                <a href="#" class="nav-tab-item" t-on-click.prevent="openAllWorkOrders">Facility Work Orders</a>
+                <a href="#" class="nav-tab-item" t-on-click.prevent="openAssets">Asset Health</a>
+                <a href="#" class="nav-tab-item" t-on-click.prevent="openUtilities">Utilities &amp; ESG</a>
+            </nav>
+
+            <!-- ========================================================= -->
             <!-- EXECUTIVE TOPBAR & LIVE FILTERS                           -->
             <!-- ========================================================= -->
             <header class="executive-topbar px-4 py-3 d-flex flex-wrap justify-content-between align-items-center">
@@ -189,8 +199,8 @@
                         </div>
                     </div>
 
-                    <!-- KPI 5: UTILITIES & ESG -->
-                    <div class="executive-card kpi-card" t-on-click="openUtilities" title="Click to view Utilities &amp; ESG">
+                    <!-- KPI 5: UTILITIES & ESG (CONDITIONALLY RENDERED) -->
+                    <div t-if="state.has_utility_data" class="executive-card kpi-card" t-on-click="openUtilities" title="Click to view Utilities &amp; ESG">
                         <div class="d-flex justify-content-between align-items-start mb-2">
                             <span class="kpi-label">Utilities &amp; ESG</span>
                             <span class="kpi-icon-pill">
@@ -258,7 +268,7 @@
                         </div>
                     </div>
 
-                    <!-- Chart 3: NEW - Facility & Work Order Status -->
+                    <!-- Chart 3: Facility & Work Order Distribution -->
                     <div class="executive-card chart-card">
                         <div class="chart-header d-flex justify-content-between align-items-center mb-3">
                             <div>
@@ -272,7 +282,7 @@
                         </div>
                     </div>
 
-                    <!-- Chart 4: NEW - SLA Resolution Rate Gauge Chart -->
+                    <!-- Chart 4: SLA Resolution Rate Semi-Gauge Chart -->
                     <div class="executive-card chart-card">
                         <div class="chart-header d-flex justify-content-between align-items-center mb-1">
                             <div>
@@ -311,7 +321,7 @@
                         </div>
                     </div>
 
-                    <!-- Panel 2: NEW - Monthly Revenue vs Maintenance Costs (Dual Chart) -->
+                    <!-- Panel 2: Monthly Revenue vs Maintenance Costs (Dual Chart) -->
                     <div class="executive-card chart-card">
                         <div class="chart-header d-flex justify-content-between align-items-center mb-3">
                             <div>
@@ -325,7 +335,7 @@
                         </div>
                     </div>
 
-                    <!-- Panel 3: NEW - Common Area & Asset Health Index -->
+                    <!-- Panel 3: Common Area & Asset Health Index -->
                     <div class="executive-card chart-card">
                         <div class="chart-header d-flex justify-content-between align-items-center mb-3">
                             <div>
@@ -349,7 +359,7 @@
                         </div>
                     </div>
 
-                    <!-- Panel 4: NEW - Upcoming Renewals & Expiries -->
+                    <!-- Panel 4: Upcoming Renewals & Expiries -->
                     <div class="executive-card chart-card">
                         <div class="chart-header d-flex justify-content-between align-items-center mb-3">
                             <div>
@@ -363,7 +373,7 @@
                             <div class="tracker-box">
                                 <div class="tracker-title">
                                     <span>Upcoming Lease Expirations</span>
-                                    <span class="badge rounded-pill bg-danger-subtle small" t-esc="state.upcomingExpiries.lease_expiries.urgent_label or '8 Expiring soon'"/>
+                                    <span class="badge rounded-pill bg-danger-subtle small" t-esc="state.upcomingExpiries.lease_expiries.urgent_label or '15 EXPIRING SOON'"/>
                                 </div>
                                 <div class="expiry-counts-row">
                                     <div class="count-pill">

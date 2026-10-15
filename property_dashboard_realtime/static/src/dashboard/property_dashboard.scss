@@ -61,6 +61,35 @@ $text-muted: #6e5e80;
 }
 
 /* --------------------------------------------------------------------------
+   Top Breadcrumb Navigation Tabs (Matching Screenshot)
+   -------------------------------------------------------------------------- */
+.executive-nav-tabs {
+    background-color: #ffffff;
+    border-bottom: 1px solid rgba(194, 169, 217, 0.22);
+    padding-top: 0.65rem;
+    padding-bottom: 0.4rem;
+
+    .nav-tab-item {
+        color: #7a1f1d;
+        font-size: 0.85rem;
+        font-weight: 500;
+        text-decoration: underline;
+        text-underline-offset: 3px;
+        cursor: pointer;
+        transition: color 0.15s ease;
+
+        &:hover {
+            color: #503966;
+            text-decoration: underline;
+        }
+
+        &.active {
+            font-weight: 600;
+        }
+    }
+}
+
+/* --------------------------------------------------------------------------
    Executive Topbar & Controls (Clean Elevated White on #f6f3f9 Background)
    -------------------------------------------------------------------------- */
 .executive-topbar {
@@ -241,7 +270,7 @@ $text-muted: #6e5e80;
 .kpi-card {
     padding: 1.25rem;
     display: flex;
-    flex-column: column;
+    flex-direction: column;
     justify-content: space-between;
     cursor: pointer;
 

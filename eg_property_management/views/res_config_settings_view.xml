@@ -7,6 +7,15 @@
             <field name="arch" type="xml">
                 <xpath expr="//app[@name='account']" position="inside">
                     <block title="Property Management" name="property_management_setting_container">
+                        <setting string="Lease Renewal Notice"
+                                 help="How far before a contract's end date to email the tenant a renewal notice.">
+                            <div class="content-group">
+                                <div class="row mt16">
+                                    <label for="renewal_notice_months" class="col-lg-3 o_light_label"/>
+                                    <field name="renewal_notice_months"/>
+                                </div>
+                            </div>
+                        </setting>
                         <setting string="Rent Invoice Defaults"
                                  help="Default product and description used when rent invoices are created from contracts.">
                             <div class="content-group">
@@ -56,6 +65,115 @@
                                 <div class="row mt16">
                                     <label for="penalty_invoice_description" class="col-lg-3 o_light_label"/>
                                     <field name="penalty_invoice_description"/>
+                                </div>
+                            </div>
+                        </setting>
+                        <setting string="Ejari Fee Invoice Defaults"
+                                 help="Default product and description used for the one-time Ejari Fee charge, billed once on the first invoice if set on the contract.">
+                            <div class="content-group">
+                                <div class="row mt16">
+                                    <label for="ejari_fee_invoice_product_id" class="col-lg-3 o_light_label"/>
+                                    <field name="ejari_fee_invoice_product_id"/>
+                                </div>
+                                <div class="row mt16">
+                                    <label for="ejari_fee_invoice_description" class="col-lg-3 o_light_label"/>
+                                    <field name="ejari_fee_invoice_description"/>
+                                </div>
+                            </div>
+                        </setting>
+                        <setting string="Admin Charge Invoice Defaults"
+                                 help="Default product and description used for the one-time Admin Charge, billed once on the first invoice if set on the contract.">
+                            <div class="content-group">
+                                <div class="row mt16">
+                                    <label for="admin_charge_invoice_product_id" class="col-lg-3 o_light_label"/>
+                                    <field name="admin_charge_invoice_product_id"/>
+                                </div>
+                                <div class="row mt16">
+                                    <label for="admin_charge_invoice_description" class="col-lg-3 o_light_label"/>
+                                    <field name="admin_charge_invoice_description"/>
+                                </div>
+                            </div>
+                        </setting>
+                        <setting string="Commission Invoice Defaults"
+                                 help="Default product and description used for the one-time tenant Commission charge, billed once on the first invoice if set on the contract. Not related to Broker Commission.">
+                            <div class="content-group">
+                                <div class="row mt16">
+                                    <label for="commission_invoice_product_id" class="col-lg-3 o_light_label"/>
+                                    <field name="commission_invoice_product_id"/>
+                                </div>
+                                <div class="row mt16">
+                                    <label for="commission_invoice_description" class="col-lg-3 o_light_label"/>
+                                    <field name="commission_invoice_description"/>
+                                </div>
+                            </div>
+                        </setting>
+                        <setting string="Parking Fee Invoice Defaults"
+                                 help="Default product and description used for the one-time Parking Fee charge, billed once on the first invoice if set on the contract.">
+                            <div class="content-group">
+                                <div class="row mt16">
+                                    <label for="parking_fee_invoice_product_id" class="col-lg-3 o_light_label"/>
+                                    <field name="parking_fee_invoice_product_id"/>
+                                </div>
+                                <div class="row mt16">
+                                    <label for="parking_fee_invoice_description" class="col-lg-3 o_light_label"/>
+                                    <field name="parking_fee_invoice_description"/>
+                                </div>
+                            </div>
+                        </setting>
+                        <setting string="Dilapidation Invoice Defaults"
+                                 help="Default product and description used for Dilapidation charges billed through Move-Out deposit settlement.">
+                            <div class="content-group">
+                                <div class="row mt16">
+                                    <label for="dilapidation_invoice_product_id" class="col-lg-3 o_light_label"/>
+                                    <field name="dilapidation_invoice_product_id"/>
+                                </div>
+                                <div class="row mt16">
+                                    <label for="dilapidation_invoice_description" class="col-lg-3 o_light_label"/>
+                                    <field name="dilapidation_invoice_description"/>
+                                </div>
+                            </div>
+                        </setting>
+                        <setting string="Shortfall Rent Invoice Defaults"
+                                 help="Default product and description used for Shortfall Rent charges billed through Move-Out deposit settlement.">
+                            <div class="content-group">
+                                <div class="row mt16">
+                                    <label for="shortfall_rent_invoice_product_id" class="col-lg-3 o_light_label"/>
+                                    <field name="shortfall_rent_invoice_product_id"/>
+                                </div>
+                                <div class="row mt16">
+                                    <label for="shortfall_rent_invoice_description" class="col-lg-3 o_light_label"/>
+                                    <field name="shortfall_rent_invoice_description"/>
+                                </div>
+                            </div>
+                        </setting>
+                        <setting string="Contract Expiry Notification"
+                                 help="Number of days before contract expiry date to trigger in-system notifications (default: 90 days).">
+                            <div class="content-group">
+                                <div class="row mt16">
+                                    <label for="contract_expiry_notice_days" class="col-lg-3 o_light_label"/>
+                                    <field name="contract_expiry_notice_days"/>
+                                </div>
+                            </div>
+                        </setting>
+                        <setting string="Tenant Payment Reminder Window"
+                                 help="Days before scheduled payment date to send reminders (e.g. 10 to 15 days).">
+                            <div class="content-group">
+                                <div class="row mt16">
+                                    <label for="payment_reminder_min_days" string="Min Days Before Due" class="col-lg-3 o_light_label"/>
+                                    <field name="payment_reminder_min_days"/>
+                                </div>
+                                <div class="row mt16">
+                                    <label for="payment_reminder_max_days" string="Max Days Before Due" class="col-lg-3 o_light_label"/>
+                                    <field name="payment_reminder_max_days"/>
+                                </div>
+                            </div>
+                        </setting>
+                        <setting string="Finance Notification Users"
+                                 help="Specific Finance team users to receive in-system tenancy notifications. If empty, all Accounting/Billing users are notified.">
+                            <div class="content-group">
+                                <div class="row mt16">
+                                    <label for="finance_user_ids" class="col-lg-3 o_light_label"/>
+                                    <field name="finance_user_ids" widget="many2many_tags"/>
                                 </div>
                             </div>
                         </setting>

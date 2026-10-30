@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    
+    <record id="action_sbs_project_extension_risk_factor" model="ir.actions.act_window">
+        <field name="name">Risk Factor Settings</field>
+        <field name="res_model">sbs_project_extension.risk.factor</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="action_sbs_project_extension_industry" model="ir.actions.act_window">
+        <field name="name">Industry Vertical Settings</field>
+        <field name="res_model">sbs_project_extension.industry</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="action_sbs_project_extension_tech_stack" model="ir.actions.act_window">
+        <field name="name">Tech Stack Settings</field>
+        <field name="res_model">sbs_project_extension.tech.stack</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="action_sbs_project_extension_project_team" model="ir.actions.act_window">
+        <field name="name">Team Member Name</field>
+        <field name="res_model">sbs_project_extension.project.team</field>
+        <field name="view_mode">list,form</field>
+    </record>
+    
+    <menuitem id="menu_sbs_project_extension_config_root" name="SBS Project Settings" parent="project.menu_project_config" sequence="100" groups="sbs_project_extension.group_sbs_project_extension"/>
+    
+    <menuitem id="menu_sbs_project_extension_risk_factor" name="Risk Factor Settings" parent="menu_sbs_project_extension_config_root" action="action_sbs_project_extension_risk_factor" sequence="10"/>
+    <menuitem id="menu_sbs_project_extension_industry" name="Industry Vertical Settings" parent="menu_sbs_project_extension_config_root" action="action_sbs_project_extension_industry" sequence="20"/>
+    <menuitem id="menu_sbs_project_extension_tech_stack" name="Tech Stack Settings" parent="menu_sbs_project_extension_config_root" action="action_sbs_project_extension_tech_stack" sequence="30"/>
+    <menuitem id="menu_sbs_project_extension_project_team" name="Project Team Settings" parent="menu_sbs_project_extension_config_root" action="action_sbs_project_extension_project_team" sequence="40"/>
+</odoo>

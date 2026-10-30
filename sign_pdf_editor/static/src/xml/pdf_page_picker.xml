@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="sign_pdf_editor.PdfPagePicker">
+        <div class="o_sign_pdf_page_picker">
+            <t t-if="!isApplicable">
+                <div class="alert alert-info mb-0" role="alert">
+                    Pick a Template above to place your text visually on the page here.
+                </div>
+            </t>
+            <t t-else="">
+                <div t-if="state.error" class="alert alert-warning" role="alert">
+                    <t t-esc="state.error"/>
+                </div>
+                <div t-if="state.loading" class="text-muted mb-2">
+                    <i class="fa fa-spinner fa-spin"/> Loading PDF preview...
+                </div>
+                <div t-if="!state.loading and !state.error" class="d-flex align-items-center gap-2 mb-2">
+                    <button type="button" class="btn btn-sm btn-secondary" t-on-click="onPrevPage">
+                        <i class="fa fa-chevron-left"/>
+                    </button>
+                    <span>
+                        Page <t t-esc="props.record.data.text_page"/> / <t t-esc="state.pageCount"/>
+                    </span>
+                    <button type="button" class="btn btn-sm btn-secondary" t-on-click="onNextPage">
+                        <i class="fa fa-chevron-right"/>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-link" t-on-click="onRefreshClick">
+                        Refresh preview
+                    </button>
+                    <span class="text-muted small">Click on the page to set the position</span>
+                </div>
+                <div class="o_sign_pdf_page_picker_canvas_wrap position-relative border"
+                     style="display: inline-block; max-width: 100%; overflow: auto;">
+                    <canvas t-ref="canvas" t-on-click="onCanvasClick" style="display: block; cursor: crosshair;"/>
+                    <div t-if="state.marker"
+                         class="o_sign_pdf_page_picker_marker"
+                         t-attf-style="left: {{state.marker.left}}px; top: {{state.marker.top}}px;"/>
+                </div>
+            </t>
+        </div>
+    </t>
+</templates>

@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_sbs_project_extension_summary_list" model="ir.ui.view">
+        <field name="name">project.project.summary.list</field>
+        <field name="model">project.project</field>
+        <field name="group_ids" eval="[(4, ref('group_sbs_project_extension'))]"/>
+        <field name="arch" type="xml">
+            <list string="Project Summary"
+                  default_order="sbs_priority_number asc, name asc">
+                <field name="sbs_priority_number" string="Priority"/>
+                <field name="name"/>
+                <field name="sbs_project_director" widget="many2one_avatar_user" optional="1"/>
+                <field name="delivery_type"/>
+                <field name="risk_level"
+                       decoration-danger="risk_level == 'high'"
+                       decoration-warning="risk_level == 'medium'"/>
+                <field name="risk_factor_id"/>
+                <field name="fa_ids" widget="many2many_tags"/>
+                <field name="developer_ids" widget="many2many_tags"/>
+                <field name="pm_ids" widget="many2many_tags"/>
+                <field name="next_action"/>
+                <field name="qa_ids" widget="many2many_tags" optional="1"/>
+                <field name="kam_ids" widget="many2many_tags" optional="1"/>
+                <field name="pc_ids" widget="many2many_tags" optional="1"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_sbs_project_extension_summary_list_search" model="ir.ui.view">
+        <field name="name">project.project.summary.list.search</field>
+        <field name="model">project.project</field>
+        <field name="group_ids" eval="[(4, ref('group_sbs_project_extension'))]"/>
+        <field name="arch" type="xml">
+            <search string="Search Projects">
+                <field name="name"/>
+                <field name="sbs_priority_number"/>
+                <field name="sbs_project_director"/>
+                <field name="delivery_type"/>
+                <field name="risk_level"/>
+                <field name="fa_ids"/>
+                <field name="developer_ids"/>
+                <field name="pm_ids"/>
+                <field name="next_action"/>
+                <field name="qa_ids"/>
+                <field name="kam_ids"/>
+                <field name="pc_ids"/>
+                <separator/>
+                <filter string="Assigned Functional Analyst" name="filter_assigned_fa" domain="[('fa_ids', '!=', False)]"/>
+                <filter string="High Risk" name="filter_risk_high" domain="[('risk_level', '=', 'high')]"/>
+                <filter string="Medium Risk" name="filter_risk_medium" domain="[('risk_level', '=', 'medium')]"/>
+                <filter string="Low Risk" name="filter_risk_low" domain="[('risk_level', '=', 'low')]"/>
+                <filter string="AMC" name="filter_delivery_type_amc" domain="[('delivery_type', '=', 'amc')]"/>
+                <filter string="Development" name="filter_delivery_type_development" domain="[('delivery_type', '=', 'development')]"/>
+                <filter string="Payment Pending" name="filter_delivery_type_pending" domain="[('delivery_type', '=', 'pending')]"/>
+                <separator/>
+                <group name="groupby">
+                    <filter name="group_by_fa_ids" string="Functional Analysts" context="{'group_by': 'fa_ids'}"/>
+                    <filter name="group_by_developer_ids" string="Developers" context="{'group_by': 'developer_ids'}"/>
+                    <filter name="group_by_risk_level" string="Risk Level" context="{'group_by': 'risk_level'}"/>
+                    <filter name="group_by_risk_factor_id" string="Risk Factor" context="{'group_by': 'risk_factor_id'}"/>
+                    <filter name="group_by_delivery_type" string="Delivery Type" context="{'group_by': 'delivery_type'}"/>
+                    <filter name="group_by_project_director" string="Project Director" context="{'group_by': 'sbs_project_director'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+<record id="action_sbs_project_extension_summary" model="ir.actions.act_window">
+        <field name="name">Project Summary</field>
+        <field name="res_model">project.project</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_id" ref="view_sbs_project_extension_summary_list"/>
+        <field name="search_view_id" ref="view_sbs_project_extension_summary_list_search"/>
+    </record>
+
+    <record id="view_sbs_project_extension_master_list" model="ir.ui.view">
+        <field name="name">project.project.master.list</field>
+        <field name="model">project.project</field>
+        <field name="group_ids" eval="[(4, ref('group_sbs_project_extension'))]"/>
+        <field name="arch" type="xml">
+            <list string="Project Master"
+                  default_order="sbs_priority_number asc, name asc">
+                <field name="sbs_priority_number" string="Priority"/>
+                <field name="name"/>
+                <field name="sbs_project_director" widget="many2one_avatar_user" optional="1"/>
+                <field name="industry_id"/>
+                <field name="delivery_type"/>
+                <field name="risk_level"
+                       decoration-danger="risk_level == 'high'"
+                       decoration-warning="risk_level == 'medium'"/>
+                <field name="risk_factor_id"/>
+                <field name="next_action"/>
+                <field name="prod_link"/>
+                <field name="pm_ids" widget="many2many_tags"/>
+                <field name="fa_ids" widget="many2many_tags"/>
+                <field name="developer_ids" widget="many2many_tags"/>
+                <field name="additional_notes"/>
+                <field name="qa_ids" widget="many2many_tags" optional="1"/>
+                <field name="kam_ids" widget="many2many_tags" optional="1"/>
+                <field name="csm_ids" widget="many2many_tags" optional="1"/>
+                <field name="pc_ids" widget="many2many_tags" optional="1"/>
+                <field name="client_name" optional="1"/>
+                <field name="client_country_id" optional="1"/>
+                <field name="client_website" optional="1"/>
+                <field name="spoc_name" optional="1"/>
+                <field name="spoc_designation" optional="1"/>
+                <field name="spoc_phone" optional="1"/>
+                <field name="spoc_email" optional="1"/>
+                <field name="client_address" optional="1"/>
+                <field name="git_repo_link" optional="1"/>
+                <field name="git_repo_creator" optional="1"/>
+                <field name="git_repo_privacy" optional="1"/>
+                <field name="tech_stack_id" optional="1"/>
+                <field name="whatsapp_group" optional="1"/>
+                <field name="proposed_value" optional="1"/>
+                <field name="locked_value" optional="1"/>
+                <field name="revised_value" optional="1"/>
+                <field name="stag_link" optional="1"/>                
+            </list>
+        </field>
+    </record>
+
+    <record id="action_sbs_project_extension_master" model="ir.actions.act_window">
+        <field name="name">Project Master</field>
+        <field name="res_model">project.project</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_id" ref="view_sbs_project_extension_master_list"/>
+        <field name="search_view_id" ref="view_sbs_project_extension_summary_list_search"/>
+    </record>
+</odoo>

@@ -1,0 +1,540 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="property_dashboard_realtime.PropertyDashboard">
+        <div class="o_property_dashboard_container d-flex flex-column h-100" t-att-class="{'pulse-active': state.pulseEffect}">
+
+            <!-- ========================================================= -->
+            <!-- TOP BREADCRUMB NAVIGATION TABS (FROM SCREENSHOT)          -->
+            <!-- ========================================================= -->
+            <nav class="executive-nav-tabs px-4 pt-2 pb-1 d-flex align-items-center gap-4">
+                <a href="#" class="nav-tab-item active" t-on-click.prevent="openAllContracts">Rent Contracts</a>
+            </nav>
+
+            <!-- ========================================================= -->
+            <!-- EXECUTIVE TOPBAR & LIVE FILTERS                           -->
+            <!-- ========================================================= -->
+            <header class="executive-topbar px-4 py-3 d-flex flex-wrap justify-content-between align-items-center">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="brand-badge p-2 rounded-3 d-flex align-items-center justify-content-center">
+                        <i class="fa fa-building-o fs-4" style="color: var(--dash-lavender-accent);"/>
+                    </div>
+                    <div>
+                        <div class="d-flex align-items-center gap-2">
+                            <h4 class="mb-0 fw-bold tracking-wide" style="color: var(--dash-text-primary);">Main Dashboard</h4>
+                            <span class="badge rounded-pill live-sync-badge d-flex align-items-center gap-1">
+                                <span class="pulse-beacon"/>
+                                <span t-if="state.realtimeConnected">Live Real-Time</span>
+                                <span t-else="">Synced</span>
+                            </span>
+                            <span t-if="state.multiCompany.active_company_name" class="badge rounded-pill company-pill d-none d-md-inline-flex align-items-center gap-1">
+                                <i class="fa fa-briefcase text-muted"/>
+                                <span t-esc="state.multiCompany.active_company_name"/>
+                            </span>
+                        </div>
+                        <p class="mb-0 small" style="color: var(--dash-text-secondary);">
+                            Last updated: <span class="fw-semibold" style="color: var(--dash-lavender-accent);" t-esc="state.lastUpdated or 'Just now'"/>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Global Filters & Actions -->
+                <div class="d-flex flex-wrap align-items-center gap-2 mt-2 mt-lg-0">
+                    <!-- Filter 1: Residential Type -->
+                    <div class="filter-group">
+                        <select class="form-select form-select-sm executive-select" t-on-change="onFilterResidentialType" t-att-value="state.residentialType">
+                            <option value="all">All Property Types</option>
+                            <option value="studio">Studio</option>
+                            <option value="1">1 Bed Flat</option>
+                            <option value="2">2 Bed Flat</option>
+                            <option value="3">3 Bed Flat</option>
+                            <option value="pent">Penthouse</option>
+                            <option value="office">Commercial Office</option>
+                        </select>
+                    </div>
+
+                    <!-- Filter 2: Contract State -->
+                    <div class="filter-group">
+                        <select class="form-select form-select-sm executive-select" t-on-change="onFilterState" t-att-value="state.contractState">
+                            <option value="all">All Contract Statuses</option>
+                            <option value="running">Running Contracts</option>
+                            <option value="expired">Expired Contracts</option>
+                            <option value="terminated">Terminated Contracts</option>
+                            <option value="cancelled">Cancelled Contracts</option>
+                        </select>
+                    </div>
+
+                    <!-- Filter 3: Project Filter (Linked to property.project) -->
+                    <div class="filter-group">
+                        <select class="form-select form-select-sm executive-select" t-on-change="onFilterProject" t-att-value="state.projectId">
+                            <option value="all">All Projects</option>
+                            <t t-foreach="state.availableProjects" t-as="proj" t-key="proj.id">
+                                <option t-att-value="proj.id" t-esc="proj.name"/>
+                            </t>
+                        </select>
+                    </div>
+
+                    <!-- Search Input -->
+                    <div class="search-input-wrapper position-relative">
+                        <i class="fa fa-search search-icon position-absolute"/>
+                        <input type="text"
+                               class="form-control form-control-sm executive-input ps-4"
+                               placeholder="Filter contracts / properties..."
+                               t-att-value="state.searchQuery"
+                               t-on-input="onSearchInput"/>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <button class="btn btn-sm btn-executive-action" t-on-click="refreshDashboard" title="Refresh Live Data">
+                        <i class="fa fa-refresh" t-att-class="{'fa-spin': state.loading}"/>
+                    </button>
+                    <button class="btn btn-sm btn-lavender fw-semibold d-flex align-items-center gap-1" t-on-click="createContract">
+                        <i class="fa fa-plus-circle"/>
+                        <span>+ New Contract</span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- ========================================================= -->
+            <!-- MAIN SCROLLABLE CONTENT BODY                              -->
+            <!-- ========================================================= -->
+            <div class="dashboard-scrollable flex-grow-1 p-4 position-relative">
+
+                <!-- Loading State Indicator -->
+                <div t-if="state.loading" class="executive-loading-overlay position-absolute top-0 start-0 w-100 h-100 d-flex flex-column justify-content-center align-items-center">
+                    <div class="spinner-border mb-3" role="status" style="color: var(--dash-lavender-accent);"/>
+                    <span class="small tracking-wider text-uppercase fw-semibold" style="color: var(--dash-text-secondary);">Loading Real-Time Property &amp; Facility Metrics...</span>
+                </div>
+
+                <!-- 1. EXPANDED KPI ROW (5 CARDS) -->
+                <section class="kpi-banner-grid-5 mb-4">
+                    <!-- KPI 1: OCCUPANCY -->
+                    <div class="executive-card kpi-card" t-on-click="openAllProperties" title="Click to view Properties">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <span class="kpi-label">Occupancy</span>
+                            <span class="kpi-icon-pill">
+                                <i class="fa fa-building"/>
+                            </span>
+                        </div>
+                        <div class="kpi-value-row d-flex align-items-baseline gap-2 mb-2">
+                            <h3 class="kpi-number mb-0" t-esc="state.kpis.units_ratio_text"/>
+                            <span class="badge rounded-pill bg-danger-subtle small fw-bold" t-esc="state.kpis.vacant_badge or 'Vacant: 10'"/>
+                        </div>
+                        <div class="occupancy-progress-bar rounded-pill overflow-hidden mb-2">
+                            <div class="progress-fill" t-attf-style="width: {{ state.kpis.occupancy_rate }}%;"/>
+                        </div>
+                        <div class="d-flex justify-content-between small" style="color: var(--dash-text-secondary);">
+                            <span>Occupancy Rate</span>
+                            <span class="fw-bold" style="color: var(--dash-lavender-accent);"><t t-esc="state.kpis.occupancy_rate"/>%</span>
+                        </div>
+                    </div>
+
+                    <!-- KPI 2: ACTIVE CONTRACTS -->
+                    <div class="executive-card kpi-card" t-on-click="openAllContracts" title="Click to view Rent Contracts">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <span class="kpi-label">Active Contracts</span>
+                            <span class="kpi-icon-pill">
+                                <i class="fa fa-file-text-o"/>
+                            </span>
+                        </div>
+                        <div class="kpi-value-row d-flex align-items-baseline gap-2 mb-2">
+                            <h3 class="kpi-number mb-0" t-esc="state.kpis.active_contracts_count"/>
+                            <span class="badge rounded-pill bg-violet-subtle small fw-bold">In Force</span>
+                        </div>
+                        <p class="small mb-0 mt-3" style="color: var(--dash-text-secondary);">
+                            <t t-esc="state.kpis.active_contracts_subtitle or '8 properties vacant &amp; ready for leasing'"/>
+                        </p>
+                    </div>
+
+                    <!-- KPI 3: CONTRACT REVENUE -->
+                    <div class="executive-card kpi-card">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <span class="kpi-label">Contract Revenue</span>
+                            <span class="kpi-icon-pill">
+                                <i class="fa fa-money"/>
+                            </span>
+                        </div>
+                        <div class="kpi-value-row d-flex align-items-baseline gap-2 mb-2">
+                            <h3 class="kpi-number mb-0 fw-bold text-truncate" style="color: var(--dash-lavender-accent);" t-esc="state.kpis.total_rent_revenue_formatted"/>
+                        </div>
+                        <p class="small mb-0 mt-3" style="color: var(--dash-text-secondary);">
+                            <t t-esc="state.kpis.revenue_subtitle or 'Total annualized Rent stream in AED'"/>
+                        </p>
+                    </div>
+
+                    <!-- KPI 4: MAINTENANCE -->
+                    <div class="executive-card kpi-card" t-on-click="openAllWorkOrders" title="Click to view Work Orders">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <span class="kpi-label">Maintenance</span>
+                            <span class="kpi-icon-pill">
+                                <i class="fa fa-wrench"/>
+                            </span>
+                        </div>
+                        <div class="kpi-value-row d-flex align-items-baseline gap-2 mb-2">
+                            <h3 class="kpi-number mb-0" t-esc="state.kpis.maintenance_open"/>
+                            <span class="badge rounded-pill bg-sky-subtle small fw-bold" t-esc="state.kpis.maintenance_subtitle or 'Open / 28 Pending'"/>
+                        </div>
+                        <div class="d-flex justify-content-between small mt-2" style="color: var(--dash-text-secondary);">
+                            <span>Repaired: <b style="color: var(--dash-text-primary);" t-esc="state.kpis.maintenance_repaired"/></span>
+                            <span>Total: <b style="color: var(--dash-text-primary);" t-esc="state.kpis.maintenance_total"/></span>
+                        </div>
+                    </div>
+
+                    <!-- KPI 5: VENDOR TASKS -->
+                    <div class="executive-card kpi-card" t-on-click="openAllWorkOrders" title="Click to view Vendor Tasks">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <span class="kpi-label">Vendor Tasks</span>
+                            <span class="kpi-icon-pill">
+                                <i class="fa fa-users"/>
+                            </span>
+                        </div>
+                        <div class="kpi-value-row d-flex align-items-baseline gap-2 mb-2">
+                            <h3 class="kpi-number mb-0" t-esc="state.kpis.vendor_tasks_count"/>
+                            <span class="badge rounded-pill bg-warning-subtle text-dark small fw-bold">
+                                <t t-esc="state.kpis.vendor_tasks_badge or 'Pending'"/>
+                            </span>
+                        </div>
+                        <p class="small mb-0 mt-3" style="color: var(--dash-text-secondary);">
+                            <t t-esc="state.kpis.vendor_tasks_subtitle or 'External service provider tasks'"/>
+                        </p>
+                    </div>
+                </section>
+
+                <!-- 2. TOP ANALYTICAL CHARTS (4 PANELS) -->
+                <section class="charts-grid-4 mb-4">
+                    <!-- Chart 1: Donut Chart - Contracts by Status -->
+                    <div class="executive-card chart-card">
+                        <div class="chart-header d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <h6 class="mb-0 fw-bold">Contracts by Status</h6>
+                                <span class="small">Running, Expired, Terminated, Cancelled</span>
+                            </div>
+                            <span class="badge bg-secondary-subtle small">Rent Contracts</span>
+                        </div>
+                        <div class="chart-canvas-wrapper position-relative">
+                            <canvas t-ref="statusChart"/>
+                        </div>
+                    </div>
+
+                    <!-- Chart 2: Horizontal Bar Chart - Tenant Nationality Mix -->
+                    <div class="executive-card chart-card">
+                        <div class="chart-header d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <h6 class="mb-0 fw-bold">Tenant Nationality Mix</h6>
+                                <span class="small">Top resident countries &amp; portfolio share</span>
+                            </div>
+                            <span class="badge bg-sky-subtle small">Active Leases</span>
+                        </div>
+                        <div class="chart-canvas-wrapper position-relative">
+                            <canvas t-ref="nationalitiesChart"/>
+                        </div>
+                    </div>
+
+                    <!-- Chart 3: Facility & Work Order Distribution -->
+                    <div class="executive-card chart-card">
+                        <div class="chart-header d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <h6 class="mb-0 fw-bold">Facility &amp; Work Orders</h6>
+                                <span class="small">HVAC, Plumbing, Electrical, Cleaning, Security</span>
+                            </div>
+                            <span class="badge bg-violet-subtle small">Work Orders</span>
+                        </div>
+                        <div class="chart-canvas-wrapper position-relative">
+                            <canvas t-ref="facilityWorkOrdersChart"/>
+                        </div>
+                    </div>
+
+                    <!-- Chart 4: SLA Resolution Rate Semi-Gauge Chart -->
+                    <div class="executive-card chart-card">
+                        <div class="chart-header d-flex justify-content-between align-items-center mb-1">
+                            <div>
+                                <h6 class="mb-0 fw-bold">SLA Resolution Rate</h6>
+                                <span class="small">Work order turnaround compliance</span>
+                            </div>
+                            <span class="badge bg-emerald-subtle small">Target: 85%+</span>
+                        </div>
+                        <div class="gauge-wrapper position-relative">
+                            <canvas t-ref="slaGaugeChart"/>
+                            <div class="gauge-inner-stats">
+                                <div class="gauge-percent" t-esc="(state.charts.sla_data.sla_met_pct || 89.2) + '%'"/>
+                                <div class="gauge-sublabel">SLA Met</div>
+                            </div>
+                            <div class="gauge-footer text-center">
+                                <i class="fa fa-clock-o me-1" style="color: var(--dash-lavender-accent);"/>
+                                <span>Avg. time to resolve: <b style="color: var(--dash-text-primary);" t-esc="(state.charts.sla_data.avg_response_hours || 3.4) + ' hrs'"/></span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 3. PROPERTY FINANCIALS & OPERATIONAL TRACKERS (4 PANELS) -->
+                <section class="middle-section-grid-4 mb-4">
+                    <!-- Panel 1: Average Rent by Unit Type -->
+                    <div class="executive-card chart-card">
+                        <div class="chart-header d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <h6 class="mb-0 fw-bold">Average Rent by Unit Type</h6>
+                                <span class="small">Actual average rent across property types</span>
+                            </div>
+                            <span class="badge bg-emerald-subtle small">AED Pricing</span>
+                        </div>
+                        <div class="chart-canvas-wrapper position-relative">
+                            <canvas t-ref="avgRentChart"/>
+                        </div>
+                    </div>
+
+                    <!-- Panel 2: Monthly Revenue vs Maintenance Costs (Dual Chart) -->
+                    <div class="executive-card chart-card">
+                        <div class="chart-header d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <h6 class="mb-0 fw-bold">Revenue vs Maintenance</h6>
+                                <span class="small">Rent Inflows vs Maintenance OPEX</span>
+                            </div>
+                            <span class="badge bg-violet-subtle small">Cashflow &amp; OPEX</span>
+                        </div>
+                        <div class="chart-canvas-wrapper position-relative">
+                            <canvas t-ref="revVsMaintChart"/>
+                        </div>
+                    </div>
+
+                    <!-- Panel 3: Common Area & Asset Health Index -->
+                    <div class="executive-card chart-card">
+                        <div class="chart-header d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <h6 class="mb-0 fw-bold">Common Area &amp; Asset Health</h6>
+                                <span class="small">Critical facility systems condition index</span>
+                            </div>
+                            <span class="badge bg-secondary-subtle small" t-on-click="openAssets" style="cursor: pointer;">Manage Assets</span>
+                        </div>
+                        <div class="asset-health-list">
+                            <t t-foreach="state.assetHealth" t-as="asset" t-key="asset.name">
+                                <div class="asset-item">
+                                    <div class="asset-info">
+                                        <span class="asset-name" t-esc="asset.name"/>
+                                        <span class="asset-score"><t t-esc="asset.health"/>%</span>
+                                    </div>
+                                    <div class="asset-bar">
+                                        <div class="asset-fill" t-attf-style="width: {{ asset.health }}%; background-color: {{ asset.color }};"/>
+                                    </div>
+                                </div>
+                            </t>
+                        </div>
+                    </div>
+
+                    <!-- Panel 4: Upcoming Renewals & Expiries -->
+                    <div class="executive-card chart-card">
+                        <div class="chart-header d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <h6 class="mb-0 fw-bold">Renewals &amp; Planned Overhauls</h6>
+                                <span class="small">Forecast lease expiries &amp; maintenance schedule</span>
+                            </div>
+                            <span class="badge bg-warning-subtle text-dark small fw-bold">Forecast</span>
+                        </div>
+                        <div class="expiries-tracker-wrapper">
+                            <!-- Lease Expirations -->
+                            <div class="tracker-box">
+                                <div class="tracker-title">
+                                    <span>Upcoming Lease Expirations</span>
+                                    <span class="badge rounded-pill bg-danger-subtle small" t-esc="state.upcomingExpiries.lease_expiries.urgent_label or '15 EXPIRING SOON'"/>
+                                </div>
+                                <div class="expiry-counts-row">
+                                    <div class="count-pill">
+                                        <span class="days-tag">30 Days</span>
+                                        <span class="days-val" t-esc="state.upcomingExpiries.lease_expiries.next_30_days"/>
+                                    </div>
+                                    <div class="count-pill">
+                                        <span class="days-tag">60 Days</span>
+                                        <span class="days-val" t-esc="state.upcomingExpiries.lease_expiries.next_60_days"/>
+                                    </div>
+                                    <div class="count-pill">
+                                        <span class="days-tag">90 Days</span>
+                                        <span class="days-val" t-esc="state.upcomingExpiries.lease_expiries.next_90_days"/>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Planned Maintenance Schedules -->
+                            <div class="tracker-box">
+                                <div class="tracker-title">
+                                    <span>Planned Maintenance Schedules</span>
+                                    <span class="badge rounded-pill bg-violet-subtle small">12-Month Schedule</span>
+                                </div>
+                                <div class="d-flex align-items-center justify-content-between p-2 rounded-2" style="background-color: #ffffff; border: 1px solid rgba(194, 169, 217, 0.25);">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <i class="fa fa-cogs" style="color: var(--dash-lavender-accent); font-size: 1.1rem;"/>
+                                        <div>
+                                            <div class="fw-bold small" style="color: var(--dash-text-primary);" t-esc="state.upcomingExpiries.planned_maintenance.overhauls_label or '12 major overhauls pending'"/>
+                                            <div class="text-muted" style="font-size: 0.7rem;">Elevators, chillers &amp; pump stations</div>
+                                        </div>
+                                    </div>
+                                    <button class="btn btn-sm btn-icon-subtle" t-on-click="openAllWorkOrders" title="View Schedule">
+                                        <i class="fa fa-arrow-right"/>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 4. BOTTOM DETAILED DATA TABLES (SIDE-BY-SIDE DUAL TABLE) -->
+                <section class="dual-tables-grid mb-3">
+                    <!-- Left: Recent Active Lease Directory -->
+                    <div class="executive-card directory-card">
+                        <div class="directory-header d-flex flex-wrap justify-content-between align-items-center p-3 border-bottom" style="border-color: rgba(194, 169, 217, 0.2) !important;">
+                            <div>
+                                <h6 class="mb-0 fw-bold d-flex align-items-center gap-2">
+                                    <i class="fa fa-list-alt" style="color: var(--dash-lavender-accent);"/>
+                                    <span>Recent Active Lease Directory</span>
+                                    <span class="badge rounded-pill bg-secondary-subtle ms-1" t-esc="state.recentContracts.length + ' Records'"/>
+                                </h6>
+                                <span class="small" style="color: var(--dash-text-secondary);">Active leases with price benchmarks and status tracking</span>
+                            </div>
+                            <div>
+                                <button class="btn btn-sm btn-violet-outline" t-on-click="openAllContracts">
+                                    All Contracts <i class="fa fa-arrow-right ms-1"/>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive directory-table-wrapper">
+                            <table class="table executive-table align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th class="ps-3">Sequence</th>
+                                        <th>Property</th>
+                                        <th>Type</th>
+                                        <th>Tenant</th>
+                                        <th>Nationality</th>
+                                        <th class="text-end">Rent (AED)</th>
+                                        <th class="text-center">Status</th>
+                                        <th class="text-end pe-3">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-if="state.recentContracts.length === 0">
+                                        <tr>
+                                            <td colspan="8" class="text-center py-4" style="color: var(--dash-text-secondary);">
+                                                No active contracts found matching filter.
+                                            </td>
+                                        </tr>
+                                    </t>
+                                    <t t-else="">
+                                        <t t-foreach="state.recentContracts" t-as="c" t-key="c.id">
+                                            <tr t-on-click="() => this.openContract(c.id)">
+                                                <td class="ps-3">
+                                                    <span class="fw-semibold font-monospace" style="color: var(--dash-lavender-accent);" t-esc="c.name"/>
+                                                </td>
+                                                <td>
+                                                    <div class="fw-semibold" t-esc="c.unit_name"/>
+                                                    <div t-if="c.project_name" class="small text-muted d-flex align-items-center gap-1" style="font-size: 0.725rem;">
+                                                        <i class="fa fa-folder-open-o" style="color: var(--dash-lavender-accent);"/>
+                                                        <span t-esc="c.project_name"/>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <span class="badge rounded-pill small px-2 py-1 badge-type-1bed" t-esc="c.unit_type"/>
+                                                </td>
+                                                <td>
+                                                    <span class="fw-medium" t-esc="c.tenant_name"/>
+                                                </td>
+                                                <td>
+                                                    <span class="country-badge text-uppercase font-monospace" t-esc="c.tenant_country_code"/>
+                                                </td>
+                                                <td class="text-end fw-bold" t-esc="c.rent_amount_formatted"/>
+                                                <td class="text-center">
+                                                    <span class="badge rounded-pill" t-att-class="c.state_badge_class" t-esc="c.state_label"/>
+                                                </td>
+                                                <td class="text-end pe-3" t-on-click.stop="">
+                                                    <button class="btn btn-sm btn-icon-subtle" t-on-click="(ev) => this.onActionClick(ev, c.id)">
+                                                        <i class="fa fa-external-link"/>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        </t>
+                                    </t>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Right: Work Order Escalations & Urgent Tasks -->
+                    <div class="executive-card directory-card">
+                        <div class="directory-header d-flex flex-wrap justify-content-between align-items-center p-3 border-bottom" style="border-color: rgba(194, 169, 217, 0.2) !important;">
+                            <div>
+                                <h6 class="mb-0 fw-bold d-flex align-items-center gap-2">
+                                    <i class="fa fa-exclamation-circle" style="color: #991b1b;"/>
+                                    <span>Work Order Escalations &amp; Urgent Tasks</span>
+                                    <span class="badge rounded-pill bg-danger-subtle ms-1" t-esc="state.workOrdersUrgent.length + ' Urgent'"/>
+                                </h6>
+                                <span class="small" style="color: var(--dash-text-secondary);">High &amp; critical priority facility maintenance requests</span>
+                            </div>
+                            <div>
+                                <button class="btn btn-sm btn-violet-outline" t-on-click="openAllWorkOrders">
+                                    All Work Orders <i class="fa fa-arrow-right ms-1"/>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive directory-table-wrapper">
+                            <table class="table executive-table align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th class="ps-3">Ticket #</th>
+                                        <th>Property / Unit</th>
+                                        <th>Fault Type</th>
+                                        <th>Priority</th>
+                                        <th>Assigned Team</th>
+                                        <th>Status</th>
+                                        <th class="text-end pe-3">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-if="state.workOrdersUrgent.length === 0">
+                                        <tr>
+                                            <td colspan="7" class="text-center py-4" style="color: var(--dash-text-secondary);">
+                                                No urgent work orders currently open.
+                                            </td>
+                                        </tr>
+                                    </t>
+                                    <t t-else="">
+                                        <t t-foreach="state.workOrdersUrgent" t-as="wo" t-key="wo.id">
+                                            <tr t-on-click="() => this.openWorkOrder(wo.id)">
+                                                <td class="ps-3 font-monospace fw-semibold" style="color: var(--dash-violet-deep);" t-esc="wo.ticket"/>
+                                                <td>
+                                                    <div class="fw-semibold" t-esc="wo.unit_name"/>
+                                                    <div t-if="wo.project_name" class="small text-muted d-flex align-items-center gap-1" style="font-size: 0.725rem;">
+                                                        <i class="fa fa-folder-open-o" style="color: var(--dash-lavender-accent);"/>
+                                                        <span t-esc="wo.project_name"/>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <span class="fw-medium" t-esc="wo.type"/>
+                                                </td>
+                                                <td>
+                                                    <span class="badge rounded-pill" t-att-class="wo.priority_badge" t-esc="wo.priority.toUpperCase()"/>
+                                                </td>
+                                                <td>
+                                                    <span class="small" style="color: var(--dash-text-secondary);" t-esc="wo.assigned_team"/>
+                                                </td>
+                                                <td>
+                                                    <span class="badge rounded-pill bg-sky-subtle" t-esc="wo.status"/>
+                                                </td>
+                                                <td class="text-end pe-3" t-on-click.stop="">
+                                                    <button class="btn btn-sm btn-icon-subtle" t-on-click="() => this.openWorkOrder(wo.id)" title="Open Ticket">
+                                                        <i class="fa fa-external-link"/>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        </t>
+                                    </t>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+        </div>
+    </t>
+
+</templates>

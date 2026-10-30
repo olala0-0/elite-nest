@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_sign_pdf_edit_wizard" model="ir.actions.act_window">
+        <field name="name">Edit PDF</field>
+        <field name="res_model">sign.pdf.edit.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <!-- Standalone top-level menu, deliberately NOT nested under an assumed
+         existing Sign menu XML ID (which I can't verify exists in your
+         installed version without seeing your source). This guarantees the
+         module installs cleanly. Once installed, if you'd like it moved
+         under the existing "Sign" app menu instead of its own top-level
+         entry, tell me the exact menu path you see and I'll adjust the
+         parent safely. -->
+    <menuitem id="menu_sign_pdf_edit_root"
+              name="PDF Editor"
+              sequence="99"/>
+    <menuitem id="menu_sign_pdf_edit_wizard"
+              name="Edit PDF"
+              parent="menu_sign_pdf_edit_root"
+              action="action_sign_pdf_edit_wizard"
+              sequence="1"/>
+</odoo>

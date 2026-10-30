@@ -1,0 +1,247 @@
+<odoo>
+    <data noupdate="1">
+        <!-- First-draft inspection checklist, see MOVE_IN_MOVE_OUT_PLAN.md section 3.4.
+             noupdate="1": these are meant to be edited freely in Odoo after
+             install (Configuration > Inspection Checklist Items) without a
+             module upgrade silently resetting them back to this list. -->
+
+        <record id="inspection_item_wall_paint" model="property.inspection.checklist.item">
+            <field name="name">Paint condition</field>
+            <field name="area">Walls &amp; Ceiling</field>
+            <field name="sequence">10</field>
+        </record>
+        <record id="inspection_item_wall_cracks" model="property.inspection.checklist.item">
+            <field name="name">Cracks</field>
+            <field name="area">Walls &amp; Ceiling</field>
+            <field name="sequence">11</field>
+        </record>
+        <record id="inspection_item_wall_dampness" model="property.inspection.checklist.item">
+            <field name="name">Dampness / water stains</field>
+            <field name="area">Walls &amp; Ceiling</field>
+            <field name="sequence">12</field>
+        </record>
+
+        <record id="inspection_item_floor_condition" model="property.inspection.checklist.item">
+            <field name="name">Tiles / parquet condition</field>
+            <field name="area">Flooring</field>
+            <field name="sequence">20</field>
+        </record>
+        <record id="inspection_item_floor_scratches" model="property.inspection.checklist.item">
+            <field name="name">Scratches</field>
+            <field name="area">Flooring</field>
+            <field name="sequence">21</field>
+        </record>
+        <record id="inspection_item_floor_grout" model="property.inspection.checklist.item">
+            <field name="name">Grout</field>
+            <field name="area">Flooring</field>
+            <field name="sequence">22</field>
+        </record>
+
+        <record id="inspection_item_doors_locks" model="property.inspection.checklist.item">
+            <field name="name">Locks &amp; keys</field>
+            <field name="area">Doors &amp; Windows</field>
+            <field name="sequence">30</field>
+        </record>
+        <record id="inspection_item_doors_glass" model="property.inspection.checklist.item">
+            <field name="name">Glass condition</field>
+            <field name="area">Doors &amp; Windows</field>
+            <field name="sequence">31</field>
+        </record>
+        <record id="inspection_item_doors_handles" model="property.inspection.checklist.item">
+            <field name="name">Handles</field>
+            <field name="area">Doors &amp; Windows</field>
+            <field name="sequence">32</field>
+        </record>
+        <record id="inspection_item_doors_screens" model="property.inspection.checklist.item">
+            <field name="name">Screens</field>
+            <field name="area">Doors &amp; Windows</field>
+            <field name="sequence">33</field>
+        </record>
+
+        <record id="inspection_item_kitchen_cabinets" model="property.inspection.checklist.item">
+            <field name="name">Cabinets</field>
+            <field name="area">Kitchen</field>
+            <field name="sequence">40</field>
+        </record>
+        <record id="inspection_item_kitchen_countertop" model="property.inspection.checklist.item">
+            <field name="name">Countertop</field>
+            <field name="area">Kitchen</field>
+            <field name="sequence">41</field>
+        </record>
+        <record id="inspection_item_kitchen_sink" model="property.inspection.checklist.item">
+            <field name="name">Sink &amp; mixer</field>
+            <field name="area">Kitchen</field>
+            <field name="sequence">42</field>
+        </record>
+        <record id="inspection_item_kitchen_exhaust" model="property.inspection.checklist.item">
+            <field name="name">Exhaust hood</field>
+            <field name="area">Kitchen</field>
+            <field name="sequence">43</field>
+        </record>
+        <record id="inspection_item_kitchen_appliances" model="property.inspection.checklist.item">
+            <field name="name">Built-in appliances (if any)</field>
+            <field name="area">Kitchen</field>
+            <field name="sequence">44</field>
+        </record>
+
+        <record id="inspection_item_bathroom_fixtures" model="property.inspection.checklist.item">
+            <field name="name">Fixtures (basin / toilet / shower)</field>
+            <field name="area">Bathroom(s)</field>
+            <field name="sequence">50</field>
+        </record>
+        <record id="inspection_item_bathroom_tiles" model="property.inspection.checklist.item">
+            <field name="name">Tiles</field>
+            <field name="area">Bathroom(s)</field>
+            <field name="sequence">51</field>
+        </record>
+        <record id="inspection_item_bathroom_mirror" model="property.inspection.checklist.item">
+            <field name="name">Mirror</field>
+            <field name="area">Bathroom(s)</field>
+            <field name="sequence">52</field>
+        </record>
+        <record id="inspection_item_bathroom_drainage" model="property.inspection.checklist.item">
+            <field name="name">Drainage</field>
+            <field name="area">Bathroom(s)</field>
+            <field name="sequence">53</field>
+        </record>
+        <record id="inspection_item_bathroom_sealing" model="property.inspection.checklist.item">
+            <field name="name">Silicone sealing</field>
+            <field name="area">Bathroom(s)</field>
+            <field name="sequence">54</field>
+        </record>
+
+        <record id="inspection_item_electrical_switches" model="property.inspection.checklist.item">
+            <field name="name">Switches &amp; sockets</field>
+            <field name="area">Electrical</field>
+            <field name="sequence">60</field>
+        </record>
+        <record id="inspection_item_electrical_lights" model="property.inspection.checklist.item">
+            <field name="name">Light fixtures</field>
+            <field name="area">Electrical</field>
+            <field name="sequence">61</field>
+        </record>
+        <record id="inspection_item_electrical_db_panel" model="property.inspection.checklist.item">
+            <field name="name">Main DB panel</field>
+            <field name="area">Electrical</field>
+            <field name="sequence">62</field>
+        </record>
+        <record id="inspection_item_electrical_fan_ac_control" model="property.inspection.checklist.item">
+            <field name="name">Fan / AC control</field>
+            <field name="area">Electrical</field>
+            <field name="sequence">63</field>
+        </record>
+
+        <record id="inspection_item_ac_cooling" model="property.inspection.checklist.item">
+            <field name="name">AC units - cooling function</field>
+            <field name="area">Air Conditioning</field>
+            <field name="sequence">70</field>
+        </record>
+        <record id="inspection_item_ac_filters" model="property.inspection.checklist.item">
+            <field name="name">Filters</field>
+            <field name="area">Air Conditioning</field>
+            <field name="sequence">71</field>
+        </record>
+        <record id="inspection_item_ac_remote" model="property.inspection.checklist.item">
+            <field name="name">Remote</field>
+            <field name="area">Air Conditioning</field>
+            <field name="sequence">72</field>
+        </record>
+        <record id="inspection_item_ac_visible_damage" model="property.inspection.checklist.item">
+            <field name="name">Visible damage</field>
+            <field name="area">Air Conditioning</field>
+            <field name="sequence">73</field>
+        </record>
+
+        <record id="inspection_item_plumbing_pressure" model="property.inspection.checklist.item">
+            <field name="name">Water pressure</field>
+            <field name="area">Plumbing</field>
+            <field name="sequence">80</field>
+        </record>
+        <record id="inspection_item_plumbing_leaks" model="property.inspection.checklist.item">
+            <field name="name">Leaks</field>
+            <field name="area">Plumbing</field>
+            <field name="sequence">81</field>
+        </record>
+        <record id="inspection_item_plumbing_water_heater" model="property.inspection.checklist.item">
+            <field name="name">Water heater</field>
+            <field name="area">Plumbing</field>
+            <field name="sequence">82</field>
+        </record>
+
+        <record id="inspection_item_balcony_railing" model="property.inspection.checklist.item">
+            <field name="name">Railing condition</field>
+            <field name="area">Balcony / Terrace</field>
+            <field name="sequence">90</field>
+        </record>
+        <record id="inspection_item_balcony_flooring" model="property.inspection.checklist.item">
+            <field name="name">Flooring</field>
+            <field name="area">Balcony / Terrace</field>
+            <field name="sequence">91</field>
+        </record>
+        <record id="inspection_item_balcony_drainage" model="property.inspection.checklist.item">
+            <field name="name">Drainage</field>
+            <field name="area">Balcony / Terrace</field>
+            <field name="sequence">92</field>
+        </record>
+
+        <record id="inspection_item_furniture_wardrobes" model="property.inspection.checklist.item">
+            <field name="name">Wardrobes</field>
+            <field name="area">Built-in Furniture</field>
+            <field name="sequence">100</field>
+        </record>
+        <record id="inspection_item_furniture_shelving" model="property.inspection.checklist.item">
+            <field name="name">Shelving - condition and functionality</field>
+            <field name="area">Built-in Furniture</field>
+            <field name="sequence">101</field>
+        </record>
+
+        <record id="inspection_item_appliance_fridge" model="property.inspection.checklist.item">
+            <field name="name">Fridge</field>
+            <field name="area">Appliances (if furnished)</field>
+            <field name="sequence">110</field>
+        </record>
+        <record id="inspection_item_appliance_washer" model="property.inspection.checklist.item">
+            <field name="name">Washer</field>
+            <field name="area">Appliances (if furnished)</field>
+            <field name="sequence">111</field>
+        </record>
+        <record id="inspection_item_appliance_oven" model="property.inspection.checklist.item">
+            <field name="name">Oven</field>
+            <field name="area">Appliances (if furnished)</field>
+            <field name="sequence">112</field>
+        </record>
+
+        <record id="inspection_item_keys_returned" model="property.inspection.checklist.item">
+            <field name="name">Number of keys / cards returned</field>
+            <field name="area">Keys &amp; Access</field>
+            <field name="sequence">120</field>
+        </record>
+        <record id="inspection_item_keys_access_cards" model="property.inspection.checklist.item">
+            <field name="name">Access cards</field>
+            <field name="area">Keys &amp; Access</field>
+            <field name="sequence">121</field>
+        </record>
+        <record id="inspection_item_keys_remotes" model="property.inspection.checklist.item">
+            <field name="name">Remotes (parking / gate)</field>
+            <field name="area">Keys &amp; Access</field>
+            <field name="sequence">122</field>
+        </record>
+
+        <record id="inspection_item_cleanliness_general" model="property.inspection.checklist.item">
+            <field name="name">General cleanliness at handover</field>
+            <field name="area">Cleanliness</field>
+            <field name="sequence">130</field>
+        </record>
+
+        <record id="inspection_item_safety_smoke_detectors" model="property.inspection.checklist.item">
+            <field name="name">Smoke detectors</field>
+            <field name="area">Safety</field>
+            <field name="sequence">140</field>
+        </record>
+        <record id="inspection_item_safety_fire_extinguisher" model="property.inspection.checklist.item">
+            <field name="name">Fire extinguisher (if applicable)</field>
+            <field name="area">Safety</field>
+            <field name="sequence">141</field>
+        </record>
+    </data>
+</odoo>

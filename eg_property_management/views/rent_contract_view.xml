@@ -1,5 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <data>
+        <!-- List View -->
         <record id="rent_contract_list_view" model="ir.ui.view">
             <field name="name">rent.contract.list</field>
             <field name="model">rent.contract</field>
@@ -25,30 +27,47 @@
             </field>
         </record>
 
+        <!-- Form View -->
         <record id="rent_contract_form_view" model="ir.ui.view">
             <field name="name">rent.contract.form</field>
             <field name="model">rent.contract</field>
             <field name="arch" type="xml">
                 <form>
                     <header>
-                        <field name="state" widget="statusbar" statusbar_visible="draft,running,cancel,close,expire"/>
+                        <field name="state" widget="statusbar" statusbar_visible="draft,running,move_out,cancelled,terminated,expired"/>
+
                         <button name="action_state_draft" string="Reset to Draft" type="object" class="btn-secondary"
-                                invisible="state in ['draft','running','cancel','expire']"/>
+                                invisible="state in ['draft','running','move_out','cancelled','expired']"/>
                         <button name="action_state_running" string="Running" type="object" class="btn-primary"
-                                invisible="state in ['running','cancel','close','expire']"/>
+                                invisible="state in ['running','move_out','cancelled','terminated','expired']"/>
+
                         <button name="action_create_invoice" string="Create Invoice" type="object" class="btn-primary"
-                                invisible="state in ['draft','cancel','close','expire']"/>
-                        <button name="action_state_close" string="Close Contract" type="object" class="btn-secondary"
-                                invisible="state in ['draft','cancel','close','expire']"/>
-                        <button name="action_state_cancel" string="Cancel" type="object" class="btn-secondary"
-                                invisible="state in ['draft','cancel','close','expire']"/>
-                        <button name="action_create_broker_bill" string="Create Broker Bill" type="object"
-                                class="btn-primary"
+                                invisible="state in ['draft','cancelled','terminated','expired']"/>
+
+                        <button name="action_state_terminate" string="Terminate Contract" type="object" class="btn-secondary"
+                                invisible="state in ['draft','cancelled','terminated','expired']"/>
+
+                        <button name="action_start_moveout" string="Start Move-Out Process" type="object" class="btn-secondary"
+                                invisible="state in ['draft','cancelled','terminated','expired'] or moveout_id"/>
+
+                        <field name="moveout_state" widget="badge" decoration-warning="moveout_state != 'settled'"
+                               decoration-success="moveout_state == 'settled'"
+                               invisible="state in ['draft','cancelled','terminated','expired'] or not moveout_id"/>
+
+                        <button name="action_state_cancel" string="Cancel Contract" type="object" class="btn-secondary"
+                                invisible="state in ['draft','cancelled','terminated','expired']"/>
+
+                        <button name="action_create_broker_bill" string="Create Broker Bill" type="object" class="btn-primary"
                                 invisible="not broker_id or not broker_commission or state != 'running' or has_broker_bill == True"/>
+
                         <button name="%(action_rent_contract_extend_wizard)d" string="Extend Contract" type="action"
-                                class="btn-primary" invisible="state in ['draft','running','cancel','close']"/>
+                                class="btn-primary" invisible="state in ['draft','running','move_out','cancelled','terminated']"/>
                     </header>
                     <sheet>
+                        <div class="alert alert-warning mb-2" role="alert"
+                             invisible="remaining_days &gt; 90 or remaining_days &lt;= 0 or state != 'running'">
+                            <i class="fa fa-exclamation-triangle me-2"/> <strong>Contract Expiry Notice:</strong> This contract expires in <field name="remaining_days" readonly="1"/> days.
+                        </div>
                         <div class="oe_button_box" name="button_box">
                             <button type="object" class="oe_stat_button" icon="fa-files-o"
                                     name="action_view_invoices">
@@ -57,25 +76,41 @@
                             <button type="object" class="oe_stat_button" icon="fa-list-alt"
                                     name="action_view_broker_bills" string="Brokers">
                             </button>
+                            <button type="object" class="oe_stat_button" icon="fa-sign-in"
+                                    name="action_open_movein" string="Move-In">
+                            </button>
+                            <button type="object" class="oe_stat_button" icon="fa-sign-out"
+                                    name="action_open_moveout" string="Move-Out" invisible="not moveout_id">
+                            </button>
                         </div>
                         <h1>
                             <field name="name" readonly="1"/>
                         </h1>
                         <group string="Contract Details">
                             <group>
-                                <field name="start_date" required="1" readonly="state == 'running'"/>
-                                <field name="end_date" required="1" readonly="state == 'running'"/>
-                                <field name="rent" required="1" readonly="state == 'running'"/>
-                                <field name="deposit" required="1" readonly="state == 'running'"/>
+                                <field name="start_date" required="1" readonly="state in ('running', 'move_out')"/>
+                                <field name="end_date" required="1" readonly="state in ('running', 'move_out')"/>
+                                <field name="rent" required="1" readonly="state in ('running', 'move_out')"/>
+                                <field name="deposit" required="1" readonly="state in ('running', 'move_out')"/>
                                 <field name="invoice_start_date" required="1"/>
                             </group>
                             <group>
                                 <field name="duration"/>
                                 <field name="contract_days"/>
                                 <field name="remaining_days"/>
-                                <field name="payment_term_id" required="1" readonly="state == 'running'"/>
+                                <field name="payment_term_id" required="1" readonly="state in ('running', 'move_out')"/>
                                 <field name="payment_count" readonly="1"/>
-                                <field name="contract_type" required="1" readonly="state == 'running'"/>
+                                <field name="contract_type" required="1" readonly="state in ('running', 'move_out')"/>
+                            </group>
+                        </group>
+                        <group string="One-Time Charges">
+                            <group>
+                                <field name="ejari_fee" readonly="state in ('running', 'move_out')"/>
+                                <field name="admin_charge" readonly="state in ('running', 'move_out')"/>
+                            </group>
+                            <group>
+                                <field name="commission" readonly="state in ('running', 'move_out')"/>
+                                <field name="parking_fee" readonly="state in ('running', 'move_out')"/>
                             </group>
                         </group>
                         <hr style="border: 1px solid #000;"/>
@@ -90,8 +125,10 @@
                         <hr style="border: 1px solid #000;"/>
                         <group string="Property Information">
                             <group>
-                                <field name="property_id" required="1" domain="[('property_for','=','rent')]"/>
+                                <field name="property_id" required="1"
+                                       domain="[('property_for','=','rent'), ('state','not in',['on_rent','rent','sold'])]"/>
                                 <field name="residential_type_id" string="Residential Type" readonly="1"/>
+                                <field name="dewa_premises_no" readonly="1"/>
                                 <label for="street" string="Address"/>
                                 <div class="o_address_format">
                                     <field name="street" placeholder="Street..." class="o_address_street"/>
@@ -117,6 +154,7 @@
                                 <field name="tenant_id" required="1"/>
                                 <field name="tenant_phone"/>
                                 <field name="tenant_email"/>
+                                <field name="tenant_country_id"/>
                             </group>
                             <group>
                                 <field name="landlord_id" required="1"/>
@@ -125,37 +163,37 @@
                             </group>
                         </group>
                         <group string="Maintenance Details">
-                            <field name="maintenance_type" readonly="state == 'running'"/>
-                            <field name="charge_type" readonly="state == 'running'"/>
+                            <field name="maintenance_type" readonly="state in ('running', 'move_out')"/>
+                            <field name="charge_type" readonly="state in ('running', 'move_out')"/>
                             <field name="total_maintenance"/>
                         </group>
                         <group string="Taxes">
-                            <field name="tax_rate" readonly="state == 'running'"/>
+                            <field name="tax_rate" readonly="state in ('running', 'move_out')"/>
                             <field name="taxable_amount" readonly="1"/>
                             <field name="tax_amount" readonly="1"/>
                         </group>
 
                         <group string="Broker / Responsible">
                             <group>
-                                <field name="user_id" required="1" readonly="state == 'running'"/>
+                                <field name="user_id" required="1" readonly="state in ('running', 'move_out')"/>
                                 <field name="phone"/>
                                 <field name="email"/>
                             </group>
                             <group>
-                                <field name="broker_id" readonly="state == 'running'"/>
+                                <field name="broker_id" readonly="state in ('running', 'move_out')"/>
                                 <field name="broker_phone"/>
                                 <field name="broker_email"/>
-                                <field name="broker_commission" readonly="state == 'running'"/>
+                                <field name="broker_commission" readonly="state in ('running', 'move_out')"/>
                             </group>
                         </group>
                         <group string="CRM">
                             <field name="lead_id" domain="[('property_id', '=', property_id)]"
-                                   options="{'no_open': True, 'no_quick_create': True}" readonly="state == 'running'"/>
+                                   options="{'no_open': True, 'no_quick_create': True}" readonly="state in ('running', 'move_out')"/>
                         </group>
                         <group string="Penalty">
-                            <field name="penalty_type" readonly="state == 'running'"/>
-                            <field name="penalty_value" readonly="state == 'running'"/>
-                            <field name="penalty_grace_days" readonly="state == 'running'"/>
+                            <field name="penalty_type" readonly="state in ('running', 'move_out')"/>
+                            <field name="penalty_value" readonly="state in ('running', 'move_out')"/>
+                            <field name="penalty_grace_days" readonly="state in ('running', 'move_out')"/>
                         </group>
 
                         <notebook>
@@ -231,17 +269,17 @@
                                                 </div>
                                             </t>
                                         </templates>
+                                        <form string="Add Document">
+                                            <sheet>
+                                                <group>
+                                                    <field name="name" required="1"/>
+                                                    <field name="document_file" filename="document_filename" required="1"/>
+                                                    <field name="document_filename" required="1"/>
+                                                    <field name="document_date" required="1"/>
+                                                </group>
+                                            </sheet>
+                                        </form>
                                     </kanban>
-                                    <form string="Add Document">
-                                        <sheet>
-                                            <group>
-                                                <field name="name" required="1"/>
-                                                <field name="document_file" filename="document_filename" required="1"/>
-                                                <field name="document_filename" required="1"/>
-                                                <field name="document_date" required="1"/>
-                                            </group>
-                                        </sheet>
-                                    </form>
                                 </field>
                             </page>
 
@@ -255,18 +293,10 @@
                                     <table style="width: 100%; border: 1px solid #D1D5DB; border-radius: 0.9rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-collapse: collapse;">
                                         <thead style="background-color: #F3F4F6;">
                                             <tr>
-                                                <th style="padding: 0.75rem; text-align: left; font-weight: 600; border-bottom: 1px solid #D1D5DB;">
-                                                    #
-                                                </th>
-                                                <th style="padding: 0.75rem; text-align: left; font-weight: 600; border-bottom: 1px solid #D1D5DB;">
-                                                    Expected Amount
-                                                </th>
-                                                <th style="padding: 0.75rem; text-align: left; font-weight: 600; border-bottom: 1px solid #D1D5DB;">
-                                                    Paid Amount
-                                                </th>
-                                                <th style="padding: 0.75rem; text-align: left; font-weight: 600; border-bottom: 1px solid #D1D5DB;">
-                                                    Due Amount
-                                                </th>
+                                                <th style="padding: 0.75rem; text-align: left; font-weight: 600; border-bottom: 1px solid #D1D5DB;">#</th>
+                                                <th style="padding: 0.75rem; text-align: left; font-weight: 600; border-bottom: 1px solid #D1D5DB;">Expected Amount</th>
+                                                <th style="padding: 0.75rem; text-align: left; font-weight: 600; border-bottom: 1px solid #D1D5DB;">Paid Amount</th>
+                                                <th style="padding: 0.75rem; text-align: left; font-weight: 600; border-bottom: 1px solid #D1D5DB;">Due Amount</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -303,9 +333,7 @@
                                             </tr>
 
                                             <tr style="font-weight: 600; background-color: #F9FAFB; border-top: 1px solid #D1D5DB;">
-                                                <td style="padding: 0.75rem; font-weight: 500;">
-                                                    <strong>Margin</strong>
-                                                </td>
+                                                <td style="padding: 0.75rem; font-weight: 500;"><strong>Margin</strong></td>
                                                 <td style="padding: 0.75rem;">
                                                     <field name="margin_expected" widget="monetary"
                                                            options="{'currency_field': 'currency_id'}" readonly="1"/>
@@ -314,9 +342,7 @@
                                                     <field name="margin_paid" widget="monetary"
                                                            options="{'currency_field': 'currency_id'}" readonly="1"/>
                                                 </td>
-                                                <td style="padding: 0.75rem; background-color: #FEE2E2; font-weight: 500;">
-                                                    #
-                                                </td>
+                                                <td style="padding: 0.75rem; background-color: #FEE2E2; font-weight: 500;">#</td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -329,6 +355,7 @@
             </field>
         </record>
 
+        <!-- Pivot View -->
         <record id="rent_contract_pivot_view" model="ir.ui.view">
             <field name="name">rent.contract.pivot</field>
             <field name="model">rent.contract</field>
@@ -342,6 +369,7 @@
             </field>
         </record>
 
+        <!-- Search View -->
         <record id="view_rent_contract_search" model="ir.ui.view">
             <field name="name">rent.contract.search</field>
             <field name="model">rent.contract</field>
@@ -355,19 +383,16 @@
                     <field name="end_date" string="End Date"/>
                     <field name="state" string="Status"/>
 
-                    <filter string="Expired Contracts" name="expired_contracts" domain="[('state', '=', 'close')]"/>
-                    <filter string="Automatic Installment" name="auto_contract"
-                            domain="[('contract_type', '=', 'auto')]"/>
-                    <filter string="Manual Installment" name="manual_contract"
-                            domain="[('contract_type', '=', 'manual')]"/>
+                    <!-- Updated to 'terminated' -->
+                    <filter string="Terminated Contracts" name="terminated_contracts" domain="[('state', '=', 'terminated')]"/>
+                    <filter string="Automatic Installment" name="auto_contract" domain="[('contract_type', '=', 'auto')]"/>
+                    <filter string="Manual Installment" name="manual_contract" domain="[('contract_type', '=', 'manual')]"/>
 
                     <group>
                         <filter string="Company" name="group_company" context="{'group_by':'company_id'}"/>
                         <filter string="Property" name="group_by_property" context="{'group_by':'property_id'}"/>
-                        <filter string="Property Type" name="group_property_type"
-                                context="{'group_by':'property_type'}"/>
-                        <filter string="Residential Type" name="group_residential_type"
-                                context="{'group_by':'residential_type_id'}"/>
+                        <filter string="Property Type" name="group_property_type" context="{'group_by':'property_type'}"/>
+                        <filter string="Residential Type" name="group_residential_type" context="{'group_by':'residential_type_id'}"/>
                         <separator/>
                         <filter string="Tenant" name="group_by_tenant" context="{'group_by':'tenant_id'}"/>
                         <filter string="Landlord" name="group_by_landlord" context="{'group_by':'landlord_id'}"/>
@@ -384,12 +409,12 @@
             </field>
         </record>
 
+        <!-- Calendar View -->
         <record id="view_rent_contract_calendar" model="ir.ui.view">
             <field name="name">rent.contract.calendar</field>
             <field name="model">rent.contract</field>
             <field name="arch" type="xml">
-                <calendar string="Rent Contracts Calendar" mode="month" date_start="start_date" date_stop="end_date"
-                          color="state">
+                <calendar string="Rent Contracts Calendar" mode="month" date_start="start_date" date_stop="end_date" color="state">
                     <field name="name"/>
                     <field name="tenant_id"/>
                     <field name="property_id"/>
@@ -398,6 +423,7 @@
             </field>
         </record>
 
+        <!-- Kanban View -->
         <record id="view_rent_contract_kanban" model="ir.ui.view">
             <field name="name">rent.contract.kanban</field>
             <field name="model">rent.contract</field>
@@ -426,39 +452,31 @@
                             </div>
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <div class="fw-bold">
-                                    Property:
-                                    <field name="property_id"/>
+                                    Property: <field name="property_id"/>
                                 </div>
-                                <span class="badge text-bg-secondary"
-                                      t-attf-class="badge bg-#{record.state.raw_value}">
+                                <span class="badge text-bg-secondary" t-attf-class="badge bg-#{record.state.raw_value}">
                                     <field name="state"/>
                                 </span>
                             </div>
 
                             <div class="o_kanban_details d-flex justify-content-between align-items-center mb-2">
                                 <div>
-                                    <strong>Landlord :</strong>
-                                    <field name="landlord_id"/>
+                                    <strong>Landlord :</strong> <field name="landlord_id"/>
                                 </div>
                             </div>
                             <div class="o_kanban_details d-flex justify-content-between align-items-center mb-2">
                                 <div>
-                                    <strong>Contract Type :</strong>
-                                    <field name="contract_type"/>
+                                    <strong>Contract Type :</strong> <field name="contract_type"/>
                                 </div>
                             </div>
                             <div class="o_kanban_details d-flex justify-content-between align-items-center mb-2">
                                 <div>
-                                    <strong>Responsible :</strong>
-                                    <field name="user_id"/>
+                                    <strong>Responsible :</strong> <field name="user_id"/>
                                 </div>
                             </div>
                             <div class="o_kanban_details text-muted small mb-2">
                                 <div>
-                                    Period:
-                                    <field name="start_date"/>
-                                    →
-                                    <field name="end_date"/>
+                                    Period: <field name="start_date"/> → <field name="end_date"/>
                                 </div>
                             </div>
                             <div class="d-flex justify-content-between align-items-center mt-2">
@@ -473,11 +491,13 @@
             </field>
         </record>
 
+        <!-- Action and Menu -->
         <record id="action_rent_contracts" model="ir.actions.act_window">
             <field name="name">Rent Contracts</field>
             <field name="res_model">rent.contract</field>
             <field name="view_mode">list,form,kanban,calendar,pivot,activity</field>
         </record>
+
         <menuitem id="property_rent_contract_menu" name="Rent Contracts" parent="property_management_menu" sequence="50"
                   action="action_rent_contracts"/>
     </data>

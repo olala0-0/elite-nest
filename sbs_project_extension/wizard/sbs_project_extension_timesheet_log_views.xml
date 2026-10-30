@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_sbs_timesheet_log_wizard_form" model="ir.ui.view">
+        <field name="name">sbs_project_extension.timesheet.log.wizard.form</field>
+        <field name="model">sbs_project_extension.timesheet.log.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Log Time to Timesheet">
+                <field name="timer_id" invisible="1"/>
+                <group>
+                    <group>
+                        <field name="task_id" options="{'no_open': True}"/>
+                        <field name="project_id" options="{'no_open': True}"/>
+                        <field name="date"/>
+                    </group>
+                    <group>
+                        <field name="measured_hours" widget="sbs_duration_hms"/>
+                        <field name="hours" widget="sbs_duration_hms"/>
+                    </group>
+                </group>
+                <group>
+                    <field name="name" placeholder="What did you work on?"/>
+                </group>
+                <div class="text-muted">
+                    You can reduce the counted time before logging it, but you
+                    cannot increase it.
+                </div>
+                <footer>
+                    <button name="action_add_to_timesheet"
+                            type="object"
+                            string="Add to Timesheet"
+                            class="btn-primary"
+                            data-hotkey="q"/>
+                    <button string="Keep for Later"
+                            special="cancel"
+                            class="btn-secondary"
+                            data-hotkey="z"/>
+                    <button name="action_discard_timer"
+                            type="object"
+                            string="Discard Timer"
+                            class="btn-link text-danger"
+                            confirm="The counted time will be deleted without being logged. Continue?"
+                            data-hotkey="x"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

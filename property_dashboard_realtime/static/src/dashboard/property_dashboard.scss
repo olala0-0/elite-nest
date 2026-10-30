@@ -1,0 +1,726 @@
+/* ==========================================================================
+   PROPERTY REAL-TIME EXECUTIVE DASHBOARD (ODOO 19 ENTERPRISE OWL)
+   EXECUTIVE FACILITY & PROPERTY MANAGEMENT PALETTE (#f6f3f9 CANVAS)
+   ========================================================================== */
+
+:root {
+    --dash-primary-lavender: #c2a9d9;
+    --dash-lavender-accent: #8b68aa;
+    --dash-lavender-light: #ece3f5;
+    --dash-lavender-medium: #a88cc4;
+    --dash-lavender-dark: #6a4f85;
+    --dash-violet-deep: #503966;
+    --dash-violet-subtle: #72538f;
+    --dash-bg: #f6f3f9;
+    --dash-card-bg: #ffffff;
+    --dash-card-surface-alt: #faf8fc;
+    --dash-border-color: rgba(194, 169, 217, 0.22);
+    --dash-text-primary: #1f1728;
+    --dash-text-secondary: #4d3d5e;
+    --dash-text-muted: #6e5e80;
+}
+
+$bg-dashboard: #f6f3f9;
+$card-bg: #ffffff;
+$card-surface-alt: #faf8fc;
+$card-border: rgba(194, 169, 217, 0.22);
+$card-hover-border: rgba(139, 104, 170, 0.5);
+
+$lavender-primary: #c2a9d9;
+$lavender-accent: #8b68aa;
+$lavender-light: #ece3f5;
+$lavender-medium: #a88cc4;
+$lavender-dark: #6a4f85;
+$violet-deep: #503966;
+$violet-subtle: #72538f;
+
+$text-primary: #1f1728;
+$text-secondary: #4d3d5e;
+$text-muted: #6e5e80;
+
+.o_property_dashboard_container {
+    background-color: $bg-dashboard;
+    color: $text-primary;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    min-height: 100%;
+    transition: background-color 0.3s ease;
+
+    &.pulse-active {
+        box-shadow: inset 0 0 40px rgba(139, 104, 170, 0.2);
+    }
+
+    .text-dark {
+        color: $text-primary !important;
+    }
+    .text-secondary {
+        color: $text-secondary !important;
+    }
+    .text-muted {
+        color: $text-muted !important;
+    }
+}
+
+/* --------------------------------------------------------------------------
+   Top Breadcrumb Navigation Tabs (Matching Screenshot)
+   -------------------------------------------------------------------------- */
+.executive-nav-tabs {
+    background-color: #ffffff;
+    border-bottom: 1px solid rgba(194, 169, 217, 0.22);
+    padding-top: 0.65rem;
+    padding-bottom: 0.4rem;
+
+    .nav-tab-item {
+        color: #7a1f1d;
+        font-size: 0.85rem;
+        font-weight: 500;
+        text-decoration: underline;
+        text-underline-offset: 3px;
+        cursor: pointer;
+        transition: color 0.15s ease;
+
+        &:hover {
+            color: #503966;
+            text-decoration: underline;
+        }
+
+        &.active {
+            font-weight: 600;
+        }
+    }
+}
+
+/* --------------------------------------------------------------------------
+   Executive Topbar & Controls (Clean Elevated White on #f6f3f9 Background)
+   -------------------------------------------------------------------------- */
+.executive-topbar {
+    background-color: #ffffff;
+    border-bottom: 1px solid rgba(194, 169, 217, 0.25);
+    box-shadow: 0 2px 8px 0 rgba(80, 57, 102, 0.05);
+    z-index: 20;
+
+    .brand-badge {
+        background: linear-gradient(135deg, rgba(194, 169, 217, 0.35), rgba(139, 104, 170, 0.2));
+        border: 1px solid rgba(139, 104, 170, 0.3);
+        width: 44px;
+        height: 44px;
+        color: $violet-deep;
+    }
+
+    .live-sync-badge {
+        background-color: rgba(194, 169, 217, 0.25);
+        color: $violet-deep;
+        border: 1px solid rgba(139, 104, 170, 0.35);
+        font-size: 0.75rem;
+        font-weight: 700;
+        padding: 0.35rem 0.65rem;
+
+        .pulse-beacon {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: $lavender-accent;
+            box-shadow: 0 0 0 0 rgba(139, 104, 170, 0.7);
+            animation: pulse-ring 2s infinite;
+        }
+    }
+
+    .company-pill {
+        background-color: #f6f3f9;
+        color: $text-secondary;
+        border: 1px solid rgba(194, 169, 217, 0.3);
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 0.35rem 0.65rem;
+    }
+
+    .executive-select, .executive-input {
+        background-color: #ffffff;
+        border: 1px solid rgba(194, 169, 217, 0.4);
+        color: $text-primary;
+        font-size: 0.825rem;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+
+        &:focus {
+            background-color: #ffffff;
+            border-color: $lavender-accent;
+            box-shadow: 0 0 0 3px rgba(139, 104, 170, 0.15);
+            color: $text-primary;
+        }
+
+        &::placeholder {
+            color: $text-muted;
+        }
+
+        option {
+            background-color: #ffffff;
+            color: $text-primary;
+        }
+    }
+
+    .search-input-wrapper {
+        min-width: 190px;
+
+        .search-icon {
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.8rem;
+            color: $text-muted;
+        }
+    }
+
+    .btn-executive-action {
+        background-color: #ffffff;
+        border: 1px solid rgba(194, 169, 217, 0.35);
+        color: $violet-deep;
+        border-radius: 8px;
+
+        &:hover {
+            background-color: #f6f3f9;
+            color: $text-primary;
+            border-color: $lavender-accent;
+        }
+    }
+
+    .btn-lavender {
+        background: linear-gradient(135deg, #8b68aa, #503966);
+        color: #ffffff !important;
+        border: none;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(80, 57, 102, 0.25);
+        transition: all 0.2s ease;
+
+        &:hover {
+            background: linear-gradient(135deg, #9d78bc, #60437b);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(80, 57, 102, 0.35);
+        }
+    }
+
+    .btn-violet-outline {
+        background-color: #ffffff;
+        border: 1px solid rgba(139, 104, 170, 0.5);
+        color: $violet-deep !important;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+
+        &:hover {
+            background-color: #ece3f5;
+            border-color: $lavender-accent;
+            color: $violet-deep !important;
+        }
+    }
+}
+
+/* --------------------------------------------------------------------------
+   Scrollable Viewport & Loading Overlay
+   -------------------------------------------------------------------------- */
+.dashboard-scrollable {
+    overflow-y: auto;
+    overflow-x: hidden;
+    height: 100%;
+}
+
+.executive-loading-overlay {
+    background-color: rgba(246, 243, 249, 0.85);
+    backdrop-filter: blur(4px);
+    z-index: 50;
+}
+
+/* --------------------------------------------------------------------------
+   Executive Card Base Styles (Elevated White Cards on #f6f3f9 Canvas)
+   -------------------------------------------------------------------------- */
+.executive-card {
+    background-color: $card-bg;
+    border: 1px solid $card-border;
+    border-radius: 14px;
+    box-shadow: 0 4px 16px 0 rgba(80, 57, 102, 0.04);
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+    overflow: hidden;
+
+    &:hover {
+        border-color: $card-hover-border;
+        box-shadow: 0 6px 20px 0 rgba(80, 57, 102, 0.08);
+    }
+}
+
+/* --------------------------------------------------------------------------
+   1. KPI Summary Cards Grid (6 Updated Cards)
+   -------------------------------------------------------------------------- */
+.kpi-banner-grid-5 {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 1.15rem;
+
+    @media (max-width: 1400px) {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    @media (max-width: 768px) {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    @media (max-width: 540px) {
+        grid-template-columns: 1fr;
+    }
+}
+
+.kpi-banner-grid-6 {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 1.15rem;
+
+    @media (max-width: 1400px) {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    @media (max-width: 768px) {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    @media (max-width: 540px) {
+        grid-template-columns: 1fr;
+    }
+}
+
+.kpi-card {
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    cursor: pointer;
+
+    .kpi-label {
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: $text-secondary;
+    }
+
+    .kpi-icon-pill {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.95rem;
+        background-color: rgba(194, 169, 217, 0.18);
+        color: $violet-deep;
+    }
+
+    .kpi-number {
+        font-size: 1.55rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        color: $text-primary;
+    }
+
+    .occupancy-progress-bar {
+        height: 6px;
+        background-color: #ede7f3;
+        width: 100%;
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #c2a9d9, #8b68aa);
+            border-radius: 999px;
+            transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+    }
+}
+
+/* --------------------------------------------------------------------------
+   2. Analytical Charts Grid (Top 4 Panels)
+   -------------------------------------------------------------------------- */
+.charts-grid-4 {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.25rem;
+
+    @media (max-width: 1400px) {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    @media (max-width: 768px) {
+        grid-template-columns: 1fr;
+    }
+}
+
+.chart-card {
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+
+    .chart-header {
+        h6 {
+            color: $text-primary;
+            font-size: 0.95rem;
+        }
+        span.small {
+            color: $text-secondary;
+            font-size: 0.775rem;
+        }
+    }
+
+    .chart-canvas-wrapper {
+        min-height: 230px;
+        height: 230px;
+        width: 100%;
+    }
+
+    .gauge-wrapper {
+        min-height: 230px;
+        height: 230px;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+
+        .gauge-inner-stats {
+            position: absolute;
+            top: 55%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+
+            .gauge-percent {
+                font-size: 1.85rem;
+                font-weight: 800;
+                color: $violet-deep;
+                line-height: 1;
+            }
+
+            .gauge-sublabel {
+                font-size: 0.725rem;
+                font-weight: 600;
+                color: $text-secondary;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+            }
+        }
+
+        .gauge-footer {
+            margin-top: -10px;
+            font-size: 0.8rem;
+            color: $text-secondary;
+        }
+    }
+}
+
+/* --------------------------------------------------------------------------
+   3. Middle Section: Financials & Operational Trackers (4 Panels)
+   -------------------------------------------------------------------------- */
+.middle-section-grid-4 {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.25rem;
+
+    @media (max-width: 1400px) {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    @media (max-width: 768px) {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Asset Health Progress Bars */
+.asset-health-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+
+    .asset-item {
+        .asset-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.825rem;
+            margin-bottom: 0.35rem;
+
+            .asset-name {
+                font-weight: 600;
+                color: $text-primary;
+            }
+            .asset-score {
+                font-weight: 700;
+                color: $violet-deep;
+            }
+        }
+
+        .asset-bar {
+            height: 7px;
+            background-color: #ede7f3;
+            border-radius: 999px;
+            overflow: hidden;
+
+            .asset-fill {
+                height: 100%;
+                border-radius: 999px;
+                transition: width 0.8s ease;
+            }
+        }
+    }
+}
+
+/* Upcoming Expiries & Maintenance Tracker */
+.expiries-tracker-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+
+    .tracker-box {
+        background-color: $card-surface-alt;
+        border: 1px solid rgba(194, 169, 217, 0.2);
+        border-radius: 10px;
+        padding: 0.85rem 1rem;
+
+        .tracker-title {
+            font-size: 0.775rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: $text-secondary;
+            margin-bottom: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .expiry-counts-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 0.5rem;
+
+            .count-pill {
+                flex: 1;
+                background-color: #ffffff;
+                border: 1px solid rgba(194, 169, 217, 0.25);
+                border-radius: 8px;
+                padding: 0.4rem 0.5rem;
+                text-align: center;
+
+                .days-tag {
+                    font-size: 0.675rem;
+                    color: $text-muted;
+                    display: block;
+                    font-weight: 600;
+                }
+                .days-val {
+                    font-size: 1.05rem;
+                    font-weight: 800;
+                    color: $violet-deep;
+                }
+            }
+        }
+    }
+}
+
+/* --------------------------------------------------------------------------
+   4. Bottom Detailed Dual Tables (Side-by-Side 50/50 Grid)
+   -------------------------------------------------------------------------- */
+.dual-tables-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+
+    @media (max-width: 1100px) {
+        grid-template-columns: 1fr;
+    }
+}
+
+.directory-card {
+    .directory-header {
+        background-color: #ffffff;
+        h6 {
+            font-size: 0.95rem;
+        }
+    }
+
+    .directory-table-wrapper {
+        max-height: 480px;
+        overflow-y: auto;
+    }
+}
+
+.executive-table {
+    border-collapse: separate;
+    border-spacing: 0;
+
+    thead th {
+        background-color: $card-surface-alt;
+        color: $text-secondary;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        border-bottom: 1px solid rgba(194, 169, 217, 0.2);
+        padding: 0.75rem 0.85rem;
+        white-space: nowrap;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    tbody tr {
+        transition: background-color 0.15s ease;
+        border-bottom: 1px solid rgba(194, 169, 217, 0.12);
+
+        &:hover {
+            background-color: #faf7fc;
+            cursor: pointer;
+        }
+
+        td {
+            padding: 0.75rem 0.85rem;
+            font-size: 0.825rem;
+            color: $text-primary;
+            vertical-align: middle;
+            border-bottom: 1px solid rgba(194, 169, 217, 0.12);
+        }
+    }
+}
+
+/* --------------------------------------------------------------------------
+   Priority Badges & Status Pills
+   -------------------------------------------------------------------------- */
+.badge-critical {
+    background-color: #fce8e8 !important;
+    color: #991b1b !important;
+    border: 1px solid rgba(153, 27, 27, 0.25) !important;
+    font-weight: 700;
+    font-size: 0.725rem;
+    padding: 0.25rem 0.6rem;
+}
+
+.badge-high {
+    background-color: #fff1e5 !important;
+    color: #c2410c !important;
+    border: 1px solid rgba(194, 65, 12, 0.25) !important;
+    font-weight: 700;
+    font-size: 0.725rem;
+    padding: 0.25rem 0.6rem;
+}
+
+.badge-normal {
+    background-color: #f1ecf7 !important;
+    color: $text-secondary !important;
+    border: 1px solid rgba(194, 169, 217, 0.3) !important;
+    font-weight: 600;
+    font-size: 0.725rem;
+    padding: 0.25rem 0.6rem;
+}
+
+.badge-running {
+    background-color: #e8f5e9 !important;
+    color: #1b5e20 !important;
+    border: 1px solid rgba(27, 94, 32, 0.25) !important;
+}
+
+.badge-expired {
+    background-color: #fff8e1 !important;
+    color: #b78103 !important;
+    border: 1px solid rgba(183, 129, 3, 0.25) !important;
+}
+
+.badge-terminated {
+    background-color: #fbebee !important;
+    color: #a82435 !important;
+    border: 1px solid rgba(168, 36, 53, 0.25) !important;
+}
+
+.badge-cancelled {
+    background-color: #ede7f3 !important;
+    color: #5c4375 !important;
+    border: 1px solid rgba(92, 67, 117, 0.25) !important;
+}
+
+/* Unit Type Badges */
+.badge-type-studio {
+    background-color: #f3e8ff !important;
+    color: #6b21a8 !important;
+}
+.badge-type-1bed {
+    background-color: #ede9fe !important;
+    color: #5b21b6 !important;
+}
+.badge-type-2bed {
+    background-color: #e0e7ff !important;
+    color: #3730a3 !important;
+}
+.badge-type-3bed {
+    background-color: #e0f2fe !important;
+    color: #075985 !important;
+}
+.badge-type-office {
+    background-color: #f1f5f9 !important;
+    color: #334155 !important;
+}
+
+.country-badge {
+    display: inline-block;
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    background-color: #f1edf5;
+    border: 1px solid rgba(194, 169, 217, 0.3);
+    font-size: 0.725rem;
+    font-weight: 700;
+    color: $violet-deep;
+}
+
+.btn-icon-subtle {
+    background: transparent;
+    border: none;
+    color: $text-secondary;
+    padding: 0.25rem 0.5rem;
+    border-radius: 6px;
+    transition: all 0.15s ease;
+
+    &:hover {
+        background-color: #ece3f5;
+        color: $violet-deep;
+    }
+}
+
+/* Subtle utility badges */
+.bg-violet-subtle {
+    background-color: rgba(194, 169, 217, 0.25) !important;
+    color: $violet-deep !important;
+    border: 1px solid rgba(139, 104, 170, 0.3);
+}
+
+.bg-emerald-subtle {
+    background-color: #e8f5e9 !important;
+    color: #1b5e20 !important;
+    border: 1px solid rgba(27, 94, 32, 0.25);
+}
+
+.bg-danger-subtle {
+    background-color: #fce8e8 !important;
+    color: #991b1b !important;
+    border: 1px solid rgba(153, 27, 27, 0.25);
+}
+
+.bg-sky-subtle {
+    background-color: #e0f2fe !important;
+    color: #0369a1 !important;
+    border: 1px solid rgba(3, 105, 161, 0.25);
+}
+
+@keyframes pulse-ring {
+    0% {
+        box-shadow: 0 0 0 0 rgba(139, 104, 170, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 8px rgba(139, 104, 170, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(139, 104, 170, 0);
+    }
+}

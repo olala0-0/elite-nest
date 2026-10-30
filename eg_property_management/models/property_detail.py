@@ -50,8 +50,9 @@ class PropertyDetails(models.Model):
     nearby_connectivities = fields.Boolean("Nearby Connectivities")
 
     state = fields.Selection(
-        [("draft", "Draft"), ("available", "Available"), ("on_rent", "On Rent"), ("on_sale", "On Sale"),
-         ("rent", "Rent"), ("sold", "sold")],
+        [("draft", "Draft"), ("available", "Vacant"), ("vacant", "Vacant"),
+         ("on_rent", "Occupied"), ("rent", "Occupied"), ("on_sale", "On Sale"),
+         ("sold", "Sold")],
         default="draft", string="Status", tracking=True)
 
     total_area = fields.Float(string="Total Area")
@@ -160,11 +161,67 @@ class PropertyDetails(models.Model):
 
         return super(PropertyDetails, self).create(vals_list)
 
+    def _get_active_rent_contract(self):
+        self.ensure_one()
+        return self.env["rent.contract"].search(
+            [("property_id", "=", self.id), ("state", "in", ("running", "move_out"))], limit=1
+        )
+
+    def _get_active_sale_contract(self):
+        self.ensure_one()
+        return self.env["sale.contract"].search(
+            [("property_id", "=", self.id), ("state", "in", ("booked", "sold"))], limit=1
+        )
+
+    def _check_no_active_contract(self, target_state_label):
+        for rec in self:
+            active_rent = rec._get_active_rent_contract()
+            if active_rent:
+                raise UserError(
+                    f"Cannot set '{rec.name}' to {target_state_label} while it has an active "
+                    f"running rent contract ('{active_rent.name}'). Terminate, cancel, or expire the "
+                    f"contract first."
+                )
+            active_sale = rec._get_active_sale_contract()
+            if active_sale:
+                raise UserError(
+                    f"Cannot set '{rec.name}' to {target_state_label} while it has an active "
+                    f"sale contract ('{active_sale.name}'). Cancel/refund the contract first."
+                )
+
+    def init(self):
+        super().init()
+        # Merge legacy 'rent' status into canonical 'on_rent' (Occupied)
+        self.env.cr.execute("""
+            UPDATE property_detail
+            SET state = 'on_rent'
+            WHERE state = 'rent';
+        """)
+        # Ensure properties with settled move-out and no running contract are marked Vacant ('available')
+        self.env.cr.execute("""
+            UPDATE property_detail pd
+            SET state = 'available'
+            WHERE pd.id IN (
+                SELECT rcm.property_id
+                FROM rent_contract_moveout rcm
+                WHERE rcm.state = 'settled'
+                  AND rcm.property_id IS NOT NULL
+            )
+            AND pd.id NOT IN (
+                SELECT rc.property_id
+                FROM rent_contract rc
+                WHERE rc.state = 'running'
+                  AND rc.property_id IS NOT NULL
+            );
+        """)
+
     def action_set_draft(self):
+        self._check_no_active_contract("Draft")
         for rec in self:
             rec.state = "draft"
 
     def action_set_available(self):
+        self._check_no_active_contract("Vacant")
         for rec in self:
             rec.state = "available"
 

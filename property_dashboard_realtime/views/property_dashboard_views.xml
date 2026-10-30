@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <!-- ========================================================= -->
+        <!-- CLIENT ACTION: REAL-TIME EXECUTIVE DASHBOARD               -->
+        <!-- 100% Read-Only Interface against existing database tables -->
+        <!-- ========================================================= -->
+        <record id="action_property_realtime_dashboard" model="ir.actions.client">
+            <field name="name">Real-Time Executive Property Dashboard</field>
+            <field name="tag">property_realtime_dashboard</field>
+            <field name="target">current</field>
+        </record>
+
+        <!-- ========================================================= -->
+        <!-- STANDALONE APP MENU ARCHITECTURE                         -->
+        <!-- ========================================================= -->
+        <menuitem id="menu_property_dashboard_root"
+                  name="Property Dashboard"
+                  web_icon="property_dashboard_realtime,static/description/icon.svg"
+                  action="action_property_realtime_dashboard"
+                  sequence="5"/>
+
+        <menuitem id="menu_property_realtime_dashboard"
+                  name="Executive Dashboard"
+                  parent="menu_property_dashboard_root"
+                  action="action_property_realtime_dashboard"
+                  sequence="1"/>
+
+    </data>
+</odoo>

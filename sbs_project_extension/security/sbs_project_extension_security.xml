@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="module_category_sbs_project_extension" model="ir.module.category">
+        <field name="name">SBS Project Extension</field>
+        <field name="description">Helps manage additional projects information.</field>
+        <field name="sequence">20</field>
+    </record>
+
+    <record id="privilege_sbs_project_role" model="res.groups.privilege">
+        <field name="name">SBS Project Role</field>
+        <field name="description">Select one access role for SBS Project Extension.</field>
+        <field name="placeholder">No SBS Project Access</field>
+        <field name="sequence">20</field>
+        <field name="category_id" ref="module_category_sbs_project_extension"/>
+    </record>
+
+    <record id="privilege_sbs_task_access" model="res.groups.privilege">
+        <field name="name">SBS Task Access</field>
+        <field name="description">Select supplemental SBS task access.</field>
+        <field name="placeholder">Standard Task Access</field>
+        <field name="sequence">30</field>
+        <field name="category_id" ref="module_category_sbs_project_extension"/>
+    </record>
+
+    <record id="group_sbs_task_read_create" model="res.groups">
+        <field name="name">Read Task Only</field>
+        <field name="sequence">10</field>
+        <field name="privilege_id" ref="privilege_sbs_task_access"/>
+        <field name="implied_ids" eval="[
+            (4, ref('project.group_project_user')),
+            (4, ref('hr_timesheet.group_hr_timesheet_user')),
+        ]"/>
+        <field name="comment">Users can view and create accessible tasks, but cannot edit or delete them. They can run the task timer and log their own time.</field>
+    </record>
+
+    <record id="group_sbs_project_extension" model="res.groups">
+        <field name="name">SBS Project User</field>
+        <field name="sequence">10</field>
+        <field name="privilege_id" ref="privilege_sbs_project_role"/>
+        <field name="implied_ids" eval="[
+            (4, ref('project.group_project_user')),
+            (4, ref('hr_timesheet.group_hr_timesheet_user')),
+        ]"/>
+        <field name="comment">Helps manage additional projects information.</field>
+    </record>
+
+    <record id="group_sbs_project_password_user" model="res.groups">
+        <field name="name">SBS Project Credentials User</field>
+        <field name="sequence">20</field>
+        <field name="privilege_id" ref="privilege_sbs_project_role"/>
+        <field name="implied_ids" eval="[(4, ref('group_sbs_project_extension'))]"/>
+        <field name="comment">Users in this group can view and maintain project credentials.</field>
+    </record>
+
+    <record id="group_sbs_project_financial_user" model="res.groups">
+        <field name="name">SBS Project Financial User</field>
+        <field name="sequence">30</field>
+        <field name="privilege_id" ref="privilege_sbs_project_role"/>
+        <field name="implied_ids" eval="[(4, ref('group_sbs_project_extension'))]"/>
+        <field name="comment">Users in this group can view and maintain project financial information.</field>
+    </record>
+
+    <record id="group_sbs_project_credentials_financial_user" model="res.groups">
+        <field name="name">SBS Project Credentials &amp; Financial User</field>
+        <field name="sequence">40</field>
+        <field name="privilege_id" ref="privilege_sbs_project_role"/>
+        <field name="implied_ids" eval="[
+            (4, ref('group_sbs_project_password_user')),
+            (4, ref('group_sbs_project_financial_user')),
+        ]"/>
+        <field name="comment">Users in this group can view and maintain project credentials and financial information.</field>
+    </record>
+
+    <record id="group_sbs_project_admin" model="res.groups">
+        <field name="name">SBS Project Admin</field>
+        <field name="sequence">50</field>
+        <field name="privilege_id" ref="privilege_sbs_project_role"/>
+        <field name="implied_ids" eval="[
+            (4, ref('group_sbs_project_credentials_financial_user')),
+            (4, ref('project.group_project_manager')),
+        ]"/>
+        <field name="comment">Administrators have full SBS project access.</field>
+    </record>
+</odoo>

@@ -1,0 +1,95 @@
+<odoo>
+    <data>
+        <record id="rent_contract_movein_view_form" model="ir.ui.view">
+            <field name="name">rent.contract.movein.form</field>
+            <field name="model">rent.contract.movein</field>
+            <field name="arch" type="xml">
+                <form string="Move-In">
+                    <header>
+                        <button name="action_mark_inspection_done" string="Mark Inspection Done" type="object"
+                                class="btn-primary" invisible="state != 'draft'"/>
+                        <button name="action_mark_contract_signed" string="Mark Contract Signed" type="object"
+                                class="btn-primary" invisible="state != 'inspection_done'"/>
+                        <button name="action_mark_payment_verified" string="Mark Payment Verified" type="object"
+                                class="btn-primary" invisible="state != 'contract_signed'"/>
+                        <button name="action_mark_handed_over" string="Mark Handed Over" type="object"
+                                class="btn-primary" invisible="state != 'payment_verified'"/>
+                        <button name="action_settle" string="Settle" type="object"
+                                class="btn-primary" invisible="state != 'handed_over'"/>
+                        <button name="action_reset_draft" string="Reset to Draft" type="object"
+                                invisible="state == 'draft'"/>
+                        <button name="%(action_report_movein_permit)d" string="Print Move-In Permit" type="action"
+                                class="btn-secondary" invisible="not move_in_permit_issued"/>
+                        <field name="state" widget="statusbar"
+                               statusbar_visible="draft,inspection_done,contract_signed,payment_verified,handed_over,settled"/>
+                    </header>
+                    <sheet>
+                        <div class="oe_button_box" name="button_box">
+                            <button type="object" class="oe_stat_button" icon="fa-clipboard"
+                                    name="action_create_or_open_inspection" string="Pre-Move-In Inspection">
+                            </button>
+                        </div>
+                        <group>
+                            <group>
+                                <field name="rent_contract_id" readonly="1"/>
+                                <field name="property_id" readonly="1"/>
+                                <field name="tenant_id" readonly="1"/>
+                                <field name="currency_id" invisible="1"/>
+                            </group>
+                            <group>
+                                <field name="invoice_expected_amount"/>
+                                <field name="invoice_paid_amount"/>
+                            </group>
+                        </group>
+                        <group string="Contract &amp; Documents">
+                            <group>
+                                <field name="contract_signed_date"/>
+                            </group>
+                            <group>
+                                <field name="move_in_permit_issued"/>
+                                <field name="move_in_permit_date"/>
+                            </group>
+                        </group>
+                        <group string="Handover &amp; Communication">
+                            <group>
+                                <field name="welcome_email_sent"/>
+                                <field name="welcome_email_date"/>
+                            </group>
+                            <group>
+                                <field name="handover_date"/>
+                            </group>
+                        </group>
+                        <div class="oe_button_box" name="secondary_actions">
+                            <button name="action_issue_move_in_permit" string="Issue Move-In Permit" type="object"
+                                    class="btn-secondary" invisible="move_in_permit_issued"/>
+                            <button name="action_mark_welcome_email_sent" string="Send Welcome Email"
+                                    type="object" class="btn-secondary" invisible="welcome_email_sent"/>
+                        </div>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="rent_contract_movein_view_list" model="ir.ui.view">
+            <field name="name">rent.contract.movein.list</field>
+            <field name="model">rent.contract.movein</field>
+            <field name="arch" type="xml">
+                <list string="Move-In Records">
+                    <field name="rent_contract_id"/>
+                    <field name="property_id"/>
+                    <field name="tenant_id"/>
+                    <field name="state" widget="badge" decoration-success="state == 'settled'"/>
+                </list>
+            </field>
+        </record>
+
+        <record id="action_rent_contract_movein" model="ir.actions.act_window">
+            <field name="name">Move-In Records</field>
+            <field name="res_model">rent.contract.movein</field>
+            <field name="view_mode">list,form</field>
+        </record>
+
+        <menuitem id="rent_contract_movein_menu" name="Move-In Records" parent="property_management_menu"
+                  action="action_rent_contract_movein" sequence="66"/>
+    </data>
+</odoo>

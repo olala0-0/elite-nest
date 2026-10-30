@@ -584,7 +584,7 @@ class RentContract(models.Model):
     def _get_invoice_settings(self):
         self.ensure_one()
         param_obj = self.env['ir.config_parameter'].sudo()
-        product_obj = self.env['product.product'].sudo()
+        product_obj = self.env['product.product'].with_company(self.company_id).sudo()
 
         def _get_product(key, fallback=False):
             product_id = param_obj.get_param(key)
@@ -743,11 +743,15 @@ class RentContract(models.Model):
     @staticmethod
     def _prepare_invoice_line(product, description, amount, account_id):
         return (0, 0, {
-            'product_id': product.id if product else False,
+            'product_id': product.id if (product and getattr(product, '_name', '') == 'product.product') else False,
             'name': description,
             'quantity': 1,
             'price_unit': amount,
-            'account_id': account_id.id,
+            'account_id': (
+                product.property_account_income_id
+                or product.categ_id.property_account_income_categ_id
+                or account_id
+            ).id if (product and hasattr(product, 'property_account_income_id')) else account_id.id,
         })
 
     def _get_next_rent_amount(self):
@@ -1435,7 +1439,11 @@ class RentContract(models.Model):
                     'name': invoice_settings['penalty_description'],
                     'quantity': 1,
                     'price_unit': penalty_amount,
-                    'account_id': income_account_id.id,
+                    'account_id': (
+                        invoice_settings['penalty_product'].property_account_income_id
+                        or invoice_settings['penalty_product'].categ_id.property_account_income_categ_id
+                        or income_account_id
+                    ).id if invoice_settings['penalty_product'] else income_account_id.id,
                 })],
             }
             invoice_id = self.env['account.move'].with_context(skip_sync_installment=True).create(move_vals)

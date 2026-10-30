@@ -89,7 +89,8 @@ class RentContractMoveOut(models.Model):
 
     state = fields.Selection(
         [('draft', 'Draft'), ('clearance_pending', 'Clearance Pending'), ('inspection_done', 'Final Inspection'),
-         ('finance_review', 'Finance Review'), ('approved', 'Approved'), ('settled', 'Settled')],
+         ('finance_review', 'Finance Review'), ('approved', 'Approved'), ('settled', 'Settled'),
+         ('cancelled', 'Cancelled')],
         string='Status', default='draft', tracking=True)
 
     @api.depends('deduction_line_ids.amount', 'rent_contract_id')
@@ -286,6 +287,169 @@ class RentContractMoveOut(models.Model):
             }
             self.env['mail.mail'].create(mail_values).send()
 
+    def _get_finance_users(self):
+        """Find users representing the Finance / Accounting team who can review & approve Move-Out."""
+        # 1. Configured finance users in Settings
+        config_user_ids = self.env['ir.config_parameter'].sudo().get_param('eg_property_management.finance_user_ids')
+        if config_user_ids:
+            try:
+                user_ids = [int(u_id.strip()) for u_id in config_user_ids.split(',') if u_id.strip().isdigit()]
+                users = self.env['res.users'].browse(user_ids).exists().filtered(lambda u: u.active)
+                if users:
+                    return users
+            except Exception:
+                pass
+
+        groups_field = 'group_ids' if 'group_ids' in self.env['res.users']._fields else 'groups_id'
+
+        # 2. Users in Move-Out Finance Approver group
+        finance_group = self.env.ref('eg_property_management.group_property_finance_approver', raise_if_not_found=False)
+        if finance_group:
+            users = self.env['res.users'].search([
+                (groups_field, 'in', finance_group.ids),
+                ('share', '=', False),
+                ('active', '=', True),
+            ])
+            if users:
+                return users
+
+        # 3. Fallback to standard Odoo Accounting / Invoicing groups
+        groups = [
+            'account.group_account_user',
+            'account.group_account_invoice',
+            'account.group_account_manager',
+        ]
+        group_ids = []
+        for group_xml_id in groups:
+            group = self.env.ref(group_xml_id, raise_if_not_found=False)
+            if group:
+                group_ids.append(group.id)
+
+        users = self.env['res.users']
+        if group_ids:
+            users = self.env['res.users'].search([
+                (groups_field, 'in', group_ids),
+                ('share', '=', False),
+                ('active', '=', True),
+            ])
+
+        if not users:
+            admin_group = self.env.ref('base.group_erp_manager', raise_if_not_found=False)
+            if admin_group:
+                users = self.env['res.users'].search([
+                    (groups_field, 'in', admin_group.ids),
+                    ('share', '=', False),
+                    ('active', '=', True),
+                ])
+        return users
+
+    def _send_system_notification(self, title, message, partners, activity_summary=None, activity_user_ids=None):
+        """Send in-system notification directly to partners and users:
+        1. Posts in Move-Out chatter and Contract chatter with forced notification_type='in_app'
+           (increments Discuss systray unread badge, no emails required).
+        2. Sends real-time pop-up notification via bus.bus to connected users.
+        3. Schedules mail.activity for approver users.
+        """
+        self.ensure_one()
+        if not partners:
+            return
+
+        # 1. Post notification in Move-Out chatter
+        msg = self.message_post(
+            body=f"<b>{title}</b><br/>{message}",
+            subject=title,
+            partner_ids=partners.ids,
+            message_type='notification',
+            subtype_xmlid='mail.mt_comment',
+        )
+        if msg and msg.notification_ids:
+            try:
+                msg.notification_ids.sudo().write({'notification_type': 'inbox'})
+            except Exception:
+                pass
+
+        # Also post in Contract chatter
+        if self.rent_contract_id:
+            try:
+                c_msg = self.rent_contract_id.message_post(
+                    body=f"<b>{title}</b><br/>{message}",
+                    subject=title,
+                    partner_ids=partners.ids,
+                    message_type='notification',
+                    subtype_xmlid='mail.mt_comment',
+                )
+                if c_msg and c_msg.notification_ids:
+                    try:
+                        c_msg.notification_ids.sudo().write({'notification_type': 'inbox'})
+                    except Exception:
+                        pass
+            except Exception:
+                pass
+
+        # 2. Real-time pop-up notification via bus.bus (requires clean plain text)
+        plain_message = message
+        try:
+            from odoo.tools import html2plaintext
+            plain_message = html2plaintext(message).strip()
+        except Exception:
+            pass
+        if '<' in plain_message and '>' in plain_message:
+            import re
+            plain_message = re.sub(r'<br\s*/?>', '\n', plain_message, flags=re.IGNORECASE)
+            plain_message = re.sub(r'<[^>]+>', '', plain_message).strip()
+
+        plain_title = title
+        if '<' in plain_title and '>' in plain_title:
+            import re
+            plain_title = re.sub(r'<[^>]+>', '', plain_title).strip()
+
+        for partner in partners:
+            try:
+                self.env['bus.bus']._sendone(
+                    partner,
+                    'simple_notification',
+                    {
+                        'type': 'info',
+                        'title': plain_title,
+                        'message': plain_message,
+                        'sticky': False,
+                    }
+                )
+            except Exception:
+                try:
+                    self.env['bus.bus']._sendone(
+                        partner,
+                        'mail.simple_notification',
+                        {
+                            'type': 'info',
+                            'title': plain_title,
+                            'message': plain_message,
+                            'sticky': False,
+                        }
+                    )
+                except Exception:
+                    pass
+
+        # 3. Schedule mail.activity if requested
+        if activity_summary and activity_user_ids:
+            for user in activity_user_ids:
+                existing_activity = self.env['mail.activity'].search([
+                    ('res_model', '=', self._name),
+                    ('res_id', '=', self.id),
+                    ('user_id', '=', user.id),
+                    ('summary', '=', activity_summary),
+                ], limit=1)
+                if not existing_activity:
+                    try:
+                        self.activity_schedule(
+                            'mail.mail_activity_data_todo',
+                            user_id=user.id,
+                            summary=activity_summary,
+                            note=message,
+                        )
+                    except Exception:
+                        pass
+
     def action_submit_finance_review(self):
         for rec in self:
             rec.write({
@@ -294,19 +458,94 @@ class RentContractMoveOut(models.Model):
                 'finance_reviewed_date': fields.Datetime.now(),
             })
 
+            finance_users = rec._get_finance_users()
+            finance_partners = finance_users.mapped('partner_id')
+            curr = rec.currency_id.symbol or ''
+            title = f"Move-Out Deposit Release Approval Needed: {rec.rent_contract_id.name}"
+            message = (
+                f"Move-Out record for contract <b>{rec.rent_contract_id.name}</b> "
+                f"(Property: <b>{rec.property_id.name or 'N/A'}</b>, Tenant: <b>{rec.tenant_id.name or 'N/A'}</b>) "
+                f"has been submitted for Finance Review.<br/>"
+                f"Deposit Received: <b>{rec.deposit_received} {curr}</b> | "
+                f"Total Deductions: <b>{rec.total_deduction_amount} {curr}</b> | "
+                f"Release / Refund: <b>{rec.deposit_release_amount} {curr}</b>.<br/>"
+                f"Please review deductions and approve the deposit release."
+            )
+            rec._send_system_notification(
+                title=title,
+                message=message,
+                partners=finance_partners,
+                activity_summary="Approve Move-Out Deposit Release",
+                activity_user_ids=finance_users,
+            )
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': 'Submitted for Finance Review',
+                'message': 'Move-out record submitted. Finance team has been notified within the system.',
+                'type': 'success',
+                'sticky': False,
+            }
+        }
+
     def action_approve(self):
-        """Step 12 (diagram names a specific person - "Ms. Gawhar" - as a
-        stand-in for "the admin approves"; see MOVE_IN_MOVE_OUT_PLAN.md
-        section 8.3). Gated on Odoo's built-in Administrator group, not a
-        named person or a new custom field/group."""
         for rec in self:
-            if not rec.env.user.has_group('base.group_system'):
-                raise UserError("Only an Administrator can approve the deposit release.")
+            is_approver = (
+                rec.env.user.has_group('eg_property_management.group_property_finance_approver') or
+                rec.env.user.has_group('base.group_system') or
+                rec.env.user.id in rec._get_finance_users().ids
+            )
+            if not is_approver:
+                raise UserError("You do not have access rights to approve Move-Out deposit releases. "
+                                "Only users with the 'Finance Approver (Move-Out)' access right or Administrators can approve.")
+
             rec.write({
                 'state': 'approved',
                 'approved_by': rec.env.user.id,
                 'approved_date': fields.Datetime.now(),
             })
+
+            # Mark pending activity as done
+            try:
+                rec.activity_feedback(
+                    ['mail.mail_activity_data_todo'],
+                    feedback=f"Deposit release approved by {rec.env.user.name}."
+                )
+            except Exception:
+                pass
+
+            curr = rec.currency_id.symbol or ''
+            title = f"Move-Out Deposit Release Approved: {rec.rent_contract_id.name}"
+            message = (
+                f"Move-Out deposit release for contract <b>{rec.rent_contract_id.name}</b> "
+                f"has been approved by <b>{rec.env.user.name}</b>.<br/>"
+                f"Deposit Received: <b>{rec.deposit_received} {curr}</b> | "
+                f"Total Deductions: <b>{rec.total_deduction_amount} {curr}</b> | "
+                f"Approved Release: <b>{rec.deposit_release_amount} {curr}</b>."
+            )
+            rec.message_post(body=f"<b>{title}</b><br/>{message}", subtype_xmlid='mail.mt_comment')
+
+            # Notify contract manager / creator if different from approver
+            notif_partners = self.env['res.partner']
+            if rec.rent_contract_id.user_id and rec.rent_contract_id.user_id.partner_id:
+                notif_partners |= rec.rent_contract_id.user_id.partner_id
+            if rec.create_uid and rec.create_uid.partner_id:
+                notif_partners |= rec.create_uid.partner_id
+            notif_partners = notif_partners - rec.env.user.partner_id
+            if notif_partners:
+                rec._send_system_notification(title=title, message=message, partners=notif_partners)
+
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': 'Deposit Release Approved',
+                'message': 'Move-out deposit release has been successfully approved.',
+                'type': 'success',
+                'sticky': False,
+            }
+        }
 
     def action_mark_deduction_transfer_done(self):
         for rec in self:
@@ -314,15 +553,66 @@ class RentContractMoveOut(models.Model):
 
     def action_settle(self):
         """Step 15. The only place that frees the property: calls the
-        contract's existing action_state_terminate(), unchanged, exactly as
-        if someone had clicked "Terminate Contract" by hand. Everything
-        before this point is informational/tracking only - clicking through
-        earlier steps never touches the contract or the property."""
+        contract's existing action_state_terminate(), unchanged, and explicitly
+        sets the linked property to 'available' (Vacant)."""
         for rec in self:
             if rec.state != 'approved':
                 raise UserError("The deposit release must be approved before settling the Move-Out.")
-            rec.rent_contract_id.action_state_terminate()
+            if rec.rent_contract_id:
+                rec.rent_contract_id.action_state_terminate()
+            if rec.property_id:
+                rec.property_id.write({'state': 'available'})
             rec.state = 'settled'
+            rec.message_post(
+                body=f"Move-Out has been settled. Linked property <b>{rec.property_id.name or 'N/A'}</b> is now <b>Vacant</b>.",
+                subtype_xmlid='mail.mt_comment'
+            )
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': 'Move-Out Settled',
+                'message': 'Move-out settled successfully. The linked property is now Vacant.',
+                'type': 'success',
+                'sticky': False,
+            }
+        }
+
+    def write(self, vals):
+        res = super().write(vals)
+        if vals.get('state') == 'settled':
+            for rec in self:
+                if rec.property_id:
+                    rec.property_id.write({'state': 'available'})
+        return res
+
+    def action_cancel(self):
+        """Cancel the Move-Out process at any stage unless it is already settled."""
+        for rec in self:
+            if rec.state == 'settled':
+                raise UserError("A settled Move-Out cannot be cancelled.")
+            rec.state = 'cancelled'
+
+            # Cancel any scheduled activities for this Move-Out
+            try:
+                rec.activity_unlink(['mail.mail_activity_data_todo'])
+            except Exception:
+                pass
+
+            rec.message_post(
+                body=f"Move-Out record has been cancelled by <b>{self.env.user.name}</b>.",
+                subtype_xmlid='mail.mt_comment'
+            )
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': 'Move-Out Cancelled',
+                'message': 'Move-out record has been cancelled.',
+                'type': 'warning',
+                'sticky': False,
+            }
+        }
 
     def action_reset_draft(self):
         """Aborting/restarting a Move-Out also returns the contract's own
@@ -331,6 +621,8 @@ class RentContractMoveOut(models.Model):
         contract doesn't sit indefinitely on the 'Move-Out Process'
         statusbar step with nothing actually in progress."""
         for rec in self:
+            if rec.state == 'settled':
+                raise UserError("A settled Move-Out cannot be reset to draft.")
             rec.state = 'draft'
             if rec.rent_contract_id.state == 'move_out':
                 rec.rent_contract_id.state = 'running'

@@ -5,13 +5,24 @@ class AccountMove(models.Model):
     _inherit = "account.move"
 
     property_id = fields.Many2one(
-        comodel_name="property.detail", 
-        string="Property / Unit"
+        comodel_name="property.detail",
+        string="Property / Unit",
+        check_company=False,
     )
     rent_contract_id = fields.Many2one(
-        comodel_name="rent.contract", 
-        string="Rent Contract"
+        comodel_name="rent.contract",
+        string="Rent Contract",
+        check_company=False,
     )
+
+    def _check_company(self, fnames=None):
+        """Allow GHD invoices to link to Elite Nest contracts and properties
+        without triggering cross-company validation errors."""
+        if fnames is None:
+            fnames = self._fields.keys()
+        excluded = {'property_id', 'rent_contract_id', 'contract_id'}
+        filtered_fnames = [f for f in fnames if f not in excluded]
+        return super(AccountMove, self)._check_company(fnames=filtered_fnames)
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -23,7 +34,7 @@ class AccountMove(models.Model):
 
         # Scenario A: Created directly from a Rent Contract screen / button action
         if active_model == 'rent.contract' and active_id:
-            contract = self.env['rent.contract'].browse(active_id)
+            contract = self.env['rent.contract'].sudo().browse(active_id)
             if contract.exists():
                 for vals in vals_list:
                     if not vals.get('rent_contract_id'):
@@ -46,7 +57,7 @@ class AccountMove(models.Model):
                         contract = self.env['rent.contract'].sudo().search([
                             ('tenant_id', '=', partner_id)
                         ], limit=1)
-                    
+
                     if contract:
                         vals['rent_contract_id'] = contract.id
                         if not vals.get('property_id') and contract.property_id:
@@ -67,18 +78,9 @@ class AccountMove(models.Model):
     def _sync_rent_installments(self):
         """ Automatically creates, edits, or deletes 'rent.installment' lines in the background
         to ensure manual Accounting invoices reflect flawlessly inside Rent Contract master sheets. """
-        # Skip automatic synchronization when the invoice was already created by
-        # rent.contract's own installment-creation flow (action_create_invoice,
-        # penalty cron), which sets skip_sync_installment=True and creates its
-        # own precise rent.installment rows right after. This used to check
-        # active_model == 'rent.contract' instead, a context key those flows
-        # never actually set (it's populated by the web client for certain
-        # button/list contexts, not by a plain server-side create() call) - so
-        # the guard never matched and every such invoice got a second, phantom
-        # installment row auto-generated on top of the correct explicit ones.
         if self.env.context.get('skip_sync_installment') or self.env.context.get('active_model') == 'rent.contract':
             return
-        
+
         for move in self:
             if move.move_type == 'out_invoice' and move.rent_contract_id:
                 # Sum the price subtotal from lines to bypass uncomputed draft totals
@@ -95,27 +97,25 @@ class AccountMove(models.Model):
                             'amount': amount,
                             'invoice_date': move.invoice_date or fields.Date.today(),
                             'currency_id': move.currency_id.id,
+                            'company_id': move.company_id.id,
                         })
                 else:
-                    # Only label this "Rent" if it's actually filling one of the
-                    # contract's still-open scheduled due dates - otherwise it's
-                    # some other ad hoc charge an accountant billed directly from
-                    # Accounting, and tagging it 'rent' would silently make it
-                    # look like a second, duplicate rent payment for a period
-                    # that's already been (or never was meant to be) invoiced.
                     invoice_date = move.invoice_date or fields.Date.today()
                     contract = move.rent_contract_id.sudo()
                     is_scheduled_rent = invoice_date in contract._get_pending_rent_due_dates()
                     payment_type = 'rent' if is_scheduled_rent else 'other'
+                    first_line = move.invoice_line_ids[:1]
                     default_description = (
                         f"Rent payment for {move.property_id.name or 'Unit'}" if is_scheduled_rent
                         else f"Manual charge for {move.property_id.name or 'Unit'}"
                     )
-                    self.env['rent.installment'].sudo().create({
+                    self.env['rent.installment'].with_company(move.company_id).sudo().create({
                         'rent_contract_id': move.rent_contract_id.id,
+                        'company_id': move.company_id.id,
+                        'product_id': first_line.product_id.id if first_line and first_line.product_id else False,
                         'invoice_date': invoice_date,
                         'payment_type': payment_type,
-                        'description': move.invoice_line_ids[0].name if move.invoice_line_ids else default_description,
+                        'description': first_line.name if first_line else default_description,
                         'amount': amount,
                         'currency_id': move.currency_id.id,
                         'invoice_id': move.id,
@@ -134,15 +134,15 @@ class AccountMove(models.Model):
         manually selecting or editing a Customer on an invoice form. """
         if self.partner_id:
             # Search active running contracts matching selected customer
-            contract = self.env['rent.contract'].search([
+            contract = self.env['rent.contract'].sudo().search([
                 ('tenant_id', '=', self.partner_id.id),
                 ('state', 'in', ('running', 'move_out'))
             ], limit=1)
             if not contract:
-                contract = self.env['rent.contract'].search([
+                contract = self.env['rent.contract'].sudo().search([
                     ('tenant_id', '=', self.partner_id.id)
                 ], limit=1)
-            
+
             if contract:
                 self.rent_contract_id = contract.id
                 if contract.property_id:
@@ -150,3 +150,15 @@ class AccountMove(models.Model):
         else:
             self.rent_contract_id = False
             self.property_id = False
+
+
+class AccountMoveLine(models.Model):
+    _inherit = "account.move.line"
+
+    def _check_company(self, fnames=None):
+        """Allow cross-company links to property/contract fields on invoice lines."""
+        if fnames is None:
+            fnames = self._fields.keys()
+        excluded = {'property_id', 'rent_contract_id', 'contract_id'}
+        filtered_fnames = [f for f in fnames if f not in excluded]
+        return super(AccountMoveLine, self)._check_company(fnames=filtered_fnames)

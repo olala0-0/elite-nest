@@ -50,8 +50,9 @@ class PropertyDetails(models.Model):
     nearby_connectivities = fields.Boolean("Nearby Connectivities")
 
     state = fields.Selection(
-        [("draft", "Draft"), ("available", "Available"), ("on_rent", "On Rent"), ("on_sale", "On Sale"),
-         ("rent", "Rent"), ("sold", "sold")],
+        [("draft", "Draft"), ("available", "Vacant"), ("vacant", "Vacant"),
+         ("on_rent", "Occupied"), ("rent", "Occupied"), ("on_sale", "On Sale"),
+         ("sold", "Sold")],
         default="draft", string="Status", tracking=True)
 
     total_area = fields.Float(string="Total Area")
@@ -188,13 +189,39 @@ class PropertyDetails(models.Model):
                     f"sale contract ('{active_sale.name}'). Cancel/refund the contract first."
                 )
 
+    def init(self):
+        super().init()
+        # Merge legacy 'rent' status into canonical 'on_rent' (Occupied)
+        self.env.cr.execute("""
+            UPDATE property_detail
+            SET state = 'on_rent'
+            WHERE state = 'rent';
+        """)
+        # Ensure properties with settled move-out and no running contract are marked Vacant ('available')
+        self.env.cr.execute("""
+            UPDATE property_detail pd
+            SET state = 'available'
+            WHERE pd.id IN (
+                SELECT rcm.property_id
+                FROM rent_contract_moveout rcm
+                WHERE rcm.state = 'settled'
+                  AND rcm.property_id IS NOT NULL
+            )
+            AND pd.id NOT IN (
+                SELECT rc.property_id
+                FROM rent_contract rc
+                WHERE rc.state = 'running'
+                  AND rc.property_id IS NOT NULL
+            );
+        """)
+
     def action_set_draft(self):
         self._check_no_active_contract("Draft")
         for rec in self:
             rec.state = "draft"
 
     def action_set_available(self):
-        self._check_no_active_contract("Available")
+        self._check_no_active_contract("Vacant")
         for rec in self:
             rec.state = "available"
 

@@ -38,7 +38,6 @@
 
                         <button name="action_state_draft" string="Reset to Draft" type="object" class="btn-secondary"
                                 invisible="state in ['draft','running','move_out','cancelled','expired']"/>
-
                         <button name="action_state_running" string="Running" type="object" class="btn-primary"
                                 invisible="state in ['running','move_out','cancelled','terminated','expired']"/>
 
@@ -65,6 +64,10 @@
                                 class="btn-primary" invisible="state in ['draft','running','move_out','cancelled','terminated']"/>
                     </header>
                     <sheet>
+                        <div class="alert alert-warning mb-2" role="alert"
+                             invisible="remaining_days &gt; 90 or remaining_days &lt;= 0 or state != 'running'">
+                            <i class="fa fa-exclamation-triangle me-2"/> <strong>Contract Expiry Notice:</strong> This contract expires in <field name="remaining_days" readonly="1"/> days.
+                        </div>
                         <div class="oe_button_box" name="button_box">
                             <button type="object" class="oe_stat_button" icon="fa-files-o"
                                     name="action_view_invoices">
@@ -123,7 +126,7 @@
                         <group string="Property Information">
                             <group>
                                 <field name="property_id" required="1"
-                                       domain="[('property_for','=','rent'), ('state','!=','rent')]"/>
+                                       domain="[('property_for','=','rent'), ('state','not in',['on_rent','rent','sold'])]"/>
                                 <field name="residential_type_id" string="Residential Type" readonly="1"/>
                                 <field name="dewa_premises_no" readonly="1"/>
                                 <label for="street" string="Address"/>

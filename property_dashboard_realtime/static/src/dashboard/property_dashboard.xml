@@ -9,8 +9,6 @@
             <!-- ========================================================= -->
             <nav class="executive-nav-tabs px-4 pt-2 pb-1 d-flex align-items-center gap-4">
                 <a href="#" class="nav-tab-item active" t-on-click.prevent="openAllContracts">Rent Contracts</a>
-                <a href="#" class="nav-tab-item" t-on-click.prevent="openAllWorkOrders">Facility Work Orders</a>
-                <a href="#" class="nav-tab-item" t-on-click.prevent="openAssets">Asset Health</a>
             </nav>
 
             <!-- ========================================================= -->
@@ -23,7 +21,7 @@
                     </div>
                     <div>
                         <div class="d-flex align-items-center gap-2">
-                            <h4 class="mb-0 fw-bold tracking-wide" style="color: var(--dash-text-primary);">Property &amp; Facility Management Command Center</h4>
+                            <h4 class="mb-0 fw-bold tracking-wide" style="color: var(--dash-text-primary);">Main Dashboard</h4>
                             <span class="badge rounded-pill live-sync-badge d-flex align-items-center gap-1">
                                 <span class="pulse-beacon"/>
                                 <span t-if="state.realtimeConnected">Live Real-Time</span>
@@ -35,7 +33,7 @@
                             </span>
                         </div>
                         <p class="mb-0 small" style="color: var(--dash-text-secondary);">
-                            Odoo 19 Enterprise Multi-Company Executive Hub • Last updated: <span class="fw-semibold" style="color: var(--dash-lavender-accent);" t-esc="state.lastUpdated or 'Just now'"/>
+                            Last updated: <span class="fw-semibold" style="color: var(--dash-lavender-accent);" t-esc="state.lastUpdated or 'Just now'"/>
                         </p>
                     </div>
                 </div>
@@ -76,18 +74,6 @@
                         </select>
                     </div>
 
-                    <!-- Filter 4: Facilities / Work Orders -->
-                    <div class="filter-group">
-                        <select class="form-select form-select-sm executive-select" t-on-change="onFilterFacility" t-att-value="state.facilityType">
-                            <option value="all">All Facilities / Work Orders</option>
-                            <option value="hvac">HVAC Systems</option>
-                            <option value="plumbing">Plumbing &amp; Piping</option>
-                            <option value="electrical">Electrical Grid</option>
-                            <option value="cleaning">Cleaning Services</option>
-                            <option value="security">Security Ops</option>
-                        </select>
-                    </div>
-
                     <!-- Search Input -->
                     <div class="search-input-wrapper position-relative">
                         <i class="fa fa-search search-icon position-absolute"/>
@@ -105,10 +91,6 @@
                     <button class="btn btn-sm btn-lavender fw-semibold d-flex align-items-center gap-1" t-on-click="createContract">
                         <i class="fa fa-plus-circle"/>
                         <span>+ New Contract</span>
-                    </button>
-                    <button class="btn btn-sm btn-violet-outline fw-semibold d-flex align-items-center gap-1" t-on-click="createWorkOrder">
-                        <i class="fa fa-wrench"/>
-                        <span>+ New Work Order</span>
                     </button>
                 </div>
             </header>
@@ -287,12 +269,12 @@
 
                 <!-- 3. PROPERTY FINANCIALS & OPERATIONAL TRACKERS (4 PANELS) -->
                 <section class="middle-section-grid-4 mb-4">
-                    <!-- Panel 1: Avg Contract Rent vs Benchmark by Type -->
+                    <!-- Panel 1: Average Rent by Unit Type -->
                     <div class="executive-card chart-card">
                         <div class="chart-header d-flex justify-content-between align-items-center mb-3">
                             <div>
-                                <h6 class="mb-0 fw-bold">Average Rent vs Benchmark</h6>
-                                <span class="small">Actual average rent vs target benchmark</span>
+                                <h6 class="mb-0 fw-bold">Average Rent by Unit Type</h6>
+                                <span class="small">Actual average rent across property types</span>
                             </div>
                             <span class="badge bg-emerald-subtle small">AED Pricing</span>
                         </div>

@@ -475,7 +475,7 @@ export class PropertyDashboard extends Component {
     }
 
     /**
-     * 5. Combo Bar: Average Rent vs Benchmark by Unit Type
+     * 5. Bar Chart: Actual Average Rent by Unit Type
      */
     _renderAvgRentComboChart() {
         if (!this.avgRentChartRef.el) return;
@@ -500,16 +500,6 @@ export class PropertyDashboard extends Component {
                         hoverBackgroundColor: "#9d78bc",
                         borderRadius: 6,
                         barPercentage: 0.6,
-                    },
-                    {
-                        type: "line",
-                        label: "Target Benchmark (AED)",
-                        data: chartData.benchmarks,
-                        borderColor: "#503966",
-                        backgroundColor: "#503966",
-                        borderWidth: 2,
-                        pointBackgroundColor: "#503966",
-                        pointRadius: 4,
                     },
                 ],
             },

@@ -170,23 +170,33 @@ class PropertyDashboardHelper(models.AbstractModel):
                 db_revenue = 0.0
             total_rent_revenue = db_revenue if db_revenue > 0 else 8731639.0
 
-            # Tenant Nationality Aggregation
+            # Tenant Nationality Aggregation (Customer / Tenant Country)
             nationality_counts = defaultdict(int)
             country_code_map = {}
-            for c in running_contracts:
+            active_contracts_for_nat = running_contracts if len(running_contracts) > 0 else all_contracts.filtered(lambda c: (c.state or "") not in ("cancel", "cancelled"))
+            for c in active_contracts_for_nat:
                 partner = getattr(c, "tenant_id", False) or getattr(c, "partner_id", False)
-                if partner and partner.country_id:
-                    c_name = partner.country_id.name or "United Arab Emirates"
-                    c_code = (partner.country_id.code or "ae").lower()
+                country = False
+                if partner and getattr(partner, "country_id", False):
+                    country = partner.country_id
+                elif getattr(c, "country_id", False):
+                    country = c.country_id
+                elif partner and getattr(partner, "commercial_partner_id", False) and partner.commercial_partner_id.country_id:
+                    country = partner.commercial_partner_id.country_id
+
+                if country and country.name:
+                    c_name = country.name.strip()
+                    c_code = (country.code or "ae").lower()
                 else:
                     c_name = "Unspecified"
                     c_code = "un"
+
                 nationality_counts[c_name] += 1
                 country_code_map[c_name] = c_code
 
             # Top Nationalities Chart
             if nationality_counts:
-                sorted_nats = sorted(nationality_counts.items(), key=lambda x: x[1], reverse=True)[:8]
+                sorted_nats = sorted(nationality_counts.items(), key=lambda x: (x[0] == "Unspecified", -x[1]))[:8]
                 tot_nats = sum(v for _, v in sorted_nats) or 1
                 tenant_nationalities = {
                     "labels": [item[0] for item in sorted_nats],
@@ -245,8 +255,16 @@ class PropertyDashboardHelper(models.AbstractModel):
                 
                 tenant_partner = getattr(c, "tenant_id", False) or getattr(c, "partner_id", False)
                 tenant_name = tenant_partner.name if tenant_partner else "N/A"
-                t_country = tenant_partner.country_id.name if tenant_partner and tenant_partner.country_id else "United Arab Emirates"
-                t_code = (tenant_partner.country_id.code if tenant_partner and tenant_partner.country_id else "ae").lower()
+                t_country_obj = False
+                if tenant_partner and getattr(tenant_partner, "country_id", False):
+                    t_country_obj = tenant_partner.country_id
+                elif getattr(c, "country_id", False):
+                    t_country_obj = c.country_id
+                elif tenant_partner and getattr(tenant_partner, "commercial_partner_id", False) and tenant_partner.commercial_partner_id.country_id:
+                    t_country_obj = tenant_partner.commercial_partner_id.country_id
+
+                t_country = t_country_obj.name if t_country_obj else "Unspecified"
+                t_code = (t_country_obj.code if t_country_obj else "un").lower()
 
                 # Text search filtering
                 if search_query:
@@ -479,12 +497,93 @@ class PropertyDashboardHelper(models.AbstractModel):
                 pass
 
         # ---------------------------------------------------------------------
-        # 6. AVERAGE RENT BY UNIT TYPE & REVENUE VS MAINTENANCE TREND
+        # 6. ACTUAL AVERAGE RENT BY UNIT TYPE (PORTFOLIO DATA)
         # ---------------------------------------------------------------------
+        def _resolve_unit_type(rec, is_contract=True):
+            prop = getattr(rec, "property_id", False) if is_contract else rec
+            bedrooms = 0
+            if prop and hasattr(prop, "bedrooms"):
+                bedrooms = prop.bedrooms or 0
+            elif hasattr(rec, "bedrooms"):
+                bedrooms = rec.bedrooms or 0
+            elif prop and hasattr(prop, "no_of_bhk"):
+                bedrooms = prop.no_of_bhk or 0
+
+            res_type = ""
+            if hasattr(rec, "residential_type") and rec.residential_type:
+                res_type = str(rec.residential_type).strip()
+            elif hasattr(rec, "residential_type_id") and rec.residential_type_id:
+                res_type = rec.residential_type_id.name.strip()
+            elif prop and hasattr(prop, "residential_type") and prop.residential_type:
+                res_type = str(prop.residential_type).strip()
+            elif prop and hasattr(prop, "residential_type_id") and prop.residential_type_id:
+                res_type = prop.residential_type_id.name.strip()
+
+            prop_type = (getattr(rec, "property_type", False) or (getattr(prop, "property_type", False) if prop else "") or "").lower()
+
+            res_lower = res_type.lower()
+            if "studio" in res_lower:
+                return "Studio"
+            elif "penthouse" in res_lower:
+                return "Penthouse"
+            elif "villa" in res_lower:
+                return "Villa"
+            elif "raw house" in res_lower or "townhouse" in res_lower:
+                return "Townhouse"
+            elif "office" in res_lower or prop_type == "commercial":
+                return "Commercial Office"
+            elif bedrooms == 1 or ("1" in res_lower and any(w in res_lower for w in ["bed", "flat", "bhk", "room"])):
+                return "1 Bed Flat"
+            elif bedrooms == 2 or ("2" in res_lower and any(w in res_lower for w in ["bed", "flat", "bhk", "room"])):
+                return "2 Bed Flat"
+            elif bedrooms == 3 or ("3" in res_lower and any(w in res_lower for w in ["bed", "flat", "bhk", "room"])):
+                return "3 Bed Flat"
+            elif bedrooms >= 4:
+                return f"{bedrooms} Bed Flat"
+            elif res_type:
+                return res_type
+            elif prop_type:
+                return prop_type.capitalize()
+            return "Standard Unit"
+
+        unit_type_rents = defaultdict(list)
+
+        # 1. Pull actual contracted rent amounts from active contracts
+        contracts_to_evaluate = running_contracts if ContractModel and len(running_contracts) > 0 else (all_contracts if ContractModel else [])
+        for c in contracts_to_evaluate:
+            r_val = float(getattr(c, rent_field or "rent", 0.0) or getattr(c, "rent_amount", 0.0) or 0.0)
+            if r_val > 0:
+                ut = _resolve_unit_type(c, is_contract=True)
+                unit_type_rents[ut].append(r_val)
+
+        # 2. If contract rents are absent or sparse, supplement with listed rent_amount from PropertyModel
+        if not unit_type_rents and PropModel is not None:
+            try:
+                p_records = PropModel.search(prop_domain)
+                for p in p_records:
+                    p_val = float(getattr(p, "rent_amount", 0.0) or getattr(p, "final_price", 0.0) or 0.0)
+                    if p_val > 0:
+                        ut = _resolve_unit_type(p, is_contract=False)
+                        unit_type_rents[ut].append(p_val)
+            except Exception as e:
+                _logger.warning("Could not read property unit rents: %s", e)
+
+        # 3. Compute actual portfolio average rent without hardcoded benchmarks
+        if unit_type_rents:
+            preferred_sort = ["Studio", "1 Bed Flat", "2 Bed Flat", "3 Bed Flat", "4 Bed Flat", "Penthouse", "Villa", "Townhouse", "Commercial Office"]
+            sorted_labels = [k for k in preferred_sort if k in unit_type_rents]
+            for k in unit_type_rents:
+                if k not in sorted_labels:
+                    sorted_labels.append(k)
+            avg_rent_labels = sorted_labels
+            avg_rent_values = [round(sum(unit_type_rents[k]) / len(unit_type_rents[k]), 2) for k in avg_rent_labels]
+        else:
+            avg_rent_labels = ["Studio", "1 Bed Flat", "2 Bed Flat", "3 Bed Flat", "Penthouse", "Office"]
+            avg_rent_values = [52000.0, 78000.0, 112000.0, 165000.0, 290000.0, 145000.0]
+
         avg_rent_by_unit_type = {
-            "labels": ["Studio", "1 Bed Flat", "2 Bed Flat", "3 Bed Flat", "Penthouse", "Office"],
-            "values": [52000.0, 78000.0, 112000.0, 165000.0, 290000.0, 145000.0],
-            "benchmarks": [48000.0, 74000.0, 108000.0, 155000.0, 275000.0, 138000.0],
+            "labels": avg_rent_labels,
+            "values": avg_rent_values,
         }
 
         revenue_vs_maintenance = {

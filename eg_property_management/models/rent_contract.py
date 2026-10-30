@@ -73,7 +73,7 @@ class RentContract(models.Model):
         readonly=True,
     )
 
-    property_id = fields.Many2one(comodel_name="property.detail", string="Property")
+    property_id = fields.Many2one(comodel_name="property.detail", string="Property", check_company=False)
     property_type = fields.Selection(
         [("land", "Land"), ("residential", "Residential"), ("commercial", "Commercial"), ("industrial", "Industrial")],
         string="Property Type", default='land')
@@ -97,7 +97,7 @@ class RentContract(models.Model):
     company_id = fields.Many2one(comodel_name="res.company", string="Company", default=lambda self: self.env.company)
     region_id = fields.Many2one(comodel_name="res.country.state", string="Region")
 
-    tenant_id = fields.Many2one(comodel_name="res.partner", string="Tenant / Customer")
+    tenant_id = fields.Many2one(comodel_name="res.partner", string="Tenant / Customer", check_company=False)
     tenant_phone = fields.Char(related="tenant_id.phone", string="Phone", readonly=True)
     tenant_email = fields.Char(related="tenant_id.email", string="Email", readonly=True)
     tenant_country_id = fields.Many2one(
@@ -108,7 +108,7 @@ class RentContract(models.Model):
         readonly=False,
     )
 
-    landlord_id = fields.Many2one(comodel_name="res.partner", string="Landlord")
+    landlord_id = fields.Many2one(comodel_name="res.partner", string="Landlord", check_company=False)
     landlord_phone = fields.Char(related="landlord_id.phone", string="Phone", readonly=True)
     landlord_email = fields.Char(related="landlord_id.email", string="Email", readonly=True)
 
@@ -118,9 +118,9 @@ class RentContract(models.Model):
                                    default="fixed")
     total_maintenance = fields.Monetary(string="Maintenance", currency_field="currency_id", tracking=True)
 
-    installment_item_id = fields.Many2one(comodel_name="product.product", string="Installment Item")
-    deposit_item_id = fields.Many2one(comodel_name="product.product", string="Deposit Item")
-    deposit_invoice_id = fields.Many2one(comodel_name='account.move', string="Deposit Invoice", readonly=True)
+    installment_item_id = fields.Many2one(comodel_name="product.product", string="Installment Item", check_company=False)
+    deposit_item_id = fields.Many2one(comodel_name="product.product", string="Deposit Item", check_company=False)
+    deposit_invoice_id = fields.Many2one(comodel_name='account.move', string="Deposit Invoice", readonly=True, check_company=False)
 
     # One-time charges (Ejari Fee / Admin Charge / Commission / Parking Fee) -
     # each follows the exact Security Deposit pattern above: a configured
@@ -128,24 +128,24 @@ class RentContract(models.Model):
     # invoice-reference field that both prevents billing it twice and lets
     # other logic (reports, statements) find which invoice carried it.
     ejari_fee = fields.Monetary(string="Ejari Fee", currency_field="currency_id")
-    ejari_fee_item_id = fields.Many2one(comodel_name="product.product", string="Ejari Fee Item")
-    ejari_fee_invoice_id = fields.Many2one(comodel_name='account.move', string="Ejari Fee Invoice", readonly=True)
+    ejari_fee_item_id = fields.Many2one(comodel_name="product.product", string="Ejari Fee Item", check_company=False)
+    ejari_fee_invoice_id = fields.Many2one(comodel_name='account.move', string="Ejari Fee Invoice", readonly=True, check_company=False)
 
     admin_charge = fields.Monetary(string="Admin Charge", currency_field="currency_id")
-    admin_charge_item_id = fields.Many2one(comodel_name="product.product", string="Admin Charge Item")
-    admin_charge_invoice_id = fields.Many2one(comodel_name='account.move', string="Admin Charge Invoice", readonly=True)
+    admin_charge_item_id = fields.Many2one(comodel_name="product.product", string="Admin Charge Item", check_company=False)
+    admin_charge_invoice_id = fields.Many2one(comodel_name='account.move', string="Admin Charge Invoice", readonly=True, check_company=False)
 
     commission = fields.Monetary(
         string="Commission", currency_field="currency_id",
         help="Tenant-facing commission charge, billed once like the Security "
              "Deposit. Not related to Broker Commission (broker_commission), "
              "which is a separate vendor bill paid out to the broker.")
-    commission_item_id = fields.Many2one(comodel_name="product.product", string="Commission Item")
-    commission_invoice_id = fields.Many2one(comodel_name='account.move', string="Commission Invoice", readonly=True)
+    commission_item_id = fields.Many2one(comodel_name="product.product", string="Commission Item", check_company=False)
+    commission_invoice_id = fields.Many2one(comodel_name='account.move', string="Commission Invoice", readonly=True, check_company=False)
 
     parking_fee = fields.Monetary(string="Parking Fee", currency_field="currency_id")
-    parking_fee_item_id = fields.Many2one(comodel_name="product.product", string="Parking Fee Item")
-    parking_fee_invoice_id = fields.Many2one(comodel_name='account.move', string="Parking Fee Invoice", readonly=True)
+    parking_fee_item_id = fields.Many2one(comodel_name="product.product", string="Parking Fee Item", check_company=False)
+    parking_fee_invoice_id = fields.Many2one(comodel_name='account.move', string="Parking Fee Invoice", readonly=True, check_company=False)
 
     lead_id = fields.Many2one(comodel_name='crm.lead', string="Source Lead")
 
@@ -153,7 +153,7 @@ class RentContract(models.Model):
                                     default='fixed')
     penalty_value = fields.Float(string="Penalty Value")
     penalty_grace_days = fields.Integer(string="Penalty Grace Days", default=3)
-    penalty_product_id = fields.Many2one(comodel_name='product.product', string='Penalty Product')
+    penalty_product_id = fields.Many2one(comodel_name='product.product', string='Penalty Product', check_company=False)
 
     tax_rate = fields.Float(string="Tax Rate (%)")
     taxable_amount = fields.Monetary(string="Taxable Amount", currency_field='currency_id', compute="_compute_tax",
@@ -218,6 +218,20 @@ class RentContract(models.Model):
     invoice_count = fields.Integer(string="Invoices", compute="_compute_invoice_count")
     expiry_notified_90_days = fields.Boolean(string="Expiry 90-Days Notified", default=False, copy=False)
 
+    def _check_company(self, fnames=None):
+        if fnames is None:
+            fnames = self._fields.keys()
+        excluded = {
+            'property_id', 'tenant_id', 'landlord_id', 'broker_id', 'lead_id',
+            'installment_item_id', 'deposit_item_id', 'deposit_invoice_id',
+            'ejari_fee_item_id', 'ejari_fee_invoice_id',
+            'admin_charge_item_id', 'admin_charge_invoice_id',
+            'commission_item_id', 'commission_invoice_id',
+            'parking_fee_item_id', 'parking_fee_invoice_id',
+            'penalty_product_id', 'movein_id', 'moveout_id',
+        }
+        filtered_fnames = [f for f in fnames if f not in excluded]
+        return super(RentContract, self)._check_company(fnames=filtered_fnames)
     @api.model_create_multi
     def create(self, vals):
         for val in vals:
@@ -581,23 +595,129 @@ class RentContract(models.Model):
                     f"or starting another contract for this unit."
                 )
 
+    def _get_ghd_company(self):
+        """Find the GHD company used for Rent Installments and Security Deposits."""
+        return self.env['res.company'].sudo().search([('name', 'ilike', 'GHD')], limit=1)
+
+    def _get_contract_company(self):
+        """Return the contract or property management company (e.g. Elite Nest)."""
+        self.ensure_one()
+        return self.company_id or self.property_id.sudo().company_id or self.env.company
+
+    def _resolve_target_company(self, product=False, payment_type='service'):
+        """Dynamically resolve target company for an installment / invoice line:
+        1. From the Product (product.company_id) if set.
+        2. By Charge Type fallback (if product.company_id is empty):
+           - 'rent' and 'deposit' -> GHD company.
+           - All other services / one-time charges -> Contract / Property company.
+        """
+        self.ensure_one()
+        is_product = bool(product and getattr(product, '_name', '') in ('product.product', 'product.template'))
+        if is_product:
+            prod_company = product.sudo().company_id
+            if prod_company:
+                return prod_company
+        if payment_type in ('rent', 'deposit'):
+            ghd_company = self._get_ghd_company()
+            if ghd_company:
+                return ghd_company
+        return self._get_contract_company()
+
+    def _resolve_service_product(self, utility_line):
+        """Resolve an optional product.product for a property.utility.service line
+        so future utility/service charges can inherit a product's company_id and income account."""
+        if not utility_line:
+            return self.env['product.product']
+        for candidate in (getattr(utility_line, 'product_id', False), getattr(utility_line.service_id, 'product_id', False), utility_line.service_id):
+            if candidate and getattr(candidate, '_name', '') == 'product.product':
+                return candidate.sudo()
+        if utility_line.service_id and utility_line.service_id.name:
+            matched = self.env['product.product'].sudo().search([
+                ('name', '=ilike', utility_line.service_id.name.strip())
+            ], limit=1)
+            if matched:
+                return matched
+        return self.env['product.product']
+
+    def _get_company_sale_journal(self, target_company, payment_type='service'):
+        """Select the Sales Journal belonging to target_company."""
+        journal_obj = self.env['account.journal'].with_company(target_company).sudo()
+        if payment_type in ('rent', 'deposit'):
+            rent_journal = journal_obj.search([
+                ('type', '=', 'sale'),
+                ('company_id', '=', target_company.id),
+                ('name', 'ilike', 'rent'),
+            ], limit=1)
+            if rent_journal:
+                return rent_journal
+        journal = journal_obj.search([
+            ('type', '=', 'sale'),
+            ('company_id', '=', target_company.id),
+        ], limit=1)
+        if not journal:
+            raise UserError(f"No Sales Journal found for company '{target_company.display_name}'.")
+        return journal
+
+    def _get_company_income_account(self, product, target_company, journal=False):
+        """Resolve the income account in target_company context:
+        1. product.with_company(target_company).property_account_income_id
+        2. product.with_company(target_company).categ_id.property_account_income_categ_id
+        3. journal.default_account_id
+        4. Fallback income account in target_company
+        """
+        is_product = bool(product and getattr(product, '_name', '') in ('product.product', 'product.template'))
+        if is_product:
+            prod_ctx = product.with_company(target_company).sudo()
+            account = (
+                prod_ctx.property_account_income_id
+                or prod_ctx.categ_id.with_company(target_company).property_account_income_categ_id
+            )
+            if account:
+                return account
+        if journal and journal.sudo().default_account_id:
+            return journal.sudo().default_account_id
+        account_obj = self.env['account.account'].with_company(target_company).sudo()
+        domain = [('account_type', 'in', ('income', 'income_other'))]
+        if 'company_ids' in account_obj._fields:
+            domain.append(('company_ids', 'in', target_company.ids))
+        elif 'company_id' in account_obj._fields:
+            domain.append(('company_id', '=', target_company.id))
+        account = account_obj.search(domain, limit=1)
+        if not account:
+            raise UserError(
+                f"No income account found for company '{target_company.display_name}'. "
+                f"Please configure an income account in Accounting."
+            )
+        return account
+
     def _get_invoice_settings(self):
         self.ensure_one()
         param_obj = self.env['ir.config_parameter'].sudo()
-        product_obj = self.env['product.product'].with_company(self.company_id).sudo()
+        contract_company = self._get_contract_company()
+        ghd_company = self._get_ghd_company() or contract_company
 
-        def _get_product(key, fallback=False):
+        def _get_product(key, fallback=False, default_company=None, name_fallback=None):
+            ctx_company = default_company or contract_company
+            product_obj = self.env['product.product'].with_company(ctx_company).sudo()
+            product = self.env['product.product']
             product_id = param_obj.get_param(key)
             if product_id and str(product_id).isdigit():
                 product = product_obj.browse(int(product_id)).exists()
-                if product:
-                    return product
+            if not product and fallback:
+                product = fallback.sudo().exists()
+            if not product and name_fallback:
+                product = product_obj.search([('name', 'ilike', name_fallback)], limit=1)
+            if product:
+                resolved_company = product.sudo().company_id or ctx_company
+                return product.with_company(resolved_company).sudo()
             return fallback
 
         return {
             'rent_product': _get_product(
                 'eg_property_management.rent_invoice_product_id',
-                self.installment_item_id,
+                self.sudo().installment_item_id,
+                default_company=ghd_company,
+                name_fallback='Installment Property Payment',
             ),
             'rent_description': param_obj.get_param(
                 'eg_property_management.rent_invoice_description',
@@ -605,20 +725,25 @@ class RentContract(models.Model):
             ),
             'deposit_product': _get_product(
                 'eg_property_management.deposit_invoice_product_id',
-                self.deposit_item_id,
+                self.sudo().deposit_item_id,
+                default_company=ghd_company,
             ),
             'deposit_description': param_obj.get_param(
                 'eg_property_management.deposit_invoice_description',
                 'Security Deposit',
             ),
-            'maintenance_product': _get_product('eg_property_management.maintenance_invoice_product_id'),
+            'maintenance_product': _get_product(
+                'eg_property_management.maintenance_invoice_product_id',
+                default_company=contract_company,
+            ),
             'maintenance_description': param_obj.get_param(
                 'eg_property_management.maintenance_invoice_description',
                 'Maintenance Charge',
             ),
             'penalty_product': _get_product(
                 'eg_property_management.penalty_invoice_product_id',
-                self.penalty_product_id,
+                self.sudo().penalty_product_id,
+                default_company=contract_company,
             ),
             'penalty_description': param_obj.get_param(
                 'eg_property_management.penalty_invoice_description',
@@ -626,7 +751,8 @@ class RentContract(models.Model):
             ),
             'ejari_fee_product': _get_product(
                 'eg_property_management.ejari_fee_invoice_product_id',
-                self.ejari_fee_item_id,
+                self.sudo().ejari_fee_item_id,
+                default_company=contract_company,
             ),
             'ejari_fee_description': param_obj.get_param(
                 'eg_property_management.ejari_fee_invoice_description',
@@ -634,7 +760,8 @@ class RentContract(models.Model):
             ),
             'admin_charge_product': _get_product(
                 'eg_property_management.admin_charge_invoice_product_id',
-                self.admin_charge_item_id,
+                self.sudo().admin_charge_item_id,
+                default_company=contract_company,
             ),
             'admin_charge_description': param_obj.get_param(
                 'eg_property_management.admin_charge_invoice_description',
@@ -642,7 +769,8 @@ class RentContract(models.Model):
             ),
             'commission_product': _get_product(
                 'eg_property_management.commission_invoice_product_id',
-                self.commission_item_id,
+                self.sudo().commission_item_id,
+                default_company=contract_company,
             ),
             'commission_description': param_obj.get_param(
                 'eg_property_management.commission_invoice_description',
@@ -650,18 +778,25 @@ class RentContract(models.Model):
             ),
             'parking_fee_product': _get_product(
                 'eg_property_management.parking_fee_invoice_product_id',
-                self.parking_fee_item_id,
+                self.sudo().parking_fee_item_id,
+                default_company=contract_company,
             ),
             'parking_fee_description': param_obj.get_param(
                 'eg_property_management.parking_fee_invoice_description',
                 'Parking Fee',
             ),
-            'dilapidation_product': _get_product('eg_property_management.dilapidation_invoice_product_id'),
+            'dilapidation_product': _get_product(
+                'eg_property_management.dilapidation_invoice_product_id',
+                default_company=contract_company,
+            ),
             'dilapidation_description': param_obj.get_param(
                 'eg_property_management.dilapidation_invoice_description',
                 'Dilapidation',
             ),
-            'shortfall_rent_product': _get_product('eg_property_management.shortfall_rent_invoice_product_id'),
+            'shortfall_rent_product': _get_product(
+                'eg_property_management.shortfall_rent_invoice_product_id',
+                default_company=contract_company,
+            ),
             'shortfall_rent_description': param_obj.get_param(
                 'eg_property_management.shortfall_rent_invoice_description',
                 'Shortfall Rent',
@@ -741,18 +876,30 @@ class RentContract(models.Model):
         return base_amount * (invoice.amount_total / invoice.amount_untaxed)
 
     @staticmethod
-    def _prepare_invoice_line(product, description, amount, account_id):
-        return (0, 0, {
-            'product_id': product.id if (product and getattr(product, '_name', '') == 'product.product') else False,
+    def _prepare_invoice_line(product, description, amount, account_id=False, target_company=False, journal=False):
+        is_product = bool(product and getattr(product, '_name', '') == 'product.product')
+        prod_ctx = product.with_company(target_company).sudo() if (is_product and target_company) else (product.sudo() if is_product else False)
+        resolved_account = False
+        if prod_ctx:
+            categ_ctx = prod_ctx.categ_id.with_company(target_company) if target_company else prod_ctx.categ_id
+            resolved_account = prod_ctx.property_account_income_id or categ_ctx.property_account_income_categ_id
+        if not resolved_account and journal and journal.sudo().default_account_id:
+            resolved_account = journal.sudo().default_account_id
+        if not resolved_account:
+            resolved_account = account_id
+
+        line_vals = {
+            'product_id': prod_ctx.id if prod_ctx else False,
             'name': description,
             'quantity': 1,
             'price_unit': amount,
-            'account_id': (
-                product.property_account_income_id
-                or product.categ_id.property_account_income_categ_id
-                or account_id
-            ).id if (product and hasattr(product, 'property_account_income_id')) else account_id.id,
-        })
+        }
+        if resolved_account:
+            line_vals['account_id'] = resolved_account.id
+        if prod_ctx and target_company:
+            taxes = prod_ctx.taxes_id.filtered(lambda t: not t.company_id or t.company_id == target_company)
+            line_vals['tax_ids'] = [(6, 0, taxes.ids)]
+        return (0, 0, line_vals)
 
     def _get_next_rent_amount(self):
         self.ensure_one()
@@ -937,12 +1084,9 @@ class RentContract(models.Model):
             raise UserError("Please set contract Start Date and End Date.")
         if not self.payment_term_id:
             raise UserError("Please set a payment term on the contract.")
-        income_account_id = self.env['account.account'].search([('account_type', '=', 'income')], limit=1)
-        if not income_account_id:
-            raise UserError("No income account found. Please configure at least one income account in Accounting.")
 
         invoice_settings = self._get_invoice_settings()
-        existing_installments = self.rent_installment_ids
+        existing_installments = self.sudo().rent_installment_ids
         pending_due_dates = self._get_pending_rent_due_dates()
         if not pending_due_dates:
             raise UserError("All invoices based on the payment count have already been created for this contract.")
@@ -950,130 +1094,82 @@ class RentContract(models.Model):
         due_dates_to_invoice = pending_due_dates if self.contract_type == 'auto' else pending_due_dates[:1]
         rent_amount_map = self._get_pending_rent_amount_map(pending_due_dates)
         first_batch_due_date = due_dates_to_invoice[0] if due_dates_to_invoice else False
-        invoice_ids = self.env['account.move']
+        invoice_ids = self.env['account.move'].sudo()
 
         for due_date in due_dates_to_invoice:
-            invoice_lines = []
-            installments = []
-            deposit_added = False
-            ejari_fee_added = False
-            admin_charge_added = False
-            commission_added = False
-            parking_fee_added = False
+            charge_items = []
+
+            def _add_charge(product, description, amount, payment_type, inst_date, contract_invoice_field=None):
+                target_co = self._resolve_target_company(product=product, payment_type=payment_type)
+                charge_items.append({
+                    'product': product,
+                    'description': description,
+                    'amount': amount,
+                    'payment_type': payment_type,
+                    'installment_date': inst_date,
+                    'target_company': target_co,
+                    'contract_invoice_field': contract_invoice_field,
+                })
 
             rent_amount = rent_amount_map.get(due_date, 0.0)
             if due_date <= self.end_date and rent_amount:
-                invoice_lines.append(
-                    self._prepare_invoice_line(
-                        invoice_settings['rent_product'],
-                        invoice_settings['rent_description'],
-                        rent_amount,
-                        income_account_id,
-                    )
+                _add_charge(
+                    invoice_settings['rent_product'],
+                    invoice_settings['rent_description'],
+                    rent_amount,
+                    'rent',
+                    due_date,
                 )
-                installments.append({
-                    'rent_contract_id': self.id,
-                    'invoice_date': due_date,
-                    'payment_type': 'rent',
-                    'description': invoice_settings['rent_description'],
-                    'amount': rent_amount,
-                    'currency_id': self.currency_id.id,
-                })
 
             if due_date == first_batch_due_date and self.deposit and self.deposit > 0 and not self.deposit_invoice_id:
-                invoice_lines.append(
-                    self._prepare_invoice_line(
-                        invoice_settings['deposit_product'],
-                        invoice_settings['deposit_description'],
-                        self.deposit,
-                        income_account_id,
-                    )
+                _add_charge(
+                    invoice_settings['deposit_product'],
+                    invoice_settings['deposit_description'],
+                    self.deposit,
+                    'deposit',
+                    self.start_date,
+                    contract_invoice_field='deposit_invoice_id',
                 )
-                installments.append({
-                    'rent_contract_id': self.id,
-                    'invoice_date': self.start_date,
-                    'payment_type': 'deposit',
-                    'description': invoice_settings['deposit_description'],
-                    'amount': self.deposit,
-                    'currency_id': self.currency_id.id,
-                })
-                deposit_added = True
 
             if due_date == first_batch_due_date and self.ejari_fee and self.ejari_fee > 0 and not self.ejari_fee_invoice_id:
-                invoice_lines.append(
-                    self._prepare_invoice_line(
-                        invoice_settings['ejari_fee_product'],
-                        invoice_settings['ejari_fee_description'],
-                        self.ejari_fee,
-                        income_account_id,
-                    )
+                _add_charge(
+                    invoice_settings['ejari_fee_product'],
+                    invoice_settings['ejari_fee_description'],
+                    self.ejari_fee,
+                    'ejari_fee',
+                    self.start_date,
+                    contract_invoice_field='ejari_fee_invoice_id',
                 )
-                installments.append({
-                    'rent_contract_id': self.id,
-                    'invoice_date': self.start_date,
-                    'payment_type': 'ejari_fee',
-                    'description': invoice_settings['ejari_fee_description'],
-                    'amount': self.ejari_fee,
-                    'currency_id': self.currency_id.id,
-                })
-                ejari_fee_added = True
 
             if due_date == first_batch_due_date and self.admin_charge and self.admin_charge > 0 and not self.admin_charge_invoice_id:
-                invoice_lines.append(
-                    self._prepare_invoice_line(
-                        invoice_settings['admin_charge_product'],
-                        invoice_settings['admin_charge_description'],
-                        self.admin_charge,
-                        income_account_id,
-                    )
+                _add_charge(
+                    invoice_settings['admin_charge_product'],
+                    invoice_settings['admin_charge_description'],
+                    self.admin_charge,
+                    'admin_charge',
+                    self.start_date,
+                    contract_invoice_field='admin_charge_invoice_id',
                 )
-                installments.append({
-                    'rent_contract_id': self.id,
-                    'invoice_date': self.start_date,
-                    'payment_type': 'admin_charge',
-                    'description': invoice_settings['admin_charge_description'],
-                    'amount': self.admin_charge,
-                    'currency_id': self.currency_id.id,
-                })
-                admin_charge_added = True
 
             if due_date == first_batch_due_date and self.commission and self.commission > 0 and not self.commission_invoice_id:
-                invoice_lines.append(
-                    self._prepare_invoice_line(
-                        invoice_settings['commission_product'],
-                        invoice_settings['commission_description'],
-                        self.commission,
-                        income_account_id,
-                    )
+                _add_charge(
+                    invoice_settings['commission_product'],
+                    invoice_settings['commission_description'],
+                    self.commission,
+                    'commission',
+                    self.start_date,
+                    contract_invoice_field='commission_invoice_id',
                 )
-                installments.append({
-                    'rent_contract_id': self.id,
-                    'invoice_date': self.start_date,
-                    'payment_type': 'commission',
-                    'description': invoice_settings['commission_description'],
-                    'amount': self.commission,
-                    'currency_id': self.currency_id.id,
-                })
-                commission_added = True
 
             if due_date == first_batch_due_date and self.parking_fee and self.parking_fee > 0 and not self.parking_fee_invoice_id:
-                invoice_lines.append(
-                    self._prepare_invoice_line(
-                        invoice_settings['parking_fee_product'],
-                        invoice_settings['parking_fee_description'],
-                        self.parking_fee,
-                        income_account_id,
-                    )
+                _add_charge(
+                    invoice_settings['parking_fee_product'],
+                    invoice_settings['parking_fee_description'],
+                    self.parking_fee,
+                    'parking_fee',
+                    self.start_date,
+                    contract_invoice_field='parking_fee_invoice_id',
                 )
-                installments.append({
-                    'rent_contract_id': self.id,
-                    'invoice_date': self.start_date,
-                    'payment_type': 'parking_fee',
-                    'description': invoice_settings['parking_fee_description'],
-                    'amount': self.parking_fee,
-                    'currency_id': self.currency_id.id,
-                })
-                parking_fee_added = True
 
             maint_amount = self._get_maintenance_charge_amount()
             if maint_amount > 0:
@@ -1083,22 +1179,13 @@ class RentContract(models.Model):
                         and inst.description == invoice_settings['maintenance_description']
                     )[:1]
                     if due_date == first_batch_due_date and not already_exists_id:
-                        invoice_lines.append(
-                            self._prepare_invoice_line(
-                                invoice_settings['maintenance_product'],
-                                invoice_settings['maintenance_description'],
-                                maint_amount,
-                                income_account_id,
-                            )
+                        _add_charge(
+                            invoice_settings['maintenance_product'],
+                            invoice_settings['maintenance_description'],
+                            maint_amount,
+                            'maintenance',
+                            self.start_date,
                         )
-                        installments.append({
-                            'rent_contract_id': self.id,
-                            'invoice_date': self.start_date,
-                            'payment_type': 'maintenance',
-                            'description': invoice_settings['maintenance_description'],
-                            'amount': maint_amount,
-                            'currency_id': self.currency_id.id,
-                        })
                 elif self.maintenance_type == 'recurring':
                     already_exists_id = existing_installments.filtered(
                         lambda inst: inst.payment_type == 'maintenance'
@@ -1106,105 +1193,130 @@ class RentContract(models.Model):
                         and inst.description == invoice_settings['maintenance_description']
                     )[:1]
                     if not already_exists_id:
-                        invoice_lines.append(
-                            self._prepare_invoice_line(
-                                invoice_settings['maintenance_product'],
-                                invoice_settings['maintenance_description'],
-                                maint_amount,
-                                income_account_id,
-                            )
+                        _add_charge(
+                            invoice_settings['maintenance_product'],
+                            invoice_settings['maintenance_description'],
+                            maint_amount,
+                            'maintenance',
+                            due_date,
                         )
-                        installments.append({
-                            'rent_contract_id': self.id,
-                            'invoice_date': due_date,
-                            'payment_type': 'maintenance',
-                            'description': invoice_settings['maintenance_description'],
-                            'amount': maint_amount,
-                            'currency_id': self.currency_id.id,
-                        })
 
             for service_id in self.utility_service_ids:
+                service_product = self._resolve_service_product(service_id)
                 if service_id.service_type == 'once':
                     utility_description = f"{service_id.service_id.name} (One-time)"
                     already_exists_id = existing_installments.filtered(
-                        lambda inst: inst.payment_type == 'utility' and inst.description == utility_description
+                        lambda inst: inst.payment_type in ('utility', 'service')
+                        and inst.description == utility_description
                     )[:1]
                     if due_date == first_batch_due_date and not already_exists_id:
-                        invoice_lines.append(
-                            self._prepare_invoice_line(
-                                service_id.service_id,
-                                utility_description,
-                                service_id.cost,
-                                income_account_id,
-                            )
+                        _add_charge(
+                            service_product,
+                            utility_description,
+                            service_id.cost,
+                            'utility',
+                            self.start_date,
                         )
-                        installments.append({
-                            'rent_contract_id': self.id,
-                            'invoice_date': self.start_date,
-                            'payment_type': 'utility',
-                            'description': utility_description,
-                            'amount': service_id.cost,
-                            'currency_id': self.currency_id.id,
-                        })
                 elif service_id.service_type == 'recurring':
                     utility_description = f"{service_id.service_id.name} for {due_date}"
                     already_exists_id = existing_installments.filtered(
-                        lambda inst: inst.payment_type == 'utility'
+                        lambda inst: inst.payment_type in ('utility', 'service')
                         and inst.invoice_date == due_date
                         and inst.description == utility_description
                     )[:1]
                     if not already_exists_id:
-                        invoice_lines.append(
-                            self._prepare_invoice_line(
-                                service_id.service_id,
-                                utility_description,
-                                service_id.cost,
-                                income_account_id,
-                            )
+                        _add_charge(
+                            service_product,
+                            utility_description,
+                            service_id.cost,
+                            'utility',
+                            due_date,
                         )
-                        installments.append({
-                            'rent_contract_id': self.id,
-                            'invoice_date': due_date,
-                            'payment_type': 'utility',
-                            'description': utility_description,
-                            'amount': service_id.cost,
-                            'currency_id': self.currency_id.id,
-                        })
 
-            if not invoice_lines:
+            if not charge_items:
                 continue
 
-            invoice_id = self.env['account.move'].with_context(skip_sync_installment=True).create({
-                'move_type': 'out_invoice',
-                'partner_id': self.tenant_id.id,
-                'invoice_origin': self.name,
-                'invoice_date': due_date,
-                'invoice_date_due': due_date,
-                'currency_id': self.currency_id.id,
-                'property_id': self.property_id.id,
-                'rent_contract_id': self.id,
-                'invoice_line_ids': invoice_lines,
-            })
+            # Group charge items by target_company so lines from different companies
+            # (e.g. GHD Rent/Deposit vs Elite Nest Admin/Ejari/Maintenance) never mix in one account.move
+            batches_by_company = {}
+            company_order = []
+            for item in charge_items:
+                co = item['target_company']
+                if co.id not in batches_by_company:
+                    batches_by_company[co.id] = []
+                    company_order.append(co)
+                batches_by_company[co.id].append(item)
 
-            for inst in installments:
-                inst['invoice_id'] = invoice_id.id
-                self.env['rent.installment'].create(inst)
+            for target_company in company_order:
+                batch_items = batches_by_company[target_company.id]
+                primary_type = (
+                    'rent'
+                    if any(it['payment_type'] in ('rent', 'deposit') for it in batch_items)
+                    else batch_items[0]['payment_type']
+                )
+                journal = self._get_company_sale_journal(target_company, payment_type=primary_type)
+                invoice_lines = []
+                for item in batch_items:
+                    line_account = self._get_company_income_account(
+                        item['product'],
+                        target_company,
+                        journal=journal,
+                    )
+                    invoice_lines.append(
+                        self._prepare_invoice_line(
+                            item['product'],
+                            item['description'],
+                            item['amount'],
+                            line_account,
+                            target_company=target_company,
+                            journal=journal,
+                        )
+                    )
 
-            if deposit_added and not self.deposit_invoice_id:
-                self.deposit_invoice_id = invoice_id.id
-            if ejari_fee_added and not self.ejari_fee_invoice_id:
-                self.ejari_fee_invoice_id = invoice_id.id
-            if admin_charge_added and not self.admin_charge_invoice_id:
-                self.admin_charge_invoice_id = invoice_id.id
-            if commission_added and not self.commission_invoice_id:
-                self.commission_invoice_id = invoice_id.id
-            if parking_fee_added and not self.parking_fee_invoice_id:
-                self.parking_fee_invoice_id = invoice_id.id
-            invoice_ids |= invoice_id
+                move_env = self.env['account.move'].with_company(target_company).sudo().with_context(
+                    skip_sync_installment=True,
+                    default_company_id=target_company.id,
+                    allowed_company_ids=target_company.ids,
+                )
+                invoice_id = move_env.create({
+                    'move_type': 'out_invoice',
+                    'company_id': target_company.id,
+                    'journal_id': journal.id,
+                    'partner_id': self.tenant_id.id,
+                    'invoice_origin': self.name,
+                    'invoice_date': due_date,
+                    'invoice_date_due': due_date,
+                    'currency_id': self.currency_id.id,
+                    'property_id': self.property_id.id,
+                    'rent_contract_id': self.id,
+                    'invoice_line_ids': invoice_lines,
+                })
+
+                inst_env = self.env['rent.installment'].with_company(target_company).sudo()
+                for item in batch_items:
+                    is_prod = bool(item['product'] and getattr(item['product'], '_name', '') == 'product.product')
+                    new_inst = inst_env.create({
+                        'rent_contract_id': self.id,
+                        'company_id': target_company.id,
+                        'product_id': item['product'].id if is_prod else False,
+                        'invoice_date': item['installment_date'],
+                        'payment_type': item['payment_type'],
+                        'description': item['description'],
+                        'amount': item['amount'],
+                        'currency_id': self.currency_id.id,
+                        'invoice_id': invoice_id.id,
+                    })
+                    existing_installments |= new_inst
+                    inv_field = item.get('contract_invoice_field')
+                    if inv_field and inv_field in self._fields and not self[inv_field]:
+                        self.sudo().write({inv_field: invoice_id.id})
+
+                invoice_ids |= invoice_id
 
         if not invoice_ids:
             raise UserError("Nothing to invoice for this period.")
 
+        allowed_companies = (self.env.companies | invoice_ids.mapped('company_id')).ids
         if len(invoice_ids) == 1:
             return {
                 'name': 'Invoice',
@@ -1212,6 +1324,7 @@ class RentContract(models.Model):
                 'res_model': 'account.move',
                 'res_id': invoice_ids.id,
                 'view_mode': 'form',
+                'context': {'allowed_company_ids': allowed_companies},
             }
 
         return {
@@ -1220,13 +1333,14 @@ class RentContract(models.Model):
             'res_model': 'account.move',
             'view_mode': 'list,form',
             'domain': [('id', 'in', invoice_ids.ids)],
+            'context': {'allowed_company_ids': allowed_companies},
         }
 
     @api.depends('rent_installment_ids.amount', 'rent_installment_ids.payment_type',
                  'rent_installment_ids.invoice_id.state', 'rent_installment_ids.invoice_id.amount_total')
     def _compute_invoice_amounts(self):
         for record in self:
-            rent_installments_id = record.rent_installment_ids.filtered(lambda r: r.payment_type != 'broker_bill')
+            rent_installments_id = record.sudo().rent_installment_ids.filtered(lambda r: r.payment_type != 'broker_bill')
             record.invoice_expected_amount = sum(rent_installments_id.mapped('amount'))
             unique_invoices_id = rent_installments_id.mapped('invoice_id').filtered(lambda inv: inv.state == 'posted')
             record.invoice_paid_amount = sum(unique_invoices_id.mapped('amount_total'))
@@ -1234,7 +1348,7 @@ class RentContract(models.Model):
     @api.depends('rent_installment_ids', 'rent_installment_ids.invoice_id.state')
     def _compute_bill_amounts(self):
         for record in self:
-            broker_installments_ids = record.rent_installment_ids.filtered(
+            broker_installments_ids = record.sudo().rent_installment_ids.filtered(
                 lambda inst: inst.payment_type == 'broker_bill' and inst.invoice_id)
 
             record.bill_expected_amount = sum(broker_installments_ids.mapped('amount'))
@@ -1261,6 +1375,13 @@ class RentContract(models.Model):
 
     def action_view_invoices(self):
         self.ensure_one()
+        linked_invoices = self.env['account.move'].sudo().search([
+            ('move_type', 'in', ['out_invoice', 'out_refund']),
+            '|',
+            ('rent_contract_id', '=', self.id),
+            ('invoice_origin', '=', self.name),
+        ])
+        allowed_companies = (self.env.companies | linked_invoices.mapped('company_id')).ids
         return {
             'name': 'Customer Invoices',
             'type': 'ir.actions.act_window',
@@ -1272,11 +1393,12 @@ class RentContract(models.Model):
                 ('rent_contract_id', '=', self.id),
                 ('invoice_origin', '=', self.name)
             ],
+            'context': {'allowed_company_ids': allowed_companies},
         }
 
     def _compute_invoice_count(self):
         for rec in self:
-            rec.invoice_count = self.env['account.move'].search_count([
+            rec.invoice_count = self.env['account.move'].sudo().search_count([
                 ('move_type', 'in', ['out_invoice', 'out_refund']),
                 '|',
                 ('rent_contract_id', '=', rec.id),
@@ -1326,19 +1448,27 @@ class RentContract(models.Model):
         if not self.broker_id or not self.broker_commission:
             raise UserError("Please set a Broker and Commission before creating a bill.")
 
-        existing_broker_inst_id = self.env['rent.installment'].search(
-            [('rent_contract_id', '=', self.id), ('payment_type', '=', 'broker_bill')], limit=1)
+        existing_broker_inst_id = self.env['rent.installment'].sudo().search(
+            [('rent_contract_id', '=', self.id), ('payment_type', '=', 'broker_bill'), ], limit=1)
 
         if existing_broker_inst_id:
             raise UserError(f"A broker bill already exists for this contract "
                             f"(Invoice: {existing_broker_inst_id.invoice_id.name or 'N/A'}).")
 
-        expense_account_id = self.env['account.account'].search([('account_type', '=', 'expense')], limit=1)
+        target_company = self._get_contract_company()
+        account_obj = self.env['account.account'].with_company(target_company).sudo()
+        domain = [('account_type', '=', 'expense')]
+        if 'company_ids' in account_obj._fields:
+            domain.append(('company_ids', 'in', target_company.ids))
+        elif 'company_id' in account_obj._fields:
+            domain.append(('company_id', '=', target_company.id))
+        expense_account_id = account_obj.search(domain, limit=1)
         if not expense_account_id:
             raise UserError("Please configure at least one expense account.")
 
         bill_vals = {
             'move_type': 'in_invoice',
+            'company_id': target_company.id,
             'partner_id': self.broker_id.id,
             'invoice_origin': self.name,
             'invoice_date': fields.Date.today(),
@@ -1353,10 +1483,11 @@ class RentContract(models.Model):
                 'account_id': expense_account_id.id,
             })],
         }
-        bill_id = self.env['account.move'].create(bill_vals)
+        bill_id = self.env['account.move'].with_company(target_company).sudo().create(bill_vals)
 
-        self.env['rent.installment'].create({
+        self.env['rent.installment'].with_company(target_company).sudo().create({
             'rent_contract_id': self.id,
+            'company_id': target_company.id,
             'invoice_date': fields.Date.today(),
             'payment_type': 'broker_bill',
             'description': f"Broker Bill for {self.name}",
@@ -1374,7 +1505,7 @@ class RentContract(models.Model):
 
     def action_view_broker_bills(self):
         self.ensure_one()
-        bill_ids = self.env['account.move'].search([
+        bill_ids = self.env['account.move'].sudo().search([
             ('property_id', '=', self.property_id.id), ('rent_contract_id', '=', self.id),
             ('move_type', '=', 'in_invoice'), ])
         return {
@@ -1384,7 +1515,7 @@ class RentContract(models.Model):
             'view_mode': 'list,form',
             'domain': [('id', 'in', bill_ids.ids)],
             'context': {'default_property_id': self.property_id.id,
-                        'default_rent_contract_id': self.id},
+                        'default_rent_contract_id': self.id, },
         }
 
     @api.depends('rent', 'total_maintenance', 'utility_service_ids.cost', 'tax_rate')
@@ -1398,7 +1529,7 @@ class RentContract(models.Model):
 
     def action_apply_penalty_cron(self):
         today = date.today()
-        overdue_installments_ids = self.env['rent.installment'].search([
+        overdue_installments_ids = self.env['rent.installment'].sudo().search([
             ('payment_type', '=', 'rent'), ('invoice_id.payment_state', '!=', 'paid'),
             ('invoice_id.invoice_date', '<', today - timedelta(days=1)), ])
 
@@ -1411,7 +1542,7 @@ class RentContract(models.Model):
             if (today - installments_id.invoice_date).days <= contract_id.penalty_grace_days:
                 continue
 
-            if self.env['rent.installment'].search_count([
+            if self.env['rent.installment'].sudo().search_count([
                 ('rent_contract_id', '=', contract_id.id), ('payment_type', '=', 'penalty'),
                 ('invoice_id.invoice_origin', '=', installments_id.invoice_id.name)]) > 0:
                 continue
@@ -1420,13 +1551,26 @@ class RentContract(models.Model):
             if contract_id.penalty_type == 'percent':
                 penalty_amount = (installments_id.amount or 0.0) * (contract_id.penalty_value or 0.0) / 100.0
 
-            income_account_id = self.env['account.account'].search([('account_type', '=', 'income')], limit=1)
-            if not income_account_id:
+            invoice_settings = contract_id._get_invoice_settings()
+            penalty_product = invoice_settings['penalty_product']
+            target_company = contract_id._resolve_target_company(
+                product=penalty_product,
+                payment_type='penalty',
+            )
+            try:
+                journal = contract_id._get_company_sale_journal(target_company, payment_type='penalty')
+                income_account_id = contract_id._get_company_income_account(
+                    penalty_product,
+                    target_company,
+                    journal=journal,
+                )
+            except UserError:
                 continue
 
-            invoice_settings = contract_id._get_invoice_settings()
             move_vals = {
                 'move_type': 'out_invoice',
+                'company_id': target_company.id,
+                'journal_id': journal.id,
                 'partner_id': contract_id.tenant_id.id,
                 'invoice_date': fields.Date.today(),
                 'invoice_date_due': fields.Date.today(),
@@ -1434,28 +1578,35 @@ class RentContract(models.Model):
                 'invoice_origin': contract_id.name,
                 'property_id': contract_id.property_id.id,
                 'rent_contract_id': contract_id.id,
-                'invoice_line_ids': [(0, 0, {
-                    'product_id': invoice_settings['penalty_product'].id if invoice_settings['penalty_product'] else False,
-                    'name': invoice_settings['penalty_description'],
-                    'quantity': 1,
-                    'price_unit': penalty_amount,
-                    'account_id': (
-                        invoice_settings['penalty_product'].property_account_income_id
-                        or invoice_settings['penalty_product'].categ_id.property_account_income_categ_id
-                        or income_account_id
-                    ).id if invoice_settings['penalty_product'] else income_account_id.id,
-                })],
+                'invoice_line_ids': [
+                    contract_id._prepare_invoice_line(
+                        penalty_product,
+                        invoice_settings['penalty_description'],
+                        penalty_amount,
+                        income_account_id,
+                        target_company=target_company,
+                        journal=journal,
+                    )
+                ],
             }
-            invoice_id = self.env['account.move'].with_context(skip_sync_installment=True).create(move_vals)
+            invoice_id = self.env['account.move'].with_company(target_company).sudo().with_context(
+                skip_sync_installment=True,
+                default_company_id=target_company.id,
+                allowed_company_ids=target_company.ids,
+            ).create(move_vals)
 
-            self.env['rent.installment'].create({
+            is_prod = bool(penalty_product and getattr(penalty_product, '_name', '') == 'product.product')
+            self.env['rent.installment'].with_company(target_company).sudo().create({
                 'rent_contract_id': contract_id.id,
+                'company_id': target_company.id,
+                'product_id': penalty_product.id if is_prod else False,
                 'invoice_date': fields.Date.today(),
                 'payment_type': 'penalty',
                 'description': invoice_settings['penalty_description'],
                 'amount': penalty_amount,
                 'invoice_id': invoice_id.id,
-                'currency_id': contract_id.currency_id.id, })
+                'currency_id': contract_id.currency_id.id,
+            })
             contract_id.message_post(
                 body=f"Penalty invoice {invoice_id.name} generated for overdue installment {installments_id.id}.")
 

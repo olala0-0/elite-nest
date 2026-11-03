@@ -38,9 +38,10 @@
 
                         <button name="action_state_draft" string="Reset to Draft" type="object" class="btn-secondary"
                                 invisible="state in ['draft','running','move_out','cancelled','expired']"/>
+                        <button name="action_state_running" string="Back to Running" type="object" class="btn-primary"
+                                invisible="state != 'move_out' or (moveout_id and moveout_state not in ('cancelled', False))"/>
                         <button name="action_state_running" string="Running" type="object" class="btn-primary"
                                 invisible="state in ['running','move_out','cancelled','terminated','expired']"/>
-
                         <button name="action_create_invoice" string="Create Invoice" type="object" class="btn-primary"
                                 invisible="state in ['draft','cancelled','terminated','expired']"/>
 

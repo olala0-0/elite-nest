@@ -587,11 +587,18 @@ class RentContractMoveOut(models.Model):
         return res
 
     def action_cancel(self):
-        """Cancel the Move-Out process at any stage unless it is already settled."""
+        """Cancel the Move-Out process at any stage unless it is already settled.
+        Restores the parent contract back to running if it was in move_out."""
         for rec in self:
             if rec.state == 'settled':
                 raise UserError("A settled Move-Out cannot be cancelled.")
             rec.state = 'cancelled'
+
+            # Contract Protection: restore contract back to running and keep property on rent
+            if rec.rent_contract_id and rec.rent_contract_id.state == 'move_out':
+                rec.rent_contract_id.write({'state': 'running'})
+                if rec.property_id and rec.property_id.state != 'on_rent':
+                    rec.property_id.write({'state': 'on_rent'})
 
             # Cancel any scheduled activities for this Move-Out
             try:
@@ -600,7 +607,7 @@ class RentContractMoveOut(models.Model):
                 pass
 
             rec.message_post(
-                body=f"Move-Out record has been cancelled by <b>{self.env.user.name}</b>.",
+                body=f"Move-Out record has been cancelled by <b>{self.env.user.name}</b>. Linked contract {rec.rent_contract_id.name or ''} restored to Running.",
                 subtype_xmlid='mail.mt_comment'
             )
         return {
@@ -608,11 +615,21 @@ class RentContractMoveOut(models.Model):
             'tag': 'display_notification',
             'params': {
                 'title': 'Move-Out Cancelled',
-                'message': 'Move-out record has been cancelled.',
+                'message': 'Move-out record has been cancelled and contract restored to Running.',
                 'type': 'warning',
                 'sticky': False,
             }
         }
+
+    def unlink(self):
+        """When a Move-Out record is deleted, restore the parent contract to running
+        if it is currently in move_out."""
+        for rec in self:
+            if rec.rent_contract_id and rec.rent_contract_id.state == 'move_out':
+                rec.rent_contract_id.write({'state': 'running'})
+                if rec.property_id and rec.property_id.state != 'on_rent':
+                    rec.property_id.write({'state': 'on_rent'})
+        return super().unlink()
 
     def action_reset_draft(self):
         """Aborting/restarting a Move-Out also returns the contract's own

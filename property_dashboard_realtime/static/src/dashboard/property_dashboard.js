@@ -15,6 +15,10 @@ export class PropertyDashboard extends Component {
         this.action = useService("action");
         this.busService = useService("bus_service");
         this.notification = useService("notification");
+        this.companyService = null;
+        try {
+            this.companyService = useService("company");
+        } catch (e) {}
 
         // Chart canvas references
         this.statusChartRef = useRef("statusChart");
@@ -32,15 +36,19 @@ export class PropertyDashboard extends Component {
             loading: true,
             realtimeConnected: false,
             lastUpdated: "",
+            dashboardMode: "property",
+            modeOverride: "",
             residentialType: "all",
             contractState: "all",
             projectId: "all",
             facilityType: "all",
+            priorityFilter: "all",
             searchQuery: "",
             pulseEffect: false,
             has_utility_data: true,
             availableProjects: [],
             multiCompany: {
+                active_company_id: false,
                 active_company_name: "",
                 allowed_companies_count: 1,
                 is_multi: false,
@@ -70,6 +78,9 @@ export class PropertyDashboard extends Component {
                 vendor_tasks_count: 8,
                 vendor_tasks_badge: "Pending",
                 vendor_tasks_subtitle: "External service provider tasks",
+                assets_total_count: 42,
+                assets_health_badge: "90.8% Healthy",
+                assets_subtitle: "Managed facility equipment & systems",
             },
             charts: {
                 contracts_by_status: { labels: [], counts: [], percentages: [], colors: [] },
@@ -82,7 +93,7 @@ export class PropertyDashboard extends Component {
                     gauge_values: [89.2, 10.8],
                     colors: ["#8b68aa", "#e8e1f0"],
                 },
-                avg_rent_by_unit_type: { labels: [], values: [], benchmarks: [] },
+                avg_rent_by_unit_type: { labels: [], values: [] },
                 revenue_vs_maintenance: { labels: [], rent_inflows: [], maintenance_opex: [] },
             },
             assetHealth: [],
@@ -108,7 +119,7 @@ export class PropertyDashboard extends Component {
             () => {
                 this._renderAllCharts();
             },
-            () => [this.state.charts, this.state.loading]
+            () => [this.state.charts, this.state.loading, this.state.dashboardMode]
         );
 
         onWillUnmount(() => {
@@ -200,16 +211,25 @@ export class PropertyDashboard extends Component {
             this.state.loading = true;
         }
         try {
+            const activeCompanyIds = (this.companyService && this.companyService.activeCompanyIds) || [];
+            const currentCompanyId =
+                (this.companyService && this.companyService.currentCompany && this.companyService.currentCompany.id) || false;
+
             const filters = {
                 residential_type: this.state.residentialType,
                 contract_state: this.state.contractState,
                 project_id: this.state.projectId,
                 facility_type: this.state.facilityType,
+                priority_filter: this.state.priorityFilter,
                 search: this.state.searchQuery,
+                company_ids: activeCompanyIds,
+                current_company_id: currentCompanyId,
+                mode_override: this.state.modeOverride || false,
             };
 
             const data = await this.orm.call("property.dashboard.helper", "get_dashboard_metrics", [filters]);
 
+            this.state.dashboardMode = data.dashboard_mode || "property";
             this.state.kpis = data.kpis;
             this.state.charts = data.charts;
             this.state.assetHealth = data.asset_health || [];
@@ -544,7 +564,7 @@ export class PropertyDashboard extends Component {
     }
 
     /**
-     * 6. Dual Chart: Monthly Revenue vs Maintenance OPEX
+     * 6. Dual / OPEX Chart: Monthly Revenue vs Maintenance OPEX
      */
     _renderRevVsMaintChart() {
         if (!this.revVsMaintChartRef.el) return;
@@ -560,35 +580,40 @@ export class PropertyDashboard extends Component {
         gradient.addColorStop(0, "rgba(194, 169, 217, 0.45)");
         gradient.addColorStop(1, "rgba(194, 169, 217, 0.0)");
 
+        const datasets = [
+            {
+                type: "bar",
+                label: "Maintenance OPEX (AED)",
+                data: chartData.maintenance_opex,
+                backgroundColor: "#503966",
+                borderRadius: 6,
+                barPercentage: 0.5,
+                yAxisID: "y",
+            },
+        ];
+
+        if (this.state.dashboardMode !== "facility") {
+            datasets.push({
+                type: "line",
+                label: "Rent Inflows (AED)",
+                data: chartData.rent_inflows,
+                borderColor: "#8b68aa",
+                backgroundColor: gradient,
+                fill: true,
+                tension: 0.3,
+                pointBackgroundColor: "#8b68aa",
+                pointBorderColor: "#ffffff",
+                pointBorderWidth: 2,
+                pointRadius: 4,
+                yAxisID: "y",
+            });
+        }
+
         this._chartInstances.revVsMaint = new window.Chart(ctx, {
             type: "bar",
             data: {
                 labels: chartData.labels,
-                datasets: [
-                    {
-                        type: "bar",
-                        label: "Maintenance OPEX (AED)",
-                        data: chartData.maintenance_opex,
-                        backgroundColor: "#503966",
-                        borderRadius: 6,
-                        barPercentage: 0.5,
-                        yAxisID: "y1",
-                    },
-                    {
-                        type: "line",
-                        label: "Rent Inflows (AED)",
-                        data: chartData.rent_inflows,
-                        borderColor: "#8b68aa",
-                        backgroundColor: gradient,
-                        fill: true,
-                        tension: 0.3,
-                        pointBackgroundColor: "#8b68aa",
-                        pointBorderColor: "#ffffff",
-                        pointBorderWidth: 2,
-                        pointRadius: 4,
-                        yAxisID: "y",
-                    },
-                ],
+                datasets: datasets,
             },
             options: {
                 responsive: true,
@@ -628,12 +653,6 @@ export class PropertyDashboard extends Component {
                             callback: (v) => `${(v / 1000).toFixed(0)}k`,
                         },
                     },
-                    y1: {
-                        type: "linear",
-                        display: false,
-                        position: "right",
-                        grid: { drawOnChartArea: false },
-                    },
                 },
             },
         });
@@ -642,6 +661,12 @@ export class PropertyDashboard extends Component {
     // =========================================================================
     // UI INTERACTION HANDLERS & STANDARD WINDOW ACTIONS
     // =========================================================================
+    setDashboardMode(mode) {
+        this.state.modeOverride = mode;
+        this.state.dashboardMode = mode;
+        this.loadDashboardData(false);
+    }
+
     onFilterResidentialType(ev) {
         this.state.residentialType = ev.target.value;
         this.loadDashboardData(true);
@@ -659,6 +684,11 @@ export class PropertyDashboard extends Component {
 
     onFilterFacility(ev) {
         this.state.facilityType = ev.target.value;
+        this.loadDashboardData(true);
+    }
+
+    onFilterPriority(ev) {
+        this.state.priorityFilter = ev.target.value;
         this.loadDashboardData(true);
     }
 

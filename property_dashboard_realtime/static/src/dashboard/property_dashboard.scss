@@ -61,7 +61,7 @@ $text-muted: #6e5e80;
 }
 
 /* --------------------------------------------------------------------------
-   Top Breadcrumb Navigation Tabs (Matching Screenshot)
+   Top Breadcrumb Navigation Tabs & Mode Switcher
    -------------------------------------------------------------------------- */
 .executive-nav-tabs {
     background-color: #ffffff;
@@ -85,6 +85,34 @@ $text-muted: #6e5e80;
 
         &.active {
             font-weight: 600;
+        }
+    }
+
+    .mode-switcher-group {
+        background-color: #f6f3f9;
+        padding: 0.2rem;
+        border-radius: 8px;
+        border: 1px solid rgba(194, 169, 217, 0.35);
+
+        .mode-pill {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: $text-secondary;
+            border: none;
+            border-radius: 6px;
+            padding: 0.2rem 0.65rem;
+            transition: all 0.15s ease;
+
+            &:hover {
+                color: $violet-deep;
+                background-color: rgba(194, 169, 217, 0.2);
+            }
+
+            &.active {
+                background-color: $violet-deep;
+                color: #ffffff;
+                box-shadow: 0 1px 4px rgba(80, 57, 102, 0.25);
+            }
         }
     }
 }
@@ -247,8 +275,22 @@ $text-muted: #6e5e80;
 }
 
 /* --------------------------------------------------------------------------
-   1. KPI Summary Cards Grid (6 Updated Cards)
+   1. KPI Summary Cards Grid (3 Cards in Single Company Mode / 5 in Combined)
    -------------------------------------------------------------------------- */
+.kpi-banner-grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.15rem;
+
+    @media (max-width: 992px) {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    @media (max-width: 540px) {
+        grid-template-columns: 1fr;
+    }
+}
+
 .kpi-banner-grid-5 {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
@@ -523,8 +565,14 @@ $text-muted: #6e5e80;
 }
 
 /* --------------------------------------------------------------------------
-   4. Bottom Detailed Dual Tables (Side-by-Side 50/50 Grid)
+   4. Bottom Detailed Tables (Single Full-Width or Side-by-Side 50/50 Grid)
    -------------------------------------------------------------------------- */
+.single-table-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+}
+
 .dual-tables-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;

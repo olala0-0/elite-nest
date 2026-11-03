@@ -5,44 +5,17 @@
         <div class="o_property_dashboard_container d-flex flex-column h-100" t-att-class="{'pulse-active': state.pulseEffect}">
 
             <!-- ========================================================= -->
-            <!-- TOP BREADCRUMB NAVIGATION TABS & COMPANY VIEW SWITCHER    -->
+            <!-- TOP BREADCRUMB NAVIGATION TABS                            -->
             <!-- ========================================================= -->
-            <nav class="executive-nav-tabs px-4 pt-2 pb-1 d-flex flex-wrap justify-content-between align-items-center gap-3">
-                <div class="d-flex align-items-center gap-4">
-                    <t t-if="state.dashboardMode !== 'facility'">
-                        <a href="#" class="nav-tab-item active" t-on-click.prevent="openAllContracts">Rent Contracts</a>
-                        <a href="#" class="nav-tab-item" t-on-click.prevent="openAllProperties">Properties</a>
-                    </t>
-                    <t t-if="state.dashboardMode !== 'property'">
-                        <a href="#" class="nav-tab-item active" t-on-click.prevent="openAllWorkOrders">Facility Work Orders</a>
-                        <a href="#" class="nav-tab-item" t-on-click.prevent="openAssets">Asset Health &amp; Equipment</a>
-                    </t>
-                </div>
-
-                <!-- Quick View Mode Indicator / Switcher -->
-                <div class="d-flex align-items-center gap-1 mode-switcher-group">
-                    <button type="button"
-                            class="btn btn-sm mode-pill"
-                            t-att-class="{'active': state.dashboardMode === 'property'}"
-                            t-on-click="() => this.setDashboardMode('property')"
-                            title="Property Management View (Rent Contracts &amp; Properties)">
-                        <i class="fa fa-building-o me-1"/>Property Management
-                    </button>
-                    <button type="button"
-                            class="btn btn-sm mode-pill"
-                            t-att-class="{'active': state.dashboardMode === 'facility'}"
-                            t-on-click="() => this.setDashboardMode('facility')"
-                            title="Facility Management View (Assets, Maintenance &amp; Work Orders)">
-                        <i class="fa fa-wrench me-1"/>Facility &amp; Assets
-                    </button>
-                    <button type="button"
-                            class="btn btn-sm mode-pill"
-                            t-att-class="{'active': state.dashboardMode === 'combined'}"
-                            t-on-click="() => this.setDashboardMode('combined')"
-                            title="Combined Executive View">
-                        <i class="fa fa-th-large me-1"/>Combined
-                    </button>
-                </div>
+            <nav class="executive-nav-tabs px-4 pt-2 pb-1 d-flex align-items-center gap-4">
+                <t t-if="state.dashboardMode !== 'facility'">
+                    <a href="#" class="nav-tab-item active" t-on-click.prevent="openAllContracts">Rent Contracts</a>
+                    <a href="#" class="nav-tab-item" t-on-click.prevent="openAllProperties">Properties</a>
+                </t>
+                <t t-if="state.dashboardMode !== 'property'">
+                    <a href="#" class="nav-tab-item active" t-on-click.prevent="openAllWorkOrders">Facility Work Orders</a>
+                    <a href="#" class="nav-tab-item" t-on-click.prevent="openAssets">Asset Health &amp; Equipment</a>
+                </t>
             </nav>
 
             <!-- ========================================================= -->
@@ -142,7 +115,7 @@
                         <i class="fa fa-search search-icon position-absolute"/>
                         <input type="text"
                                class="form-control form-control-sm executive-input ps-4"
-                               t-att-placeholder="state.dashboardMode === 'facility' ? 'Filter assets / work orders...' : (state.dashboardMode === 'property' ? 'Filter contracts / properties...' : 'Filter contracts, assets, work orders...')"
+                               t-att-placeholder="state.dashboardMode === 'facility' ? 'Filter assets / work orders...' : 'Filter contracts / properties...'"
                                t-att-value="state.searchQuery"
                                t-on-input="onSearchInput"/>
                     </div>
@@ -183,7 +156,7 @@
                     <span class="small tracking-wider text-uppercase fw-semibold" style="color: var(--dash-text-secondary);">Loading Real-Time Metrics...</span>
                 </div>
 
-                <!-- 1. KPI ROW (3 CARDS IN PROPERTY OR FACILITY MODE, 5 CARDS IN COMBINED MODE) -->
+                <!-- 1. KPI ROW (3 CARDS IN PROPERTY OR FACILITY MODE) -->
                 <section t-attf-class="{{ state.dashboardMode === 'combined' ? 'kpi-banner-grid-5' : 'kpi-banner-grid-3' }} mb-4">
                     <!-- PROPERTY KPIs -->
                     <t t-if="state.dashboardMode !== 'facility'">
@@ -281,7 +254,7 @@
                             </p>
                         </div>
 
-                        <!-- KPI 6: MANAGED ASSETS (Shown in Facility Mode to form 3 balanced KPI cards) -->
+                        <!-- KPI 6: MANAGED ASSETS -->
                         <div t-if="state.dashboardMode === 'facility'" class="executive-card kpi-card" t-on-click="openAssets" title="Click to view Managed Assets &amp; Equipment">
                             <div class="d-flex justify-content-between align-items-start mb-2">
                                 <span class="kpi-label">Managed Assets</span>
@@ -300,7 +273,7 @@
                     </t>
                 </section>
 
-                <!-- 2. PROPERTY ANALYTICS & LEASE TRACKERS (4 PANELS - SHOWN IN PROPERTY & COMBINED MODES) -->
+                <!-- 2. PROPERTY ANALYTICS & LEASE TRACKERS (4 PANELS - SHOWN IN PROPERTY MODE) -->
                 <section t-if="state.dashboardMode !== 'facility'" class="charts-grid-4 mb-4">
                     <!-- Panel 1: Donut Chart - Contracts by Status -->
                     <div class="executive-card chart-card">
@@ -390,7 +363,7 @@
                     </div>
                 </section>
 
-                <!-- 3. FACILITY, ASSET & WORK ORDER ANALYTICS (4 PANELS - SHOWN IN FACILITY & COMBINED MODES) -->
+                <!-- 3. FACILITY, ASSET & WORK ORDER ANALYTICS (4 PANELS - SHOWN IN FACILITY MODE) -->
                 <section t-if="state.dashboardMode !== 'property'" class="middle-section-grid-4 mb-4">
                     <!-- Panel 1: Facility & Work Order Distribution -->
                     <div class="executive-card chart-card">
@@ -466,14 +439,14 @@
                         </div>
                     </div>
 
-                    <!-- Panel 4: Maintenance OPEX & Cashflow Trend -->
+                    <!-- Panel 4: Monthly Purchases Trend -->
                     <div class="executive-card chart-card">
                         <div class="chart-header d-flex justify-content-between align-items-center mb-3">
                             <div>
-                                <h6 class="mb-0 fw-bold" t-esc="state.dashboardMode === 'facility' ? 'Monthly Maintenance OPEX' : 'Revenue vs Maintenance'"/>
-                                <span class="small" t-esc="state.dashboardMode === 'facility' ? '6-Month Facility Maintenance Spend (AED)' : 'Rent Inflows vs Maintenance OPEX'"/>
+                                <h6 class="mb-0 fw-bold">Monthly Purchases</h6>
+                                <span class="small">6-Month Purchase Orders Spend (AED)</span>
                             </div>
-                            <span class="badge bg-violet-subtle small">OPEX Trend</span>
+                            <span class="badge bg-violet-subtle small">Purchases</span>
                         </div>
                         <div class="chart-canvas-wrapper position-relative">
                             <canvas t-ref="revVsMaintChart"/>
@@ -483,7 +456,7 @@
 
                 <!-- 4. BOTTOM DETAILED DATA TABLES -->
                 <section t-attf-class="{{ state.dashboardMode === 'combined' ? 'dual-tables-grid' : 'single-table-grid' }} mb-3">
-                    <!-- Left: Recent Active Lease Directory (Shown in Property & Combined Modes) -->
+                    <!-- Left: Recent Active Lease Directory (Shown in Property Mode) -->
                     <div t-if="state.dashboardMode !== 'facility'" class="executive-card directory-card">
                         <div class="directory-header d-flex flex-wrap justify-content-between align-items-center p-3 border-bottom" style="border-color: rgba(194, 169, 217, 0.2) !important;">
                             <div>
@@ -562,7 +535,7 @@
                         </div>
                     </div>
 
-                    <!-- Right: Work Order Escalations & Urgent Tasks (Shown in Facility & Combined Modes) -->
+                    <!-- Right: Work Order Escalations & Urgent Tasks (Shown in Facility Mode) -->
                     <div t-if="state.dashboardMode !== 'property'" class="executive-card directory-card">
                         <div class="directory-header d-flex flex-wrap justify-content-between align-items-center p-3 border-bottom" style="border-color: rgba(194, 169, 217, 0.2) !important;">
                             <div>

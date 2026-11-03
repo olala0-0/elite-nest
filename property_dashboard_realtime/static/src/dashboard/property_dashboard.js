@@ -583,7 +583,7 @@ export class PropertyDashboard extends Component {
         const datasets = [
             {
                 type: "bar",
-                label: "Maintenance OPEX (AED)",
+                label: "Purchase Orders (AED)",
                 data: chartData.maintenance_opex,
                 backgroundColor: "#503966",
                 borderRadius: 6,
@@ -591,23 +591,6 @@ export class PropertyDashboard extends Component {
                 yAxisID: "y",
             },
         ];
-
-        if (this.state.dashboardMode !== "facility") {
-            datasets.push({
-                type: "line",
-                label: "Rent Inflows (AED)",
-                data: chartData.rent_inflows,
-                borderColor: "#8b68aa",
-                backgroundColor: gradient,
-                fill: true,
-                tension: 0.3,
-                pointBackgroundColor: "#8b68aa",
-                pointBorderColor: "#ffffff",
-                pointBorderWidth: 2,
-                pointRadius: 4,
-                yAxisID: "y",
-            });
-        }
 
         this._chartInstances.revVsMaint = new window.Chart(ctx, {
             type: "bar",

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import logging
 from collections import defaultdict
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from dateutil.relativedelta import relativedelta
 from odoo import api, fields, models, _
 
@@ -50,6 +50,12 @@ class PropertyDashboardHelper(models.AbstractModel):
                 return self.env[model_name]
         return None
 
+    def _get_purchase_model(self):
+        """Locates purchase order model if installed."""
+        if "purchase.order" in self.env:
+            return self.env["purchase.order"]
+        return None
+
     # =========================================================================
     # OPTIMIZED DASHBOARD RPC METRICS (100% READ-ONLY ORM QUERIES)
     # =========================================================================
@@ -58,10 +64,9 @@ class PropertyDashboardHelper(models.AbstractModel):
         """
         Computes all executive metrics on the fly using standard Odoo ORM methods
         (search_count, read_group, search_read) strictly querying existing installed tables.
-        Dynamically switches mode based on the active company:
+        Dynamically switches mode based strictly on the active company in Odoo:
         - 'property': Property Management company (Rent Contracts & Property Units)
-        - 'facility': Facility Management company (Assets, Maintenance & Work Orders)
-        - 'combined': Combined Executive View
+        - 'facility': Facility Management company (Assets, Maintenance, Work Orders & Purchases)
         """
         filters = filters or {}
 
@@ -84,18 +89,12 @@ class PropertyDashboardHelper(models.AbstractModel):
         if not selected_company_records:
             selected_company_records = self.env.companies or self.env.company
 
-        # Determine dashboard mode based on active company or explicit override
-        mode_override = filters.get("mode_override")
-        if mode_override in ("property", "facility", "combined"):
-            dashboard_mode = mode_override
+        # Determine dashboard mode strictly from Odoo's active company
+        active_cname = (active_company.name or "").lower()
+        if any(k in active_cname for k in ["facilit", "fm", "maintenance"]):
+            dashboard_mode = "facility"
         else:
-            active_cname = (active_company.name or "").lower()
-            if any(k in active_cname for k in ["facilit", "fm", "maintenance"]):
-                dashboard_mode = "facility"
-            elif any(k in active_cname for k in ["propert", "real estate", "leasing", "realty"]):
-                dashboard_mode = "property"
-            else:
-                dashboard_mode = "combined"
+            dashboard_mode = "property"
 
         prop_company_ids = [
             c.id for c in selected_company_records
@@ -700,10 +699,57 @@ class PropertyDashboardHelper(models.AbstractModel):
             "values": avg_rent_values,
         }
 
+        # ---------------------------------------------------------------------
+        # 7. MONTHLY PURCHASES (FROM PURCHASE.ORDER)
+        # ---------------------------------------------------------------------
+        PurchaseModel = self._get_purchase_model()
+        monthly_purchases = defaultdict(float)
+        latest_po_date = None
+
+        if PurchaseModel is not None:
+            try:
+                PoSudo = PurchaseModel.sudo()
+                po_base_domain = [("state", "!=", "cancel")]
+                if "company_id" in PoSudo._fields and PoSudo.search_count(fac_company_domain + po_base_domain) > 0:
+                    po_domain = list(fac_company_domain) + po_base_domain
+                elif "company_id" in PoSudo._fields and PoSudo.search_count(company_domain + po_base_domain) > 0:
+                    po_domain = list(company_domain) + po_base_domain
+                else:
+                    po_domain = list(po_base_domain)
+
+                # Prefer confirmed purchase orders if any exist
+                confirmed_domain = po_domain + [("state", "in", ["purchase", "done"])]
+                if PoSudo.search_count(confirmed_domain) > 0:
+                    po_records = PoSudo.search(confirmed_domain, order="date_order asc")
+                else:
+                    po_records = PoSudo.search(po_domain, order="date_order asc")
+
+                for po in po_records:
+                    dt_val = getattr(po, "date_approve", False) or getattr(po, "date_order", False) or getattr(po, "create_date", False)
+                    if not dt_val:
+                        continue
+                    po_date = dt_val.date() if isinstance(dt_val, datetime) else dt_val
+                    month_start = date(po_date.year, po_date.month, 1)
+                    amt = float(getattr(po, "amount_total", 0.0) or 0.0)
+                    monthly_purchases[month_start] += amt
+                    if latest_po_date is None or month_start > latest_po_date:
+                        latest_po_date = month_start
+            except Exception as e:
+                _logger.warning("Could not read purchase.order records: %s", e)
+
+        anchor_date = latest_po_date or date(fields.Date.today().year, fields.Date.today().month, 1)
+        purchase_labels = []
+        purchase_amounts = []
+        for offset in range(5, -1, -1):
+            m_date = anchor_date - relativedelta(months=offset)
+            m_key = date(m_date.year, m_date.month, 1)
+            purchase_labels.append(m_key.strftime("%b %Y"))
+            purchase_amounts.append(round(monthly_purchases.get(m_key, 0.0), 2))
+
         revenue_vs_maintenance = {
-            "labels": ["May 2026", "Jun 2026", "Jul 2026", "Aug 2026", "Sep 2026", "Oct 2026"],
-            "rent_inflows": [680000.0, 710000.0, 750000.0, 740000.0, 790000.0, 820000.0],
-            "maintenance_opex": [690000.0, 640000.0, 780000.0, 720000.0, 610000.0, 660000.0],
+            "labels": purchase_labels,
+            "rent_inflows": [0.0 for _ in purchase_labels],
+            "maintenance_opex": purchase_amounts,
         }
 
         # ---------------------------------------------------------------------

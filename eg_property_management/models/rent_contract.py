@@ -1817,7 +1817,8 @@ class RentContract(models.Model):
     moveout_state = fields.Selection(
         [('draft', 'Move-Out: Draft'), ('clearance_pending', 'Move-Out: Clearance Pending'),
          ('inspection_done', 'Move-Out: Final Inspection'), ('finance_review', 'Move-Out: Finance Review'),
-         ('approved', 'Move-Out: Approved'), ('settled', 'Move-Out: Settled')],
+         ('approved', 'Move-Out: Approved'), ('settled', 'Move-Out: Settled'),
+         ('cancelled', 'Move-Out: Cancelled')],
         string='Move-Out Status', compute='_compute_moveout_state')
 
     def _compute_moveout_state(self):

@@ -578,12 +578,25 @@ class RentContractMoveOut(models.Model):
             }
         }
 
+    @api.model_create_multi
+    def create(self, vals_list):
+        records = super().create(vals_list)
+        for rec in records:
+            if rec.rent_contract_id and rec.rent_contract_id.state == 'running':
+                rec.rent_contract_id.write({'state': 'move_out'})
+        return records
+
     def write(self, vals):
         res = super().write(vals)
         if vals.get('state') == 'settled':
             for rec in self:
                 if rec.property_id:
                     rec.property_id.write({'state': 'available'})
+        elif vals.get('state') and vals['state'] not in ('settled', 'cancelled'):
+            # If move-out is active, ensure the linked contract reflects 'move_out' state
+            for rec in self:
+                if rec.rent_contract_id and rec.rent_contract_id.state == 'running':
+                    rec.rent_contract_id.write({'state': 'move_out'})
         return res
 
     def action_cancel(self):

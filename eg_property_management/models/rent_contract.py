@@ -232,6 +232,37 @@ class RentContract(models.Model):
         }
         filtered_fnames = [f for f in fnames if f not in excluded]
         return super(RentContract, self)._check_company(fnames=filtered_fnames)
+    def _notify_property_dashboard(self):
+        """Broadcast real-time update event to Property Dashboard listeners."""
+        try:
+            bus = self.env['bus.bus'].sudo()
+            payload = {'updated_at': fields.Datetime.now().isoformat()}
+            bus._sendone('property_dashboard_channel', 'property_dashboard_update', payload)
+            if self.env.user and self.env.user.partner_id:
+                bus._sendone(self.env.user.partner_id, 'property_dashboard_update', payload)
+        except Exception:
+            pass
+
+    def _sync_property_occupancy_state(self):
+        """Ensure linked property.detail state stays in sync with contract status changes."""
+        for rec in self:
+            if not rec.property_id:
+                continue
+            try:
+                if rec.state in ('running', 'move_out'):
+                    if rec.property_id.state != 'on_rent':
+                        rec.property_id.sudo().write({'state': 'on_rent'})
+                elif rec.state in ('expired', 'cancelled', 'terminated', 'draft'):
+                    other_active = self.sudo().search_count([
+                        ('property_id', '=', rec.property_id.id),
+                        ('id', '!=', rec.id),
+                        ('state', 'in', ('running', 'move_out')),
+                    ])
+                    if not other_active and rec.property_id.state not in ('available', 'sold'):
+                        rec.property_id.sudo().write({'state': 'available'})
+            except Exception:
+                pass
+
     @api.model_create_multi
     def create(self, vals):
         for val in vals:
@@ -251,12 +282,35 @@ class RentContract(models.Model):
             if not val.get('invoice_start_date'):
                 val['invoice_start_date'] = val.get('start_date') or fields.Date.today()
 
-        return super(RentContract, self).create(vals)
+        records = super(RentContract, self).create(vals)
+        records._sync_property_occupancy_state()
+        records._notify_property_dashboard()
+        return records
 
     def write(self, vals):
         if 'end_date' in vals:
             vals['expiry_notified_90_days'] = False
-        return super(RentContract, self).write(vals)
+        res = super(RentContract, self).write(vals)
+        if 'state' in vals or 'property_id' in vals:
+            self._sync_property_occupancy_state()
+        self._notify_property_dashboard()
+        return res
+
+    def unlink(self):
+        properties = self.mapped('property_id')
+        res = super(RentContract, self).unlink()
+        for prop in properties:
+            try:
+                active_count = self.sudo().search_count([
+                    ('property_id', '=', prop.id),
+                    ('state', 'in', ('running', 'move_out')),
+                ])
+                if not active_count and prop.state not in ('available', 'sold'):
+                    prop.sudo().write({'state': 'available'})
+            except Exception:
+                pass
+        self._notify_property_dashboard()
+        return res
 
     def _invoice_status_label(self, invoice):
         """Human-readable status for one charge's invoice, for the printed

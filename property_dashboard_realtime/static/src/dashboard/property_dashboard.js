@@ -112,6 +112,7 @@ export class PropertyDashboard extends Component {
 
         onMounted(() => {
             this._setupBus();
+            this._setupAutoSync();
             this._renderAllCharts();
         });
 
@@ -124,6 +125,7 @@ export class PropertyDashboard extends Component {
 
         onWillUnmount(() => {
             this._teardownBus();
+            this._teardownAutoSync();
             this._destroyCharts();
         });
     }
@@ -189,6 +191,38 @@ export class PropertyDashboard extends Component {
             } catch (e) {}
         }
         this._busCleanups = [];
+    }
+
+    _setupAutoSync() {
+        this._onVisibilityOrFocus = () => {
+            if (!document.hidden && !this.state.loading) {
+                this.loadDashboardData(false);
+            }
+        };
+        window.addEventListener("focus", this._onVisibilityOrFocus);
+        document.addEventListener("visibilitychange", this._onVisibilityOrFocus);
+
+        this._autoSyncInterval = setInterval(() => {
+            if (!document.hidden && !this.state.loading) {
+                this.loadDashboardData(false);
+            }
+        }, 10000);
+    }
+
+    _teardownAutoSync() {
+        if (this._onVisibilityOrFocus) {
+            window.removeEventListener("focus", this._onVisibilityOrFocus);
+            document.removeEventListener("visibilitychange", this._onVisibilityOrFocus);
+            this._onVisibilityOrFocus = null;
+        }
+        if (this._autoSyncInterval) {
+            clearInterval(this._autoSyncInterval);
+            this._autoSyncInterval = null;
+        }
+        if (this._debounceTimer) {
+            clearTimeout(this._debounceTimer);
+            this._debounceTimer = null;
+        }
     }
 
     _onRealtimeBusEvent() {
@@ -325,7 +359,9 @@ export class PropertyDashboard extends Component {
                                 const total = context.dataset.data.reduce((a, b) => a + b, 0) || 1;
                                 const val = context.raw;
                                 const pct = ((val / total) * 100).toFixed(1);
-                                return ` ${context.label}: ${val} (${pct}%)`;
+                                const rawLabels = chartData.raw_labels || [];
+                                const cleanLabel = rawLabels[context.dataIndex] || context.label;
+                                return ` ${cleanLabel}: ${val} (${pct}%)`;
                             },
                         },
                     },

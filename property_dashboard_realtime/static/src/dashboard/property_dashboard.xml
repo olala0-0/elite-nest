@@ -68,9 +68,11 @@
                             <select class="form-select form-select-sm executive-select" t-on-change="onFilterState" t-att-value="state.contractState">
                                 <option value="all">All Contract Statuses</option>
                                 <option value="running">Running Contracts</option>
+                                <option value="move_out">Move-Out Process</option>
                                 <option value="expired">Expired Contracts</option>
                                 <option value="terminated">Terminated Contracts</option>
                                 <option value="cancelled">Cancelled Contracts</option>
+                                <option value="draft">Draft Contracts</option>
                             </select>
                         </div>
                     </t>
@@ -280,7 +282,7 @@
                         <div class="chart-header d-flex justify-content-between align-items-center mb-3">
                             <div>
                                 <h6 class="mb-0 fw-bold">Contracts by Status</h6>
-                                <span class="small">Running, Expired, Terminated, Cancelled</span>
+                                <span class="small">Running, Move-Out, Expired, Terminated, Cancelled</span>
                             </div>
                             <span class="badge bg-secondary-subtle small">Rent Contracts</span>
                         </div>

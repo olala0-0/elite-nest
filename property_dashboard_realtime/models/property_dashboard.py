@@ -139,8 +139,7 @@ class PropertyDashboardHelper(models.AbstractModel):
 
         if PropModel is not None:
             PropModel = PropModel.sudo()
-            if "company_id" in PropModel._fields and PropModel.search_count(prop_company_domain) > 0:
-                prop_domain = list(prop_company_domain)
+            db_any_units = PropModel.search_count([]) > 0
 
             if residential_type_filter and residential_type_filter != "all":
                 if "residential_type" in PropModel._fields:
@@ -169,28 +168,28 @@ class PropertyDashboardHelper(models.AbstractModel):
                 db_occupied = db_total_units
                 db_vacant = 0
         else:
+            db_any_units = False
             db_total_units = 0
             db_occupied = 0
             db_vacant = 0
 
-        # High-fidelity benchmarks when tables are empty or newly installed
-        total_units = db_total_units if db_total_units > 0 else 193
-        occupied_units = db_occupied if db_total_units > 0 else 183
-        vacant_units = db_vacant if db_total_units > 0 else 10
-        if db_total_units > 0 and vacant_units == 0 and total_units > occupied_units:
+        # Use real DB counts whenever property records exist in the database
+        total_units = db_total_units if db_any_units else 193
+        occupied_units = db_occupied if db_any_units else 183
+        vacant_units = db_vacant if db_any_units else 10
+        if db_any_units and vacant_units == 0 and total_units > occupied_units:
             vacant_units = max(total_units - occupied_units, 0)
-        occupancy_rate = round((occupied_units / total_units * 100.0), 1) if total_units > 0 else 94.8
+        occupancy_rate = round((occupied_units / total_units * 100.0), 1) if total_units > 0 else 0.0
 
         # ---------------------------------------------------------------------
-        # 3. LEASE CONTRACTS & REVENUE (READ-ONLY)
+        # 3. LEASE CONTRACTS & REVENUE (READ-ONLY, SYNCED WITH RENT.CONTRACT)
         # ---------------------------------------------------------------------
         ContractModel = self._get_contract_model()
         contract_domain = []
 
         if ContractModel is not None:
             ContractModel = ContractModel.sudo()
-            if "company_id" in ContractModel._fields and ContractModel.search_count(prop_company_domain) > 0:
-                contract_domain = list(prop_company_domain)
+            db_any_contracts = ContractModel.search_count([]) > 0
 
             if residential_type_filter and residential_type_filter != "all":
                 if "residential_type" in ContractModel._fields:
@@ -209,22 +208,41 @@ class PropertyDashboardHelper(models.AbstractModel):
             if state_filter and state_filter != "all":
                 contract_domain.append(("state", "=", state_filter))
 
-            # Query counts
+            # Query counts synced 1-to-1 with Rent Contracts list view
             all_contracts = ContractModel.search(contract_domain)
             running_contracts = all_contracts.filtered(lambda c: (c.state or "") == "running")
+            moveout_contracts = all_contracts.filtered(lambda c: (c.state or "") == "move_out")
             expired_contracts = all_contracts.filtered(lambda c: (c.state or "") in ("expire", "expired"))
             terminated_contracts = all_contracts.filtered(lambda c: (c.state or "") in ("close", "terminated"))
             cancelled_contracts = all_contracts.filtered(lambda c: (c.state or "") in ("cancel", "cancelled"))
+            draft_contracts = all_contracts.filtered(lambda c: (c.state or "") == "draft")
 
-            db_active_count = len(running_contracts)
-            active_contracts_count = db_active_count if db_active_count > 0 else 163
+            if db_any_contracts:
+                if state_filter and state_filter != "all":
+                    active_contracts_count = len(all_contracts)
+                else:
+                    active_contracts_count = len(running_contracts)
+            else:
+                active_contracts_count = 163
+
+            status_summary_parts = [
+                f"{len(moveout_contracts)} Move-Out",
+                f"{len(expired_contracts)} Expired",
+                f"{len(cancelled_contracts)} Cancelled",
+            ]
+            if len(terminated_contracts) > 0:
+                status_summary_parts.append(f"{len(terminated_contracts)} Terminated")
+            if len(draft_contracts) > 0:
+                status_summary_parts.append(f"{len(draft_contracts)} Draft")
+            active_contracts_subtitle = f"{len(all_contracts)} Total • " + " • ".join(status_summary_parts)
 
             rent_field = "rent" if "rent" in ContractModel._fields else ("rent_amount" if "rent_amount" in ContractModel._fields else False)
+            revenue_source_contracts = running_contracts if (not state_filter or state_filter == "all") else all_contracts
             if rent_field:
-                db_revenue = sum(float(getattr(c, rent_field) or 0.0) for c in running_contracts)
+                db_revenue = sum(float(getattr(c, rent_field) or 0.0) for c in revenue_source_contracts)
             else:
                 db_revenue = 0.0
-            total_rent_revenue = db_revenue if db_revenue > 0 else 8731639.0
+            total_rent_revenue = db_revenue if db_any_contracts else 8731639.0
 
             # Tenant Nationality Aggregation (Customer / Tenant Country)
             nationality_counts = defaultdict(int)
@@ -268,20 +286,37 @@ class PropertyDashboardHelper(models.AbstractModel):
                     "codes": ["ae", "in", "gb", "eg", "al", "aq"],
                 }
 
-            # Contracts by Status (Donut Chart)
-            status_labels = ["Running", "Expired", "Terminated", "Cancelled"]
-            status_counts = [
-                len(running_contracts) if len(all_contracts) > 0 else 163,
-                len(expired_contracts) if len(all_contracts) > 0 else 15,
-                len(terminated_contracts) if len(all_contracts) > 0 else 9,
-                len(cancelled_contracts) if len(all_contracts) > 0 else 6,
-            ]
+            # Contracts by Status (Donut Chart synced with rent.contract state selection)
+            if db_any_contracts:
+                status_items = [
+                    ("Running", len(running_contracts), "#8b68aa"),
+                    ("Move-Out Process", len(moveout_contracts), "#72538f"),
+                    ("Expired", len(expired_contracts), "#b399cc"),
+                    ("Terminated", len(terminated_contracts), "#5c4375"),
+                    ("Cancelled", len(cancelled_contracts), "#3a254c"),
+                ]
+                if len(draft_contracts) > 0:
+                    status_items.append(("Draft", len(draft_contracts), "#cbb8de"))
+            else:
+                status_items = [
+                    ("Running", 163, "#8b68aa"),
+                    ("Move-Out Process", 0, "#72538f"),
+                    ("Expired", 15, "#b399cc"),
+                    ("Terminated", 9, "#5c4375"),
+                    ("Cancelled", 6, "#3a254c"),
+                ]
+
+            raw_status_labels = [item[0] for item in status_items]
+            status_labels = [f"{item[0]} ({item[1]})" for item in status_items]
+            status_counts = [item[1] for item in status_items]
+            status_colors = [item[2] for item in status_items]
             sum_stat = sum(status_counts) or 1
             contracts_by_status = {
                 "labels": status_labels,
+                "raw_labels": raw_status_labels,
                 "counts": status_counts,
                 "percentages": [round((c / sum_stat) * 100.0, 1) for c in status_counts],
-                "colors": ["#8b68aa", "#b399cc", "#5c4375", "#3a254c"],
+                "colors": status_colors,
             }
 
             # Lease Expirations (Upcoming in 30, 60, 90 days)
@@ -294,10 +329,33 @@ class PropertyDashboardHelper(models.AbstractModel):
                 c_30, c_60, c_90 = 15, 67, 1
 
             upcoming_lease_expiries = {
-                "next_30_days": c_30 if len(running_contracts) > 0 else 15,
-                "next_60_days": c_60 if len(running_contracts) > 0 else 67,
-                "next_90_days": c_90 if len(running_contracts) > 0 else 1,
-                "urgent_label": f"{c_30 if len(running_contracts) > 0 else 15} EXPIRING SOON",
+                "next_30_days": c_30 if db_any_contracts else 15,
+                "next_60_days": c_60 if db_any_contracts else 67,
+                "next_90_days": c_90 if db_any_contracts else 1,
+                "urgent_label": f"{c_30 if db_any_contracts else 15} EXPIRING SOON",
+            }
+
+            state_label_map = {
+                "running": "Running",
+                "move_out": "Move-Out Process",
+                "expired": "Expired",
+                "expire": "Expired",
+                "terminated": "Terminated",
+                "close": "Terminated",
+                "cancelled": "Cancelled",
+                "cancel": "Cancelled",
+                "draft": "Draft",
+            }
+            state_badge_map = {
+                "running": "badge-running",
+                "move_out": "badge-moveout",
+                "expired": "badge-expired",
+                "expire": "badge-expired",
+                "terminated": "badge-terminated",
+                "close": "badge-terminated",
+                "cancelled": "badge-cancelled",
+                "cancel": "badge-cancelled",
+                "draft": "badge-normal",
             }
 
             # Directory Table Contracts (Limit 50)
@@ -330,8 +388,8 @@ class PropertyDashboardHelper(models.AbstractModel):
 
                 r_val = float(getattr(c, rent_field, 0.0) or 0.0) if rent_field else 0.0
                 st_code = c.state or "draft"
-                st_label = st_code.capitalize()
-                st_badge = "badge-running" if st_code == "running" else ("badge-terminated" if st_code in ("close", "terminated") else "badge-expired")
+                st_label = state_label_map.get(st_code, st_code.replace("_", " ").title())
+                st_badge = state_badge_map.get(st_code, "badge-normal")
 
                 u_type = getattr(c, "residential_type", False) or (unit_obj.residential_type if unit_obj and hasattr(unit_obj, "residential_type") else "Flat")
 
@@ -357,12 +415,14 @@ class PropertyDashboardHelper(models.AbstractModel):
             running_contracts = []
             rent_field = False
             active_contracts_count = 163
+            active_contracts_subtitle = f"{vacant_units} properties vacant & ready for leasing"
             total_rent_revenue = 8731639.0
             contracts_by_status = {
-                "labels": ["Running", "Expired", "Terminated", "Cancelled"],
-                "counts": [163, 15, 9, 6],
-                "percentages": [84.5, 7.8, 4.7, 3.0],
-                "colors": ["#8b68aa", "#b399cc", "#5c4375", "#3a254c"],
+                "labels": ["Running (163)", "Move-Out Process (0)", "Expired (15)", "Terminated (9)", "Cancelled (6)"],
+                "raw_labels": ["Running", "Move-Out Process", "Expired", "Terminated", "Cancelled"],
+                "counts": [163, 0, 15, 9, 6],
+                "percentages": [84.5, 0.0, 7.8, 4.7, 3.0],
+                "colors": ["#8b68aa", "#72538f", "#b399cc", "#5c4375", "#3a254c"],
             }
             tenant_nationalities = {
                 "labels": ["United Arab Emirates", "India", "United Kingdom", "Egypt", "Albania", "Antarctica"],
@@ -773,7 +833,7 @@ class PropertyDashboardHelper(models.AbstractModel):
                 "units_ratio_text": f"{occupied_units} / {total_units}",
                 "vacant_badge": f"Vacant: {vacant_units}",
                 "active_contracts_count": active_contracts_count,
-                "active_contracts_subtitle": f"{vacant_units} properties vacant & ready for leasing",
+                "active_contracts_subtitle": active_contracts_subtitle,
                 "total_rent_revenue": total_rent_revenue,
                 "total_rent_revenue_formatted": f"AED {total_rent_revenue:,.2f}",
                 "revenue_subtitle": "Total annualized Rent stream in AED",

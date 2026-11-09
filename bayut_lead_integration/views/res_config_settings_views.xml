@@ -5,11 +5,11 @@
         <field name="model">res.config.settings</field>
         <field name="inherit_id" ref="crm.res_config_settings_view_form"/>
         <field name="arch" type="xml">
-            <xpath expr="//app[@name='crm']" position="inside">
-                <block title="Bayut Leads Integration" name="bayut_lead_integration_setting_container">
+            <xpath expr="//block[@name='convert_visitor_setting_container']" position="after">
+                <block title="Bayut Lead Integration" name="bayut_lead_integration_setting_container">
                     <setting id="bayut_api_credentials_setting"
-                             string="Bayut API Credentials"
-                             help="Configure the Bayut Leads API endpoint and Bearer token.">
+                             string="Bayut Lead API Credentials"
+                             help="Configure the Bayut Leads API endpoint and Bearer token to import Bayut leads into CRM.">
                         <div class="content-group">
                             <div class="row mt16">
                                 <label for="bayut_api_url" class="col-lg-3 o_light_label"/>
@@ -35,7 +35,7 @@
                     </setting>
 
                     <setting id="bayut_lead_assignment_setting"
-                             string="Lead Assignment &amp; Sync Schedule"
+                             string="Bayut Lead Assignment &amp; Sync Schedule"
                              help="Default Sales Team, Salesperson, and cron interval for imported Bayut leads.">
                         <div class="content-group">
                             <div class="row mt16">
@@ -61,8 +61,8 @@
                     </setting>
 
                     <setting id="bayut_sync_logs_setting"
-                             string="Recent Bayut Sync Logs"
-                             help="Execution history for automated and manual Bayut synchronization runs.">
+                             string="Recent Bayut Lead Sync Logs"
+                             help="Execution history for automated and manual Bayut lead synchronization runs.">
                         <div class="content-group w-100 mt8">
                             <div class="mb8">
                                 <button name="action_open_bayut_sync_logs"

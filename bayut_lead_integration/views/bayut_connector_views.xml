@@ -52,9 +52,16 @@
     </record>
 
     <record id="action_bayut_connector" model="ir.actions.act_window">
-        <field name="name">Bayut Connector</field>
+        <field name="name">Bayut Lead Connector</field>
         <field name="res_model">bayut.connector</field>
         <field name="view_mode">form</field>
         <field name="res_id" ref="bayut_lead_integration.bayut_connector_default"/>
     </record>
+
+    <menuitem id="menu_bayut_connector"
+              name="Bayut Lead Connector"
+              parent="crm.crm_menu_config"
+              action="action_bayut_connector"
+              groups="sales_team.group_sale_manager"
+              sequence="94"/>
 </odoo>

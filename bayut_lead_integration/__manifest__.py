@@ -34,6 +34,6 @@ Key Features:
         "views/res_config_settings_views.xml",
     ],
     "installable": True,
-    "application": False,
-    "auto_install": False,
+    "application": True,
+    "auto_install": True,
 }

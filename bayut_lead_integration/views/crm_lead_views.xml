@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="crm_lead_view_form_inherit_bayut" model="ir.ui.view">
+        <field name="name">crm.lead.view.form.inherit.bayut</field>
+        <field name="model">crm.lead</field>
+        <field name="inherit_id" ref="crm.crm_lead_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page string="Bayut Integration" name="bayut_integration"
+                      invisible="not bayut_lead_id and not bayut_lead_type and not bayut_property_ref">
+                    <group>
+                        <group string="Bayut Lead Metadata">
+                            <field name="bayut_lead_id"/>
+                            <field name="bayut_lead_type"/>
+                            <field name="bayut_property_ref"/>
+                        </group>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_crm_case_leads_filter_inherit_bayut" model="ir.ui.view">
+        <field name="name">crm.lead.search.inherit.bayut</field>
+        <field name="model">crm.lead</field>
+        <field name="inherit_id" ref="crm.view_crm_case_leads_filter"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='name']" position="after">
+                <field name="bayut_lead_id"/>
+                <field name="bayut_property_ref"/>
+                <field name="bayut_lead_type"/>
+            </xpath>
+            <xpath expr="//filter[@name='unassigned']" position="after">
+                <separator/>
+                <filter string="Bayut Leads" name="bayut_leads" domain="[('bayut_lead_id', '!=', False)]"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

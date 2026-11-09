@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <!-- Default singleton Bayut Connector record -->
+    <record id="bayut_connector_default" model="bayut.connector">
+        <field name="name">Bayut Leads Connector</field>
+    </record>
+
+    <!-- Scheduled Cron Job: Bayut: Sync Leads (every 10 minutes by default) -->
+    <record id="ir_cron_bayut_sync_leads" model="ir.cron">
+        <field name="name">Bayut: Sync Leads</field>
+        <field name="model_id" ref="model_bayut_connector"/>
+        <field name="state">code</field>
+        <field name="code">model.cron_sync_leads()</field>
+        <field name="interval_number">10</field>
+        <field name="interval_type">minutes</field>
+        <field name="active" eval="True"/>
+    </record>
+</odoo>

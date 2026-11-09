@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="res_config_settings_view_form_inherit_bayut" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.inherit.bayut.lead.integration</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="crm.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//app[@name='crm']" position="inside">
+                <block title="Bayut Leads Integration" name="bayut_lead_integration_setting_container">
+                    <setting id="bayut_api_credentials_setting"
+                             string="Bayut API Credentials"
+                             help="Configure the Bayut Leads API endpoint and Bearer token.">
+                        <div class="content-group">
+                            <div class="row mt16">
+                                <label for="bayut_api_url" class="col-lg-3 o_light_label"/>
+                                <field name="bayut_api_url" placeholder="https://leads-api.bayut.com/"/>
+                            </div>
+                            <div class="row mt8">
+                                <label for="bayut_api_key" class="col-lg-3 o_light_label"/>
+                                <field name="bayut_api_key" password="True" placeholder="Enter Bayut Bearer API Key"/>
+                            </div>
+                            <div class="mt16 d-flex gap-2">
+                                <button name="action_bayut_test_connection"
+                                        type="object"
+                                        string="Test Connection"
+                                        icon="fa-plug"
+                                        class="btn-secondary"/>
+                                <button name="action_bayut_sync_now"
+                                        type="object"
+                                        string="Sync Now"
+                                        icon="fa-refresh"
+                                        class="btn-primary"/>
+                            </div>
+                        </div>
+                    </setting>
+
+                    <setting id="bayut_lead_assignment_setting"
+                             string="Lead Assignment &amp; Sync Schedule"
+                             help="Default Sales Team, Salesperson, and cron interval for imported Bayut leads.">
+                        <div class="content-group">
+                            <div class="row mt16">
+                                <label for="bayut_default_team_id" class="col-lg-4 o_light_label"/>
+                                <field name="bayut_default_team_id"/>
+                            </div>
+                            <div class="row mt8">
+                                <label for="bayut_default_user_id" class="col-lg-4 o_light_label"/>
+                                <field name="bayut_default_user_id"/>
+                            </div>
+                            <div class="row mt8">
+                                <label for="bayut_sync_interval" class="col-lg-4 o_light_label"/>
+                                <div>
+                                    <field name="bayut_sync_interval" class="oe_inline"/>
+                                    <span class="ms-1 text-muted">minutes</span>
+                                </div>
+                            </div>
+                            <div class="row mt8">
+                                <label for="bayut_last_sync" class="col-lg-4 o_light_label"/>
+                                <field name="bayut_last_sync" readonly="1"/>
+                            </div>
+                        </div>
+                    </setting>
+
+                    <setting id="bayut_sync_logs_setting"
+                             string="Recent Bayut Sync Logs"
+                             help="Execution history for automated and manual Bayut synchronization runs.">
+                        <div class="content-group w-100 mt8">
+                            <div class="mb8">
+                                <button name="action_open_bayut_sync_logs"
+                                        type="object"
+                                        icon="fa-history"
+                                        class="btn-link ps-0">
+                                    <span>View All Sync Logs (</span>
+                                    <field name="bayut_sync_log_count" class="oe_inline"/>
+                                    <span>)</span>
+                                </button>
+                            </div>
+                            <field name="bayut_recent_log_ids" readonly="1" nolabel="1">
+                                <list create="0" edit="0" delete="0" limit="5"
+                                      decoration-success="status == 'success'"
+                                      decoration-danger="status == 'error'">
+                                    <field name="sync_datetime"/>
+                                    <field name="status" widget="badge"
+                                           decoration-success="status == 'success'"
+                                           decoration-danger="status == 'error'"/>
+                                    <field name="leads_created"/>
+                                    <field name="message"/>
+                                </list>
+                            </field>
+                        </div>
+                    </setting>
+                </block>
+            </xpath>
+        </field>
+    </record>
+</odoo>

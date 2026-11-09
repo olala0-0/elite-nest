@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="bayut_connector_view_form" model="ir.ui.view">
+        <field name="name">bayut.connector.view.form</field>
+        <field name="model">bayut.connector</field>
+        <field name="arch" type="xml">
+            <form string="Bayut Leads Connector">
+                <header>
+                    <button name="action_sync_now"
+                            string="Sync Now"
+                            type="object"
+                            class="btn-primary"
+                            icon="fa-refresh"
+                            groups="sales_team.group_sale_manager"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_sync_logs"
+                                type="object"
+                                class="oe_stat_button"
+                                icon="fa-history">
+                            <field name="log_count" widget="statinfo" string="Sync Logs"/>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <field name="last_sync"/>
+                    </group>
+                    <notebook>
+                        <page string="Recent Sync Logs" name="sync_logs">
+                            <field name="log_ids" readonly="1">
+                                <list create="0" edit="0"
+                                      decoration-success="status == 'success'"
+                                      decoration-danger="status == 'error'">
+                                    <field name="sync_datetime"/>
+                                    <field name="status" widget="badge"
+                                           decoration-success="status == 'success'"
+                                           decoration-danger="status == 'error'"/>
+                                    <field name="leads_created"/>
+                                    <field name="message"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_bayut_connector" model="ir.actions.act_window">
+        <field name="name">Bayut Connector</field>
+        <field name="res_model">bayut.connector</field>
+        <field name="view_mode">form</field>
+        <field name="res_id" ref="bayut_lead_integration.bayut_connector_default"/>
+    </record>
+</odoo>

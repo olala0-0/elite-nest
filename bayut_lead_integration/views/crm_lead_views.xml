@@ -32,7 +32,7 @@
                 <field name="bayut_lead_type"/>
                 <field name="bayut_listing_id"/>
             </xpath>
-            <xpath expr="//filter[@name='unassigned']" position="after">
+            <xpath expr="//search" position="inside">
                 <separator/>
                 <filter string="Bayut Leads" name="bayut_leads" domain="[('bayut_lead_id', '!=', False)]"/>
             </xpath>

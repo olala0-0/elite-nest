@@ -249,7 +249,7 @@
                 <separator/>
                 <filter string="For Rent" name="for_rent" domain="[('purpose', '=', 'for-rent')]"/>
                 <filter string="For Sale" name="for_sale" domain="[('purpose', '=', 'for-sale')]"/>
-                <group expand="0" string="Group By">
+                <group>
                     <filter string="Bayut Status" name="group_by_state" context="{'group_by': 'state'}"/>
                     <filter string="Purpose" name="group_by_purpose" context="{'group_by': 'purpose'}"/>
                     <filter string="Property Type" name="group_by_type" context="{'group_by': 'property_type'}"/>

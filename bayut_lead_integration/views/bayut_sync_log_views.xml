@@ -58,7 +58,7 @@
                 <separator/>
                 <filter string="Leads Sync" name="filter_leads" domain="[('sync_type', '=', 'leads')]"/>
                 <filter string="Listings Sync" name="filter_listings" domain="[('sync_type', '=', 'listings')]"/>
-                <group expand="0" string="Group By">
+                <group>
                     <filter string="Operation" name="group_by_type" context="{'group_by': 'sync_type'}"/>
                     <filter string="Status" name="group_by_status" context="{'group_by': 'status'}"/>
                     <filter string="Sync Date" name="group_by_date" context="{'group_by': 'sync_datetime'}"/>

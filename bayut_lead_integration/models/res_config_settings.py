@@ -1,20 +1,34 @@
 # -*- coding: utf-8 -*-
-from odoo import api, fields, models, _
+from odoo import fields, models, _
+from .bayut_connector import DEFAULT_BAYUT_TOKEN, DEFAULT_LEADS_API_URL, DEFAULT_LISTING_API_URL
 
 
 class ResConfigSettings(models.TransientModel):
     _inherit = "res.config.settings"
 
     bayut_api_url = fields.Char(
-        string="Bayut API URL",
-        default="https://leads-api.bayut.com/",
+        string="Bayut Leads API URL",
+        default=DEFAULT_LEADS_API_URL,
         config_parameter="bayut_lead_integration.bayut_api_url",
-        help="Endpoint URL for the Bayut Leads API. Update this with the production URL provided by Bayut Support.",
+        help="Endpoint URL for the Bayut Leads API.",
     )
     bayut_api_key = fields.Char(
-        string="Bayut API Key",
+        string="Bayut Leads API Key",
+        default=DEFAULT_BAYUT_TOKEN,
         config_parameter="bayut_lead_integration.bayut_api_key",
         help="Bearer API token provided by Bayut Support.",
+    )
+    bayut_listing_api_url = fields.Char(
+        string="Bayut Listing API URL",
+        default=DEFAULT_LISTING_API_URL,
+        config_parameter="bayut_lead_integration.bayut_listing_api_url",
+        help="Endpoint URL for pushing/updating property listings on Bayut Profolio.",
+    )
+    bayut_listing_api_key = fields.Char(
+        string="Bayut Listing API Key",
+        default=DEFAULT_BAYUT_TOKEN,
+        config_parameter="bayut_lead_integration.bayut_listing_api_key",
+        help="Listing API Bearer token provided by the Bayut team.",
     )
     bayut_default_team_id = fields.Many2one(
         comodel_name="crm.team",
@@ -36,7 +50,17 @@ class ResConfigSettings(models.TransientModel):
         help="Frequency in minutes for the 'Bayut: Sync Leads' scheduled action.",
     )
     bayut_last_sync = fields.Datetime(
-        string="Last Successful Sync",
+        string="Last Leads Sync",
+        compute="_compute_bayut_sync_info",
+        readonly=True,
+    )
+    bayut_xml_feed_url = fields.Char(
+        string="Profolio XML Feed URL",
+        compute="_compute_bayut_sync_info",
+        readonly=True,
+    )
+    bayut_json_feed_url = fields.Char(
+        string="Profolio JSON Feed URL",
         compute="_compute_bayut_sync_info",
         readonly=True,
     )
@@ -58,6 +82,8 @@ class ResConfigSettings(models.TransientModel):
         total_logs = self.env["bayut.sync.log"].sudo().search_count([])
         for record in self:
             record.bayut_last_sync = connector.last_sync
+            record.bayut_xml_feed_url = connector.xml_feed_url
+            record.bayut_json_feed_url = connector.json_feed_url
             record.bayut_sync_log_count = total_logs
             record.bayut_recent_log_ids = recent_logs
 
@@ -73,6 +99,16 @@ class ResConfigSettings(models.TransientModel):
                 "interval_number": interval,
                 "interval_type": "minutes",
             })
+        connector = self.env["bayut.connector"].sudo()._get_connector()
+        connector.with_context(skip_param_sync=True).write({
+            "api_url": self.bayut_api_url or DEFAULT_LEADS_API_URL,
+            "api_key": self.bayut_api_key or DEFAULT_BAYUT_TOKEN,
+            "listing_api_url": self.bayut_listing_api_url or DEFAULT_LISTING_API_URL,
+            "listing_api_key": self.bayut_listing_api_key or DEFAULT_BAYUT_TOKEN,
+            "default_team_id": self.bayut_default_team_id.id or False,
+            "default_user_id": self.bayut_default_user_id.id or False,
+            "sync_interval": interval,
+        })
 
     def action_bayut_test_connection(self):
         """Save current settings and test the Bayut API connection."""
@@ -101,10 +137,27 @@ class ResConfigSettings(models.TransientModel):
             "type": "ir.actions.client",
             "tag": "display_notification",
             "params": {
-                "title": _("Bayut Manual Sync"),
+                "title": _("Bayut Manual Lead Sync"),
                 "message": result.get("message", ""),
                 "type": "success" if is_ok else "warning",
                 "sticky": not is_ok,
+            },
+        }
+
+    def action_bayut_sync_listings_now(self):
+        """Save current settings and synchronize all published Bayut listings immediately."""
+        self.ensure_one()
+        self.set_values()
+        result = self.env["bayut.connector"].cron_sync_listings()
+        is_ok = result.get("status") == "success"
+        return {
+            "type": "ir.actions.client",
+            "tag": "display_notification",
+            "params": {
+                "title": _("Bayut Listing Sync"),
+                "message": result.get("message", ""),
+                "type": "success" if is_ok else "warning",
+                "sticky": False,
             },
         }
 

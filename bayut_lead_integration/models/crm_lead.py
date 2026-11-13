@@ -25,6 +25,13 @@ class CrmLead(models.Model):
         copy=False,
         help="Property reference code associated with the Bayut listing.",
     )
+    bayut_listing_id = fields.Many2one(
+        comodel_name="bayut.listing",
+        string="Bayut Listing",
+        index=True,
+        ondelete="set null",
+        help="Linked Bayut listing record in Odoo.",
+    )
 
     _sql_constraints = [
         (

@@ -3,3 +3,7 @@ access_bayut_connector_salesman,bayut.connector.salesman,model_bayut_connector,s
 access_bayut_connector_manager,bayut.connector.manager,model_bayut_connector,sales_team.group_sale_manager,1,1,1,1
 access_bayut_sync_log_salesman,bayut.sync.log.salesman,model_bayut_sync_log,sales_team.group_sale_salesman,1,0,0,0
 access_bayut_sync_log_manager,bayut.sync.log.manager,model_bayut_sync_log,sales_team.group_sale_manager,1,1,1,1
+access_bayut_listing_salesman,bayut.listing.salesman,model_bayut_listing,sales_team.group_sale_salesman,1,1,1,0
+access_bayut_listing_manager,bayut.listing.manager,model_bayut_listing,sales_team.group_sale_manager,1,1,1,1
+access_bayut_listing_image_salesman,bayut.listing.image.salesman,model_bayut_listing_image,sales_team.group_sale_salesman,1,1,1,1
+access_bayut_listing_image_manager,bayut.listing.image.manager,model_bayut_listing_image,sales_team.group_sale_manager,1,1,1,1

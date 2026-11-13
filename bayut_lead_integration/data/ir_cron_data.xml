@@ -1,8 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo noupdate="1">
-    <!-- Default singleton Bayut Connector record -->
+    <!-- Sequence for standalone Bayut Listings -->
+    <record id="seq_bayut_listing" model="ir.sequence">
+        <field name="name">Bayut Property Listing Reference</field>
+        <field name="code">bayut.listing</field>
+        <field name="prefix">BYT-</field>
+        <field name="padding">4</field>
+        <field name="company_id" eval="False"/>
+    </record>
+
+    <!-- Pre-configure Bayut API keys in System Parameters -->
+    <record id="config_param_bayut_api_url" model="ir.config_parameter">
+        <field name="key">bayut_lead_integration.bayut_api_url</field>
+        <field name="value">https://leads-api.bayut.com/</field>
+    </record>
+
+    <record id="config_param_bayut_api_key" model="ir.config_parameter">
+        <field name="key">bayut_lead_integration.bayut_api_key</field>
+        <field name="value">96522341|rB11mebGgqYvMIIquvTlT9T23ESdNv3mmjSGbFq876729d9f</field>
+    </record>
+
+    <record id="config_param_bayut_listing_api_url" model="ir.config_parameter">
+        <field name="key">bayut_lead_integration.bayut_listing_api_url</field>
+        <field name="value">https://api.bayut.com/v1/listings</field>
+    </record>
+
+    <record id="config_param_bayut_listing_api_key" model="ir.config_parameter">
+        <field name="key">bayut_lead_integration.bayut_listing_api_key</field>
+        <field name="value">96522341|rB11mebGgqYvMIIquvTlT9T23ESdNv3mmjSGbFq876729d9f</field>
+    </record>
+
+    <!-- Default singleton Bayut Connector record pre-loaded with the agency token -->
     <record id="bayut_connector_default" model="bayut.connector">
-        <field name="name">Bayut Leads Connector</field>
+        <field name="name">Bayut Profolio Connector</field>
+        <field name="api_url">https://leads-api.bayut.com/</field>
+        <field name="api_key">96522341|rB11mebGgqYvMIIquvTlT9T23ESdNv3mmjSGbFq876729d9f</field>
+        <field name="listing_api_url">https://api.bayut.com/v1/listings</field>
+        <field name="listing_api_key">96522341|rB11mebGgqYvMIIquvTlT9T23ESdNv3mmjSGbFq876729d9f</field>
+        <field name="sync_interval">10</field>
     </record>
 
     <!-- Scheduled Cron Job: Bayut: Sync Leads (every 10 minutes by default) -->
@@ -12,6 +47,17 @@
         <field name="state">code</field>
         <field name="code">model.cron_sync_leads()</field>
         <field name="interval_number">10</field>
+        <field name="interval_type">minutes</field>
+        <field name="active" eval="True"/>
+    </record>
+
+    <!-- Scheduled Cron Job: Bayut: Sync Listings (every 15 minutes) -->
+    <record id="ir_cron_bayut_sync_listings" model="ir.cron">
+        <field name="name">Bayut: Sync Listings</field>
+        <field name="model_id" ref="model_bayut_connector"/>
+        <field name="state">code</field>
+        <field name="code">model.cron_sync_listings()</field>
+        <field name="interval_number">15</field>
         <field name="interval_type">minutes</field>
         <field name="active" eval="True"/>
     </record>

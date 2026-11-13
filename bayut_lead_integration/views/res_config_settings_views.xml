@@ -6,9 +6,39 @@
         <field name="inherit_id" ref="crm.res_config_settings_view_form"/>
         <field name="arch" type="xml">
             <xpath expr="//block[@name='convert_visitor_setting_container']" position="after">
-                <block title="Bayut Lead Integration" name="bayut_lead_integration_setting_container">
+                <block title="Bayut Lead &amp; Listing Integration" name="bayut_lead_integration_setting_container">
+                    <setting id="bayut_listing_api_setting"
+                             string="Bayut Listing API &amp; Profolio Feeds"
+                             help="Manage and push your property listings from Odoo to Bayut Profolio using your Listing API token.">
+                        <div class="content-group">
+                            <div class="row mt16">
+                                <label for="bayut_listing_api_url" class="col-lg-3 o_light_label"/>
+                                <field name="bayut_listing_api_url" placeholder="https://api.bayut.com/v1/listings"/>
+                            </div>
+                            <div class="row mt8">
+                                <label for="bayut_listing_api_key" class="col-lg-3 o_light_label"/>
+                                <field name="bayut_listing_api_key" password="True" placeholder="Enter Bayut Listing API Token"/>
+                            </div>
+                            <div class="row mt8">
+                                <label for="bayut_xml_feed_url" class="col-lg-3 o_light_label"/>
+                                <field name="bayut_xml_feed_url" widget="CopyClipboardChar" readonly="1"/>
+                            </div>
+                            <div class="row mt8">
+                                <label for="bayut_json_feed_url" class="col-lg-3 o_light_label"/>
+                                <field name="bayut_json_feed_url" widget="CopyClipboardChar" readonly="1"/>
+                            </div>
+                            <div class="mt16 d-flex gap-2">
+                                <button name="action_bayut_sync_listings_now"
+                                        type="object"
+                                        string="Sync Listings Now"
+                                        icon="fa-cloud-upload"
+                                        class="btn-primary"/>
+                            </div>
+                        </div>
+                    </setting>
+
                     <setting id="bayut_api_credentials_setting"
-                             string="Bayut Lead API Credentials"
+                             string="Bayut Leads API Credentials"
                              help="Configure the Bayut Leads API endpoint and Bearer token to import Bayut leads into CRM.">
                         <div class="content-group">
                             <div class="row mt16">
@@ -27,7 +57,7 @@
                                         class="btn-secondary"/>
                                 <button name="action_bayut_sync_now"
                                         type="object"
-                                        string="Sync Now"
+                                        string="Sync Leads Now"
                                         icon="fa-refresh"
                                         class="btn-primary"/>
                             </div>
@@ -61,8 +91,8 @@
                     </setting>
 
                     <setting id="bayut_sync_logs_setting"
-                             string="Recent Bayut Lead Sync Logs"
-                             help="Execution history for automated and manual Bayut lead synchronization runs.">
+                             string="Recent Bayut Sync Logs"
+                             help="Execution history for automated and manual Bayut synchronization runs.">
                         <div class="content-group w-100 mt8">
                             <div class="mb8">
                                 <button name="action_open_bayut_sync_logs"
@@ -79,10 +109,12 @@
                                       decoration-success="status == 'success'"
                                       decoration-danger="status == 'error'">
                                     <field name="sync_datetime"/>
+                                    <field name="sync_type" widget="badge"/>
                                     <field name="status" widget="badge"
                                            decoration-success="status == 'success'"
                                            decoration-danger="status == 'error'"/>
                                     <field name="leads_created"/>
+                                    <field name="listings_synced"/>
                                     <field name="message"/>
                                 </list>
                             </field>
@@ -92,4 +124,44 @@
             </xpath>
         </field>
     </record>
+
+    <!-- =================================================================== -->
+    <!-- STANDALONE TOP-LEVEL APP MENUS: BAYUT INTEGRATION                   -->
+    <!-- =================================================================== -->
+    <menuitem id="menu_bayut_root"
+              name="Bayut Integration"
+              web_icon="bayut_lead_integration,static/description/icon.svg"
+              groups="sales_team.group_sale_salesman"
+              sequence="45"/>
+
+    <menuitem id="menu_bayut_listings_main"
+              name="Listings"
+              parent="menu_bayut_root"
+              action="action_bayut_listings"
+              sequence="10"/>
+
+    <menuitem id="menu_bayut_leads_main"
+              name="Bayut Leads"
+              parent="menu_bayut_root"
+              action="action_bayut_crm_leads"
+              sequence="20"/>
+
+    <menuitem id="menu_bayut_connector_main"
+              name="Connector Hub"
+              parent="menu_bayut_root"
+              action="action_bayut_connector"
+              sequence="30"/>
+
+    <menuitem id="menu_bayut_logs_main"
+              name="Sync Logs"
+              parent="menu_bayut_root"
+              action="action_bayut_sync_log"
+              sequence="40"/>
+
+    <menuitem id="menu_bayut_config_main"
+              name="Settings"
+              parent="menu_bayut_root"
+              action="crm.crm_config_settings_action"
+              groups="sales_team.group_sale_manager"
+              sequence="50"/>
 </odoo>

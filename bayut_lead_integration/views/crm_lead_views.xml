@@ -7,12 +7,13 @@
         <field name="arch" type="xml">
             <xpath expr="//notebook" position="inside">
                 <page string="Bayut Integration" name="bayut_integration"
-                      invisible="not bayut_lead_id and not bayut_lead_type and not bayut_property_ref">
+                      invisible="not bayut_lead_id and not bayut_lead_type and not bayut_property_ref and not bayut_listing_id">
                     <group>
                         <group string="Bayut Lead Metadata">
                             <field name="bayut_lead_id"/>
                             <field name="bayut_lead_type"/>
                             <field name="bayut_property_ref"/>
+                            <field name="bayut_listing_id"/>
                         </group>
                     </group>
                 </page>
@@ -29,11 +30,29 @@
                 <field name="bayut_lead_id"/>
                 <field name="bayut_property_ref"/>
                 <field name="bayut_lead_type"/>
+                <field name="bayut_listing_id"/>
             </xpath>
             <xpath expr="//filter[@name='unassigned']" position="after">
                 <separator/>
                 <filter string="Bayut Leads" name="bayut_leads" domain="[('bayut_lead_id', '!=', False)]"/>
             </xpath>
+        </field>
+    </record>
+
+    <!-- Action to view Bayut CRM Leads inside the standalone Bayut app -->
+    <record id="action_bayut_crm_leads" model="ir.actions.act_window">
+        <field name="name">Bayut Leads</field>
+        <field name="res_model">crm.lead</field>
+        <field name="view_mode">list,kanban,form</field>
+        <field name="domain">[('bayut_lead_id', '!=', False)]</field>
+        <field name="context">{'search_default_bayut_leads': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No Bayut leads imported yet.
+            </p>
+            <p>
+                Leads from Bayut are automatically imported every 10 minutes or when you click <b>Sync Leads Now</b> in the Connector Hub.
+            </p>
         </field>
     </record>
 </odoo>

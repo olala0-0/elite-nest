@@ -4,7 +4,7 @@ from odoo import fields, models
 
 class BayutSyncLog(models.Model):
     _name = "bayut.sync.log"
-    _description = "Bayut Lead Sync Log"
+    _description = "Bayut Lead & Listing Sync Log"
     _order = "sync_datetime desc, id desc"
     _rec_name = "sync_datetime"
 
@@ -21,6 +21,17 @@ class BayutSyncLog(models.Model):
         readonly=True,
         index=True,
     )
+    sync_type = fields.Selection(
+        selection=[
+            ("leads", "Leads Sync"),
+            ("listings", "Listings Sync"),
+            ("test", "Connection Test"),
+        ],
+        string="Operation",
+        default="leads",
+        readonly=True,
+        index=True,
+    )
     status = fields.Selection(
         selection=[
             ("success", "Success"),
@@ -34,6 +45,11 @@ class BayutSyncLog(models.Model):
     )
     leads_created = fields.Integer(
         string="Leads Created",
+        default=0,
+        readonly=True,
+    )
+    listings_synced = fields.Integer(
+        string="Listings Synced",
         default=0,
         readonly=True,
     )

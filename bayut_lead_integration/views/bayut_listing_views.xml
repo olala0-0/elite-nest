@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Kanban View for Bayut Listings -->
+    <record id="bayut_listing_view_kanban" model="ir.ui.view">
+        <field name="name">bayut.listing.view.kanban</field>
+        <field name="model">bayut.listing</field>
+        <field name="arch" type="xml">
+            <kanban sample="1">
+                <field name="id"/>
+                <field name="name"/>
+                <field name="reference_number"/>
+                <field name="purpose"/>
+                <field name="property_type"/>
+                <field name="price"/>
+                <field name="currency_id"/>
+                <field name="city"/>
+                <field name="community"/>
+                <field name="bedrooms"/>
+                <field name="bathrooms"/>
+                <field name="size_sqft"/>
+                <field name="state"/>
+                <field name="image_1920"/>
+                <templates>
+                    <t t-name="card">
+                        <div class="d-flex justify-content-between align-items-start mb-1">
+                            <span class="badge rounded-pill text-bg-secondary" t-esc="record.reference_number.value"/>
+                            <field name="state" widget="label_selection"
+                                   options="{'classes': {'draft': 'secondary', 'published': 'success', 'unpublished': 'warning', 'error': 'danger'}}"/>
+                        </div>
+                        <div class="fw-bold fs-6 text-truncate mb-1">
+                            <field name="name"/>
+                        </div>
+                        <div class="text-muted small mb-2">
+                            <i class="fa fa-map-marker me-1" title="Location"/>
+                            <field name="community"/>, <field name="city"/>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-auto pt-2 border-top">
+                            <div class="fw-bold text-primary">
+                                <field name="price" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                            </div>
+                            <div class="small text-muted">
+                                <span class="me-2"><i class="fa fa-bed me-1" title="Bedrooms"/><field name="bedrooms"/></span>
+                                <span><i class="fa fa-bath me-1" title="Bathrooms"/><field name="bathrooms"/></span>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- List View for Bayut Listings -->
+    <record id="bayut_listing_view_list" model="ir.ui.view">
+        <field name="name">bayut.listing.view.list</field>
+        <field name="model">bayut.listing</field>
+        <field name="arch" type="xml">
+            <list string="Bayut Property Listings" sample="1"
+                  decoration-success="state == 'published'"
+                  decoration-muted="state == 'unpublished'"
+                  decoration-danger="state == 'error'">
+                <header>
+                    <button name="action_publish_to_bayut"
+                            type="object"
+                            string="Publish / Update on Bayut"
+                            class="btn-primary"/>
+                    <button name="action_unpublish_from_bayut"
+                            type="object"
+                            string="Unpublish from Bayut"
+                            class="btn-secondary"/>
+                </header>
+                <field name="reference_number"/>
+                <field name="name"/>
+                <field name="purpose"/>
+                <field name="property_type"/>
+                <field name="community"/>
+                <field name="building_name"/>
+                <field name="bedrooms"/>
+                <field name="size_sqft"/>
+                <field name="price" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                <field name="currency_id" column_invisible="True"/>
+                <field name="permit_number" optional="show"/>
+                <field name="agent_name" optional="show"/>
+                <field name="last_bayut_sync" optional="show"/>
+                <field name="state" widget="badge"
+                       decoration-success="state == 'published'"
+                       decoration-info="state == 'draft'"
+                       decoration-warning="state == 'unpublished'"
+                       decoration-danger="state == 'error'"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Form View for Bayut Listings -->
+    <record id="bayut_listing_view_form" model="ir.ui.view">
+        <field name="name">bayut.listing.view.form</field>
+        <field name="model">bayut.listing</field>
+        <field name="arch" type="xml">
+            <form string="Bayut Property Listing">
+                <header>
+                    <button name="action_publish_to_bayut"
+                            string="Publish to Bayut Profolio"
+                            type="object"
+                            class="btn-primary"
+                            icon="fa-cloud-upload"
+                            invisible="state == 'published'"/>
+                    <button name="action_update_on_bayut"
+                            string="Push Update to Bayut"
+                            type="object"
+                            class="btn-primary"
+                            icon="fa-refresh"
+                            invisible="state != 'published'"/>
+                    <button name="action_unpublish_from_bayut"
+                            string="Unpublish from Bayut"
+                            type="object"
+                            class="btn-secondary"
+                            icon="fa-eye-slash"
+                            invisible="state != 'published'"/>
+                    <button name="action_set_draft"
+                            string="Reset to Draft"
+                            type="object"
+                            invisible="state == 'draft'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,published,unpublished"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_leads"
+                                type="object"
+                                class="oe_stat_button"
+                                icon="fa-star">
+                            <field name="lead_count" widget="statinfo" string="Bayut Leads"/>
+                        </button>
+                    </div>
+                    <field name="image_1920" widget="image" class="oe_avatar"/>
+                    <div class="oe_title">
+                        <label for="name" string="Listing Title"/>
+                        <h1>
+                            <field name="name" placeholder="e.g. Luxury 2BR Marina View Apartment in Dubai Marina"/>
+                        </h1>
+                        <div class="d-flex gap-3 align-items-center mt-1">
+                            <span class="text-muted">Ref:</span>
+                            <field name="reference_number" class="fw-bold oe_inline"/>
+                        </div>
+                    </div>
+
+                    <group>
+                        <group string="Listing Classification &amp; Pricing">
+                            <field name="purpose" widget="radio" options="{'horizontal': true}"/>
+                            <field name="category"/>
+                            <field name="property_type"/>
+                            <field name="currency_id" invisible="1"/>
+                            <field name="price" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                            <field name="rent_frequency" invisible="purpose != 'for-rent'"/>
+                            <field name="permit_number" placeholder="e.g. 71123456789"/>
+                            <field name="completion_status"/>
+                        </group>
+                        <group string="Property Specifications">
+                            <field name="bedrooms"/>
+                            <field name="bathrooms"/>
+                            <field name="size_sqft"/>
+                            <field name="parking_spaces"/>
+                            <field name="furnished"/>
+                            <field name="publish_on_bayut"/>
+                            <field name="publish_on_dubizzle"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="Location &amp; Building" name="location">
+                            <group>
+                                <group string="Address &amp; Tower">
+                                    <field name="city"/>
+                                    <field name="community" placeholder="e.g. Business Bay"/>
+                                    <field name="sub_community" placeholder="e.g. Executive Towers"/>
+                                    <field name="building_name" placeholder="e.g. Executive Tower B"/>
+                                    <field name="bayut_location_id"/>
+                                </group>
+                                <group string="Geo Coordinates">
+                                    <field name="latitude"/>
+                                    <field name="longitude"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <page string="Descriptions (EN / AR)" name="descriptions">
+                            <group>
+                                <field name="title_ar" placeholder="Arabic Listing Title (Optional)"/>
+                                <field name="description_en" placeholder="Detailed property description shown on Bayut..."/>
+                                <field name="description_ar" placeholder="Arabic property description (Optional)..."/>
+                            </group>
+                        </page>
+
+                        <page string="Photos &amp; Virtual Tours" name="media">
+                            <group>
+                                <group>
+                                    <field name="video_url" placeholder="https://youtube.com/..."/>
+                                </group>
+                                <group>
+                                    <field name="virtual_tour_url" placeholder="https://my.matterport.com/..."/>
+                                </group>
+                            </group>
+                            <separator string="Photo Gallery"/>
+                            <field name="image_ids">
+                                <list editable="bottom">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="name"/>
+                                    <field name="image" widget="image" options="{'size': [80, 60]}"/>
+                                    <field name="external_url" readonly="1"/>
+                                </list>
+                            </field>
+                        </page>
+
+                        <page string="Listing Agent &amp; Sync Info" name="agent_sync">
+                            <group>
+                                <group string="Assigned Listing Agent">
+                                    <field name="agent_user_id"/>
+                                    <field name="agent_name"/>
+                                    <field name="agent_email"/>
+                                    <field name="agent_phone"/>
+                                    <field name="agent_brn"/>
+                                </group>
+                                <group string="Bayut Profolio Synchronization">
+                                    <field name="bayut_external_id"/>
+                                    <field name="source_property_ref"/>
+                                    <field name="last_bayut_sync"/>
+                                    <field name="last_sync_message"/>
+                                </group>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- Search View for Bayut Listings -->
+    <record id="bayut_listing_view_search" model="ir.ui.view">
+        <field name="name">bayut.listing.view.search</field>
+        <field name="model">bayut.listing</field>
+        <field name="arch" type="xml">
+            <search string="Search Bayut Listings">
+                <field name="name"/>
+                <field name="reference_number"/>
+                <field name="community"/>
+                <field name="building_name"/>
+                <field name="permit_number"/>
+                <filter string="Published on Bayut" name="published" domain="[('state', '=', 'published')]"/>
+                <filter string="Draft" name="draft" domain="[('state', '=', 'draft')]"/>
+                <filter string="Unpublished" name="unpublished" domain="[('state', '=', 'unpublished')]"/>
+                <separator/>
+                <filter string="For Rent" name="for_rent" domain="[('purpose', '=', 'for-rent')]"/>
+                <filter string="For Sale" name="for_sale" domain="[('purpose', '=', 'for-sale')]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Bayut Status" name="group_by_state" context="{'group_by': 'state'}"/>
+                    <filter string="Purpose" name="group_by_purpose" context="{'group_by': 'purpose'}"/>
+                    <filter string="Property Type" name="group_by_type" context="{'group_by': 'property_type'}"/>
+                    <filter string="Community" name="group_by_community" context="{'group_by': 'community'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Window Action for Bayut Listings -->
+    <record id="action_bayut_listings" model="ir.actions.act_window">
+        <field name="name">Bayut Property Listings</field>
+        <field name="res_model">bayut.listing</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="search_view_id" ref="bayut_listing_view_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first Bayut Profolio property listing!
+            </p>
+            <p>
+                Manage your property listings, prices, photos, and DLD permits here, or import existing units from Odoo Properties in the <b>Connector Hub</b>.
+            </p>
+        </field>
+    </record>
+</odoo>

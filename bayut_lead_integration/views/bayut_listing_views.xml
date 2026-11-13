@@ -160,7 +160,6 @@
                             <field name="parking_spaces"/>
                             <field name="furnished"/>
                             <field name="publish_on_bayut"/>
-                            <field name="publish_on_dubizzle"/>
                         </group>
                     </group>
 

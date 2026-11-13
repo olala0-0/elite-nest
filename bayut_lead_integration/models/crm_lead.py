@@ -33,14 +33,6 @@ class CrmLead(models.Model):
         help="Linked Bayut listing record in Odoo.",
     )
 
-    _sql_constraints = [
-        (
-            "bayut_lead_id_unique",
-            "unique(bayut_lead_id)",
-            "A CRM Lead with this Bayut Lead ID already exists!",
-        ),
-    ]
-
     @api.constrains("bayut_lead_id")
     def _check_unique_bayut_lead_id(self):
         for lead in self:

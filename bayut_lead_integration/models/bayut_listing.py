@@ -213,7 +213,6 @@ class BayutListing(models.Model):
 
     # Portal Target & Agent Info
     publish_on_bayut = fields.Boolean(string="Publish on Bayut", default=True, tracking=True)
-    publish_on_dubizzle = fields.Boolean(string="Publish on Dubizzle", default=False, tracking=True)
 
     agent_user_id = fields.Many2one(
         comodel_name="res.users",
@@ -257,13 +256,23 @@ class BayutListing(models.Model):
     )
     lead_count = fields.Integer(string="Leads", compute="_compute_lead_count")
 
-    _sql_constraints = [
-        (
-            "reference_number_unique",
-            "unique(reference_number)",
-            "Property Reference must be unique across Bayut listings!",
-        ),
-    ]
+    @api.constrains("reference_number")
+    def _check_unique_reference_number(self):
+        for rec in self:
+            if not rec.reference_number:
+                continue
+            duplicate = self.sudo().search(
+                [
+                    ("reference_number", "=", rec.reference_number),
+                    ("id", "!=", rec.id),
+                ],
+                limit=1,
+            )
+            if duplicate:
+                raise UserError(
+                    _("Property Reference '%s' is already used on another Bayut listing.")
+                    % rec.reference_number
+                )
 
     @api.depends("agent_user_id")
     def _compute_agent_details(self):
@@ -298,7 +307,7 @@ class BayutListing(models.Model):
             "name", "title_ar", "permit_number", "purpose", "category", "property_type",
             "price", "rent_frequency", "bedrooms", "bathrooms", "size_sqft", "furnished",
             "city", "community", "sub_community", "building_name", "description_en",
-            "description_ar", "publish_on_bayut", "publish_on_dubizzle", "agent_name",
+            "description_ar", "publish_on_bayut", "agent_name",
             "agent_email", "agent_phone",
         }
         if not self.env.context.get("skip_bayut_auto_sync") and (sync_trigger_fields & set(vals.keys())):
@@ -324,11 +333,7 @@ class BayutListing(models.Model):
             if img.id:
                 images.append(f"{base_url}/web/image/bayut.listing.image/{img.id}/image")
 
-        portals = []
-        if self.publish_on_bayut:
-            portals.append("bayut")
-        if self.publish_on_dubizzle:
-            portals.append("dubizzle")
+        portals = ["bayut"] if self.publish_on_bayut else []
 
         return {
             "id": self.bayut_external_id or False,

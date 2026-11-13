@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 {
     "name": "Bayut Lead & Listing Integration",
-    "version": "17.0.2.0.0",
+    "version": "1.0.0",
     "category": "Sales/CRM",
     "summary": "Standalone Bayut Profolio App: Manage & Push Property Listings, XML/JSON Feeds, and Sync Bayut Leads into Odoo CRM",
     "description": """
 Bayut Lead & Listing Integration (Standalone Odoo App)
 ======================================================
-Complete standalone application for managing **Bayut & Dubizzle Profolio Property Listings**
+Complete standalone application for managing **Bayut Profolio Property Listings**
 and importing **Bayut Leads & Intent Signals** into Odoo CRM (`crm.lead`).
 
 Key Features:
@@ -18,7 +18,7 @@ Key Features:
    - Create, edit, price, and publish listings directly from Odoo since Profolio locks manual editing when Listing API integration is active.
    - Pre-configured with the agency's Bayut Listing API Token (`96522341|rB11mebGgqYvMIIquvTlT9T23ESdNv3mmjSGbFq876729d9f`).
    - One-click **Publish to Bayut Profolio**, **Push Update to Bayut**, **Unpublish**, and automatic sync when a published listing is edited.
-   - Live **XML Feed** (`/bayut/feed/listings.xml`) and **JSON Feed** (`/bayut/feed/listings.json`) endpoints for Bayut/Dubizzle Profolio.
+   - Live **XML Feed** (`/bayut/feed/listings.xml`) and **JSON Feed** (`/bayut/feed/listings.json`) endpoints for Bayut Profolio.
    - Optional one-click import from `property.detail` if `eg_property_management` is installed.
 3. **Bayut Leads Synchronization (`crm.lead`)**:
    - Scheduled cron job (`Bayut: Sync Leads`) and real-time webhook (`/bayut/webhook/leads`).

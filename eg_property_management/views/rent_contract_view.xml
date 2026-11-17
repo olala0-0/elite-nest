@@ -83,6 +83,14 @@
                             <button type="object" class="oe_stat_button" icon="fa-sign-out"
                                     name="action_open_moveout" string="Move-Out" invisible="not moveout_id">
                             </button>
+                            <button type="object" class="oe_stat_button" icon="fa-history"
+                                    name="action_open_previous_contract" string="Prev Contract"
+                                    invisible="not previous_contract_id">
+                            </button>
+                            <button type="object" class="oe_stat_button" icon="fa-repeat"
+                                    name="action_open_renewed_contract" string="Renewed As"
+                                    invisible="not renewed_contract_id">
+                            </button>
                         </div>
                         <h1>
                             <field name="name" readonly="1"/>

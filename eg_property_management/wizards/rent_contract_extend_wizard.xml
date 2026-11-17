@@ -3,13 +3,25 @@
         <field name="name">rent.contract.extend.wizard.form</field>
         <field name="model">rent.contract.extend.wizard</field>
         <field name="arch" type="xml">
-            <form string="Extend Contract">
-                <group>
-<!--                    <field name="contract_id"/>-->
-                    <field name="new_end_date"/>
-                </group>
+            <form string="Extend / Renew Contract">
+                <sheet>
+                    <p class="text-muted">
+                        Extending this contract creates a <b>new renewed contract</b> linked to this one. The original contract will remain sealed with its complete history, and the new contract will inherit all terms, tenant, and property details.
+                    </p>
+                    <group>
+                        <group string="Previous Contract">
+                            <field name="contract_id" readonly="1" options="{'no_open': True}"/>
+                            <field name="currency_id" invisible="1"/>
+                        </group>
+                        <group string="Renewal Period &amp; Terms">
+                            <field name="new_start_date"/>
+                            <field name="new_end_date"/>
+                            <field name="new_rent" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                        </group>
+                    </group>
+                </sheet>
                 <footer>
-                    <button name="action_extend_contract" type="object" string="Confirm" class="btn-primary"/>
+                    <button name="action_extend_contract" type="object" string="Confirm &amp; Create Renewed Contract" class="btn-primary"/>
                     <button string="Cancel" special="cancel" class="btn-secondary"/>
                 </footer>
             </form>
@@ -17,7 +29,7 @@
     </record>
 
     <record id="action_rent_contract_extend_wizard" model="ir.actions.act_window">
-        <field name="name">Extend Contract</field>
+        <field name="name">Extend / Renew Contract</field>
         <field name="res_model">rent.contract.extend.wizard</field>
         <field name="view_mode">form</field>
         <field name="target">new</field>

@@ -216,6 +216,45 @@ class RentContract(models.Model):
     )
 
     invoice_count = fields.Integer(string="Invoices", compute="_compute_invoice_count")
+    # Contract Renewal Chain
+    previous_contract_id = fields.Many2one(
+        comodel_name='rent.contract',
+        string='Previous Contract',
+        copy=False,
+        readonly=True,
+        help="The expired contract this record was renewed from.",
+    )
+    renewed_contract_id = fields.Many2one(
+        comodel_name='rent.contract',
+        string='Renewed As',
+        compute='_compute_renewed_contract_id',
+        help="The new contract created when this contract was renewed.",
+    )
+
+    def _compute_renewed_contract_id(self):
+        for rec in self:
+            renewed = self.sudo().search([('previous_contract_id', '=', rec.id)], limit=1)
+            rec.renewed_contract_id = renewed
+
+    def action_open_previous_contract(self):
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'res_model': 'rent.contract',
+            'res_id': self.previous_contract_id.id,
+            'view_mode': 'form',
+            'target': 'current',
+        }
+
+    def action_open_renewed_contract(self):
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'res_model': 'rent.contract',
+            'res_id': self.renewed_contract_id.id,
+            'view_mode': 'form',
+            'target': 'current',
+        }
     expiry_notified_90_days = fields.Boolean(string="Expiry 90-Days Notified", default=False, copy=False)
 
     def _check_company(self, fnames=None):

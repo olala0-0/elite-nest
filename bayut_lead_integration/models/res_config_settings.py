@@ -64,6 +64,11 @@ class ResConfigSettings(models.TransientModel):
         compute="_compute_bayut_sync_info",
         readonly=True,
     )
+    bayut_webhook_url = fields.Char(
+        string="Leads Webhook URL",
+        compute="_compute_bayut_sync_info",
+        readonly=True,
+    )
     bayut_sync_log_count = fields.Integer(
         string="Bayut Sync Logs Count",
         compute="_compute_bayut_sync_info",
@@ -84,6 +89,7 @@ class ResConfigSettings(models.TransientModel):
             record.bayut_last_sync = connector.last_sync
             record.bayut_xml_feed_url = connector.xml_feed_url
             record.bayut_json_feed_url = connector.json_feed_url
+            record.bayut_webhook_url = connector.webhook_url
             record.bayut_sync_log_count = total_logs
             record.bayut_recent_log_ids = recent_logs
 

@@ -677,6 +677,23 @@ class BayutConnector(models.Model):
             })
             return {"success": False, "message": msg}
 
+        if "leads-api.bayut.com" in (cfg["api_url"] or ""):
+            msg = _(
+                "Bayut Listing API Key is verified and Profolio Feeds (XML/JSON) are active! "
+                "Note: Bayut Leads API URL is currently using the placeholder ('%s'). "
+                "Bayut support has completed Listing API integration, but has not yet provided the official Leads API endpoint URL. "
+                "Once Bayut provides the real Leads API URL, enter it in Settings or Connector Hub. "
+                "If Bayut sends leads via Webhook, provide them with your Webhook URL: %s"
+            ) % (cfg["api_url"], connector.webhook_url)
+            LogModel.create({
+                "connector_id": connector.id,
+                "sync_datetime": fields.Datetime.now(),
+                "sync_type": "test",
+                "status": "success",
+                "message": msg,
+            })
+            return {"success": True, "message": msg}
+
         since_dt = fields.Datetime.now() - timedelta(hours=1)
         headers = {
             "Authorization": f"Bearer {token}",
@@ -907,6 +924,24 @@ class BayutConnector(models.Model):
             })
             return {"status": "error", "leads_created": 0, "message": msg}
 
+        if "leads-api.bayut.com" in (cfg["api_url"] or ""):
+            msg = _(
+                "Bayut Leads API endpoint is currently set to the temporary placeholder address ('%s'). "
+                "Bayut support has completed Listing API integration, but has not yet provided the official Leads API endpoint URL. "
+                "Please update the Leads API URL in Settings once Bayut support shares it. "
+                "If Bayut pushes leads via Webhook, provide them with your Webhook URL: %s"
+            ) % (cfg["api_url"], connector.webhook_url)
+            _logger.info(msg)
+            LogModel.create({
+                "connector_id": connector.id,
+                "sync_datetime": sync_start,
+                "sync_type": "leads",
+                "status": "error",
+                "leads_created": 0,
+                "message": msg,
+            })
+            return {"status": "error", "leads_created": 0, "message": msg}
+
         since_dt = connector.last_sync or (sync_start - timedelta(hours=24))
         since_str = since_dt.strftime("%Y-%m-%dT%H:%M:%SZ")
 
@@ -928,7 +963,15 @@ class BayutConnector(models.Model):
             response.raise_for_status()
             payload = response.json()
         except requests.exceptions.RequestException as exc:
-            error_msg = _("Bayut Leads API request note: %s") % str(exc)
+            err_str = str(exc)
+            if "Failed to resolve" in err_str or "NameResolutionError" in err_str:
+                error_msg = _(
+                    "Unable to resolve host for '%s'. This indicates Bayut has not yet provided the official Leads API endpoint. "
+                    "Once received from Bayut support, update the Leads API URL in Settings or Connector Hub. "
+                    "Alternatively, Bayut can push leads directly to your Webhook URL: %s"
+                ) % (cfg["api_url"], connector.webhook_url)
+            else:
+                error_msg = _("Bayut Leads API connection error: %s") % err_str
             _logger.warning("Bayut Leads sync note: %s", error_msg)
             LogModel.create({
                 "connector_id": connector.id,

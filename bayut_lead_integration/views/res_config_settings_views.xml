@@ -49,6 +49,10 @@
                                 <label for="bayut_api_key" class="col-lg-3 o_light_label"/>
                                 <field name="bayut_api_key" password="True" placeholder="Enter Bayut Bearer API Key"/>
                             </div>
+                            <div class="row mt8">
+                                <label for="bayut_webhook_url" class="col-lg-3 o_light_label"/>
+                                <field name="bayut_webhook_url" widget="CopyClipboardChar" readonly="1"/>
+                            </div>
                             <div class="mt16 d-flex gap-2">
                                 <button name="action_bayut_test_connection"
                                         type="object"

@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
+import hashlib
+import hmac
 import logging
 import re
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 
 import requests
 
@@ -12,6 +14,14 @@ _logger = logging.getLogger(__name__)
 DEFAULT_BAYUT_TOKEN = "96522341|rB11mebGgqYvMIIquvTlT9T23ESdNv3mmjSGbFq876729d9f"
 DEFAULT_LEADS_API_URL = "https://leads-api.bayut.com/"
 DEFAULT_LISTING_API_URL = "https://api.bayut.com/v1/listings"
+
+PLACEHOLDER_LEADS_HOSTS = ("leads-api.bayut.com",)
+
+# Push API (Bayut / dubizzle -> Odoo): portal -> (signature header, secret config parameter)
+PUSH_PORTALS = {
+    "bayut": ("X-Bayut-Signature", "bayut_lead_integration.bayut_push_secret"),
+    "dubizzle": ("X-dubizzle-Signature", "bayut_lead_integration.dubizzle_push_secret"),
+}
 
 INTENT_SIGNAL_TYPES = {"phone_view", "sms_click"}
 INTENT_SIGNAL_NOTE = _(
@@ -85,8 +95,14 @@ class BayutConnector(models.Model):
         compute="_compute_endpoints_and_counts",
     )
     webhook_url = fields.Char(
-        string="Leads Webhook URL",
+        string="Bayut Push API URL",
         compute="_compute_endpoints_and_counts",
+        help="Give this URL to support@bayut.com to receive Bayut call & WhatsApp leads in real time.",
+    )
+    dubizzle_webhook_url = fields.Char(
+        string="dubizzle Push API URL",
+        compute="_compute_endpoints_and_counts",
+        help="Give this URL to ps-reply@dubizzle.com to receive dubizzle WhatsApp leads in real time.",
     )
 
     log_ids = fields.One2many(
@@ -124,6 +140,7 @@ class BayutConnector(models.Model):
             rec.xml_feed_url = f"{base_url}/bayut/feed/listings.xml"
             rec.json_feed_url = f"{base_url}/bayut/feed/listings.json"
             rec.webhook_url = f"{base_url}/bayut/webhook/leads"
+            rec.dubizzle_webhook_url = f"{base_url}/dubizzle/webhook/leads"
             rec.log_count = len(rec.log_ids)
             rec.listing_count = total_listings
             rec.published_listing_count = pub_listings
@@ -230,89 +247,192 @@ class BayutConnector(models.Model):
     # =========================================================================
     # 1. ISOLATED BAYUT LEAD PAYLOAD PARSER
     # =========================================================================
-    @api.model
-    def _parse_lead(self, raw_lead):
-        """Parse a single lead dictionary from the Bayut API response into a
-        normalized dictionary used by Odoo CRM.
+    @staticmethod
+    def _str(value):
+        return "" if value is None or value is False else str(value).strip()
 
-        TODO: Update the field key mappings below once Bayut Support provides
-        the official Leads API response documentation.
-        All JSON structure assumptions are isolated inside this single method:
-        - Expected top-level response key in cron_sync_leads(): data.get("leads", [])
-        - Expected per-lead keys mapped here:
-            * id           -> bayut_lead_id (str)
-            * type         -> lead_type (email / call_log / phone_view / whatsapp / sms_click / whatsapp_view)
-            * client_name  -> client_name (str)
-            * email        -> email (str)
-            * phone        -> phone (str)
-            * message      -> message (str)
-            * property_ref -> property_ref (str)
-            * created_at   -> created_at (str)
+    @staticmethod
+    def _format_phone(value):
+        """Bayut sends numbers without '+' (e.g. 971551234567)."""
+        digits = re.sub(r"\D", "", str(value or ""))
+        return f"+{digits}" if len(digits) >= 10 else digits
+
+    @staticmethod
+    def _format_timestamp(value):
+        """Accept epoch seconds (call payload) or ISO strings (WhatsApp payload)."""
+        if value in (None, False, ""):
+            return ""
+        if isinstance(value, (int, float)) or str(value).isdigit():
+            try:
+                return datetime.fromtimestamp(int(float(value)), tz=timezone.utc).strftime(
+                    "%Y-%m-%d %H:%M:%S UTC"
+                )
+            except (ValueError, OverflowError, OSError):
+                return str(value)
+        return str(value)
+
+    @api.model
+    def _parse_lead(self, raw_lead, portal=None):
+        """Normalize one Bayut / dubizzle lead into a flat dict used by Odoo CRM.
+
+        Supported formats (Bayut / dubizzle Push API documentation):
+          * Call lead (Bayut):        id, agent{name,phone,email}, call_details{...},
+                                      enquirer{phone_number}, portal
+          * WhatsApp lead (Bayut):    id, agent{url,id,name,email,phone_number}?,
+                                      listing{url,reference}?, message, received_at,
+                                      enquirer{name,contact_link,phone_number,intent?}, wam_id
+          * WhatsApp lead (dubizzle): id, enquirer{name,phone_number,contact_link},
+                                      listing{url,reference}, received_at
+          * Legacy flat format (client_name / email / phone / property_ref ...).
         """
         if not isinstance(raw_lead, dict):
             return {}
+        s = self._str
 
-        raw_id = (
-            raw_lead.get("id")
-            or raw_lead.get("lead_id")
-            or raw_lead.get("uid")
-        )
-        lead_type = str(
-            raw_lead.get("type")
-            or raw_lead.get("lead_type")
-            or raw_lead.get("channel")
-            or "email"
-        ).strip().lower()
+        def _sub(key):
+            val = raw_lead.get(key)
+            return val if isinstance(val, dict) else {}
 
-        client_name = str(
-            raw_lead.get("client_name")
-            or raw_lead.get("name")
-            or raw_lead.get("sender_name")
-            or ""
-        ).strip()
+        enquirer = _sub("enquirer")
+        agent = _sub("agent")
+        listing = _sub("listing")
+        call = _sub("call_details")
 
-        email = str(
-            raw_lead.get("email")
-            or raw_lead.get("client_email")
-            or raw_lead.get("sender_email")
-            or ""
-        ).strip()
+        raw_id = raw_lead.get("id") or raw_lead.get("lead_id") or raw_lead.get("uid")
+        contact_link = s(enquirer.get("contact_link"))
 
-        phone = str(
-            raw_lead.get("phone")
+        portal = s(raw_lead.get("portal") or portal).lower()
+        if not portal:
+            portal = "dubizzle" if "dubizzle" in contact_link.lower() else "bayut"
+
+        if call:
+            lead_type = "call"
+        elif "wam_id" in raw_lead or "whatsapp" in contact_link.lower():
+            lead_type = "whatsapp"
+        else:
+            lead_type = s(
+                raw_lead.get("type") or raw_lead.get("lead_type") or raw_lead.get("channel") or "email"
+            ).lower()
+
+        phone = (
+            enquirer.get("phone_number")
+            or raw_lead.get("phone")
             or raw_lead.get("client_phone")
             or raw_lead.get("mobile")
             or raw_lead.get("sender_phone")
-            or ""
-        ).strip()
-
-        message = str(
-            raw_lead.get("message")
-            or raw_lead.get("body")
-            or raw_lead.get("comments")
-            or ""
-        ).strip()
-
-        property_ref = str(
-            raw_lead.get("property_ref")
+        )
+        property_ref = s(
+            listing.get("reference")
+            or raw_lead.get("property_ref")
             or raw_lead.get("property_reference")
             or raw_lead.get("reference")
             or raw_lead.get("listing_reference")
-            or "N/A"
-        ).strip()
+        )
 
-        created_at = raw_lead.get("created_at") or raw_lead.get("timestamp") or False
+        call_info = {}
+        if call:
+            call_info = {
+                "status": s(call.get("call_status")),
+                "pickup": self._format_timestamp(call.get("pickup_timestamp")),
+                "duration": call.get("call_duration"),
+                "total_duration": call.get("call_total_duration"),
+                "proxy_number": s(call.get("proxy_number")),
+            }
 
         return {
-            "bayut_lead_id": str(raw_id).strip() if raw_id is not None and str(raw_id).strip() else "",
+            "bayut_lead_id": s(raw_id),
+            "portal": portal,
             "lead_type": lead_type,
-            "client_name": client_name,
-            "email": email,
-            "phone": phone,
-            "message": message,
+            "client_name": s(
+                enquirer.get("name")
+                or raw_lead.get("client_name")
+                or raw_lead.get("name")
+                or raw_lead.get("sender_name")
+            ),
+            "email": s(
+                enquirer.get("email")
+                or raw_lead.get("email")
+                or raw_lead.get("client_email")
+                or raw_lead.get("sender_email")
+            ),
+            "phone": self._format_phone(phone) if phone else "",
+            "message": s(raw_lead.get("message") or raw_lead.get("body") or raw_lead.get("comments")),
             "property_ref": property_ref or "N/A",
-            "created_at": created_at,
+            "listing_url": s(listing.get("url")),
+            "contact_link": contact_link,
+            "intent": s(enquirer.get("intent")),
+            "agent_name": s(agent.get("name")),
+            "agent_email": s(agent.get("email")),
+            "agent_phone": s(agent.get("phone_number") or agent.get("phone")),
+            "call_info": call_info,
+            "created_at": self._format_timestamp(
+                raw_lead.get("received_at")
+                or call.get("pickup_timestamp")
+                or raw_lead.get("created_at")
+                or raw_lead.get("timestamp")
+            ),
         }
+
+    @api.model
+    def _find_agent_user(self, agent_email):
+        """Map the portal agent (by email) to an internal Odoo user."""
+        if not agent_email:
+            return self.env["res.users"]
+        return self.env["res.users"].sudo().search(
+            [("share", "=", False), "|", ("login", "=ilike", agent_email), ("email", "=ilike", agent_email)],
+            limit=1,
+        )
+
+    @api.model
+    def _build_lead_description(self, parsed):
+        lines = []
+        if parsed.get("message"):
+            lines += [parsed["message"], ""]
+        lines.append(_("Source: %(portal)s %(type)s lead",
+                       portal=parsed["portal"].capitalize(), type=parsed["lead_type"]))
+        if parsed.get("created_at"):
+            lines.append(_("Received at: %s", parsed["created_at"]))
+        if parsed.get("intent"):
+            lines.append(_("Enquirer intent: %s", parsed["intent"]))
+        if parsed.get("listing_url"):
+            lines.append(_("Listing: %s", parsed["listing_url"]))
+        if parsed.get("contact_link"):
+            lines.append(_("Contact link: %s", parsed["contact_link"]))
+        agent_bits = [v for v in (parsed.get("agent_name"), parsed.get("agent_email"), parsed.get("agent_phone")) if v]
+        if agent_bits:
+            lines.append(_("Portal agent: %s", " / ".join(agent_bits)))
+        call = parsed.get("call_info") or {}
+        if call:
+            lines.append(_(
+                "Call: status=%(status)s, picked up=%(pickup)s, talk time=%(dur)ss, total=%(total)ss, proxy=%(proxy)s",
+                status=call.get("status") or "-",
+                pickup=call.get("pickup") or "-",
+                dur=call.get("duration") if call.get("duration") is not None else "-",
+                total=call.get("total_duration") if call.get("total_duration") is not None else "-",
+                proxy=call.get("proxy_number") or "-",
+            ))
+        if parsed["lead_type"] in INTENT_SIGNAL_TYPES:
+            lines.append(INTENT_SIGNAL_NOTE)
+        return "\n".join(lines)
+
+    @api.model
+    def _verify_push_signature(self, portal, raw_body, received_signature):
+        """Bayut/dubizzle sign the body as md5(secret_key . body) (hex, lowercase).
+
+        Returns (accepted: bool, note: str). If no secret is configured yet the lead is
+        accepted (portals only issue the secret after registering the endpoint) but
+        flagged as unverified in the sync log.
+        """
+        header, param_key = PUSH_PORTALS.get(portal, PUSH_PORTALS["bayut"])
+        secret = (self.env["ir.config_parameter"].sudo().get_param(param_key) or "").strip()
+        if not secret:
+            return True, _("UNVERIFIED: no %s push secret configured yet.", portal.capitalize())
+        if isinstance(raw_body, str):
+            raw_body = raw_body.encode("utf-8")
+        expected = hashlib.md5(secret.encode("utf-8") + raw_body).hexdigest()
+        if received_signature and hmac.compare_digest(expected, received_signature.strip().lower()):
+            return True, ""
+        return False, _("Invalid or missing %s header.", header)
 
     # =========================================================================
     # 2. ISOLATED BAYUT LISTING PAYLOAD BUILDER & PUSH ENGINE
@@ -751,7 +871,7 @@ class BayutConnector(models.Model):
             return {"success": True, "message": msg}
 
     @api.model
-    def _process_incoming_leads_payload(self, payload, source="cron", since_str=""):
+    def _process_incoming_leads_payload(self, payload, source="cron", since_str="", portal=None, note=""):
         """Process a parsed JSON payload containing Bayut leads and create `crm.lead` records."""
         connector = self._get_connector()
         cfg = self._get_config_settings()
@@ -762,7 +882,9 @@ class BayutConnector(models.Model):
             raw_leads = payload.get("leads", payload.get("data", []))
             if isinstance(raw_leads, dict):
                 raw_leads = [raw_leads]
-            elif not raw_leads and any(k in payload for k in ("id", "lead_id", "client_name", "property_ref")):
+            elif not raw_leads and any(
+                k in payload for k in ("id", "lead_id", "client_name", "property_ref", "enquirer")
+            ):
                 raw_leads = [payload]
         elif isinstance(payload, list):
             raw_leads = payload
@@ -775,11 +897,12 @@ class BayutConnector(models.Model):
         leads_created = 0
         leads_skipped = 0
         leads_attached = 0
+        leads_failed = 0
         LeadModel = self.env["crm.lead"].sudo()
 
         for raw_item in raw_leads:
             try:
-                parsed = self._parse_lead(raw_item)
+                parsed = self._parse_lead(raw_item, portal=portal)
                 if not parsed:
                     continue
 
@@ -824,29 +947,26 @@ class BayutConnector(models.Model):
                     leads_attached += 1
                     continue
 
-                # 3. Build description and priority (intent signals get low priority '0')
-                description_parts = []
-                if message:
-                    description_parts.append(message)
-                if created_at:
-                    description_parts.append(f"Bayut Created At: {created_at}")
-                if lead_type in INTENT_SIGNAL_TYPES:
-                    description_parts.append(INTENT_SIGNAL_NOTE)
-
+                # 3. Build description, title and salesperson
                 matched_listing = self._find_matching_bayut_listing(property_ref)
+                agent_user = self._find_agent_user(parsed.get("agent_email"))
+                if agent_user:
+                    user_id = agent_user.id
+                elif matched_listing and matched_listing.agent_user_id:
+                    user_id = matched_listing.agent_user_id.id
+                else:
+                    user_id = cfg["user_id"] or False
 
+                who = client_name or phone or email or _("Unknown enquirer")
+                title_ref = property_ref if property_ref != "N/A" else who
                 lead_vals = {
-                    "name": f"[Bayut {lead_type}] {property_ref}",
+                    "name": f"[{parsed['portal'].capitalize()} {lead_type}] {title_ref}",
                     "contact_name": client_name or False,
                     "email_from": email or False,
                     "phone": phone or False,
-                    "description": "\n\n".join(description_parts) if description_parts else False,
+                    "description": self._build_lead_description(parsed),
                     "team_id": cfg["team_id"] or False,
-                    "user_id": (
-                        matched_listing.agent_user_id.id
-                        if matched_listing and matched_listing.agent_user_id
-                        else (cfg["user_id"] or False)
-                    ),
+                    "user_id": user_id,
                     "bayut_lead_id": bayut_lead_id or False,
                     "bayut_lead_type": lead_type,
                     "bayut_property_ref": property_ref,
@@ -863,31 +983,34 @@ class BayutConnector(models.Model):
                 if matched_property and "property_id" in LeadModel._fields:
                     lead_vals["property_id"] = matched_property.id
 
-                new_lead = LeadModel.create(lead_vals)
+                with self.env.cr.savepoint():
+                    new_lead = LeadModel.create(lead_vals)
                 if lead_type in INTENT_SIGNAL_TYPES:
                     new_lead.message_post(body=INTENT_SIGNAL_NOTE)
 
                 leads_created += 1
             except Exception as item_exc:
-                _logger.error(
-                    "Failed to import individual Bayut lead %s: %s", raw_item, item_exc
-                )
+                leads_failed += 1
+                _logger.exception("Failed to import individual Bayut lead %s: %s", raw_item, item_exc)
 
         connector.sudo().with_context(skip_param_sync=True).write({"last_sync": sync_start})
 
         summary_msg = _(
             "Lead Sync (%(source)s) completed: %(created)d lead(s) created, "
-            "%(attached)d attached to existing leads, %(skipped)d duplicate(s) skipped.",
-            source=source.upper(),
+            "%(attached)d attached to existing leads, %(skipped)d duplicate(s) skipped, %(failed)d failed.",
+            source=f"{source.upper()} {portal.upper()}" if portal else source.upper(),
             created=leads_created,
             attached=leads_attached,
             skipped=leads_skipped,
+            failed=leads_failed,
         )
+        if note:
+            summary_msg = f"{summary_msg} {note}"
         LogModel.create({
             "connector_id": connector.id,
             "sync_datetime": sync_start,
             "sync_type": "leads",
-            "status": "success",
+            "status": "error" if leads_failed else "success",
             "leads_created": leads_created,
             "message": summary_msg,
         })
@@ -924,23 +1047,17 @@ class BayutConnector(models.Model):
             })
             return {"status": "error", "leads_created": 0, "message": msg}
 
-        if "leads-api.bayut.com" in (cfg["api_url"] or ""):
+        if any(host in (cfg["api_url"] or "") for host in PLACEHOLDER_LEADS_HOSTS):
+            # Leads arrive via the Push API (webhook). Polling is optional and only runs
+            # once a real V1 leads URL is configured -> skip quietly, no error log spam.
             msg = _(
-                "Bayut Leads API endpoint is currently set to the temporary placeholder address ('%s'). "
-                "Bayut support has completed Listing API integration, but has not yet provided the official Leads API endpoint URL. "
-                "Please update the Leads API URL in Settings once Bayut support shares it. "
-                "If Bayut pushes leads via Webhook, provide them with your Webhook URL: %s"
-            ) % (cfg["api_url"], connector.webhook_url)
-            _logger.info(msg)
-            LogModel.create({
-                "connector_id": connector.id,
-                "sync_datetime": sync_start,
-                "sync_type": "leads",
-                "status": "error",
-                "leads_created": 0,
-                "message": msg,
-            })
-            return {"status": "error", "leads_created": 0, "message": msg}
+                "Lead polling is disabled (no Leads API URL configured). Leads are received in real time "
+                "via the Push API webhooks: %(bayut)s and %(dubizzle)s",
+                bayut=connector.webhook_url,
+                dubizzle=connector.dubizzle_webhook_url,
+            )
+            _logger.debug(msg)
+            return {"status": "skipped", "leads_created": 0, "message": msg}
 
         since_dt = connector.last_sync or (sync_start - timedelta(hours=24))
         since_str = since_dt.strftime("%Y-%m-%dT%H:%M:%SZ")

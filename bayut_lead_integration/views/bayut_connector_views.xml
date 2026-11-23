@@ -67,6 +67,7 @@
                             <field name="api_url"/>
                             <field name="api_key" password="True"/>
                             <field name="webhook_url" widget="CopyClipboardChar" readonly="1"/>
+                            <field name="dubizzle_webhook_url" widget="CopyClipboardChar" readonly="1"/>
                             <field name="default_team_id"/>
                             <field name="default_user_id"/>
                             <field name="sync_interval"/>

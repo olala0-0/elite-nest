@@ -49,9 +49,24 @@
                                 <label for="bayut_api_key" class="col-lg-3 o_light_label"/>
                                 <field name="bayut_api_key" password="True" placeholder="Enter Bayut Bearer API Key"/>
                             </div>
+                            <div class="mt16 text-muted">
+                                Real-time leads (Push API): send each URL to the portal, then paste the secret key they issue.
+                            </div>
                             <div class="row mt8">
                                 <label for="bayut_webhook_url" class="col-lg-3 o_light_label"/>
                                 <field name="bayut_webhook_url" widget="CopyClipboardChar" readonly="1"/>
+                            </div>
+                            <div class="row mt8">
+                                <label for="bayut_push_secret" class="col-lg-3 o_light_label"/>
+                                <field name="bayut_push_secret" password="True" placeholder="Issued by support@bayut.com"/>
+                            </div>
+                            <div class="row mt8">
+                                <label for="bayut_dubizzle_webhook_url" class="col-lg-3 o_light_label"/>
+                                <field name="bayut_dubizzle_webhook_url" widget="CopyClipboardChar" readonly="1"/>
+                            </div>
+                            <div class="row mt8">
+                                <label for="dubizzle_push_secret" class="col-lg-3 o_light_label"/>
+                                <field name="dubizzle_push_secret" password="True" placeholder="Issued by ps-reply@dubizzle.com"/>
                             </div>
                             <div class="mt16 d-flex gap-2">
                                 <button name="action_bayut_test_connection"

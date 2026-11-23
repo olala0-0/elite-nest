@@ -30,6 +30,23 @@ class ResConfigSettings(models.TransientModel):
         config_parameter="bayut_lead_integration.bayut_listing_api_key",
         help="Listing API Bearer token provided by the Bayut team.",
     )
+    bayut_push_secret = fields.Char(
+        string="Bayut Push Secret Key",
+        config_parameter="bayut_lead_integration.bayut_push_secret",
+        help="Secret key issued by Bayut after registering your Push API URL. "
+             "Used to verify the X-Bayut-Signature header (md5(secret + body)).",
+    )
+    dubizzle_push_secret = fields.Char(
+        string="dubizzle Push Secret Key",
+        config_parameter="bayut_lead_integration.dubizzle_push_secret",
+        help="Secret key issued by dubizzle after registering your Push API URL. "
+             "Used to verify the X-dubizzle-Signature header (md5(secret + body)).",
+    )
+    bayut_dubizzle_webhook_url = fields.Char(
+        string="dubizzle Push API URL",
+        compute="_compute_bayut_sync_info",
+        readonly=True,
+    )
     bayut_default_team_id = fields.Many2one(
         comodel_name="crm.team",
         string="Default Sales Team",
@@ -90,6 +107,7 @@ class ResConfigSettings(models.TransientModel):
             record.bayut_xml_feed_url = connector.xml_feed_url
             record.bayut_json_feed_url = connector.json_feed_url
             record.bayut_webhook_url = connector.webhook_url
+            record.bayut_dubizzle_webhook_url = connector.dubizzle_webhook_url
             record.bayut_sync_log_count = total_logs
             record.bayut_recent_log_ids = recent_logs
 
@@ -138,7 +156,7 @@ class ResConfigSettings(models.TransientModel):
         self.ensure_one()
         self.set_values()
         result = self.env["bayut.connector"].cron_sync_leads()
-        is_ok = result.get("status") == "success"
+        is_ok = result.get("status") in ("success", "skipped")
         return {
             "type": "ir.actions.client",
             "tag": "display_notification",

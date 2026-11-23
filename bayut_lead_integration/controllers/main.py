@@ -6,6 +6,8 @@ import xml.etree.ElementTree as ET
 from odoo import fields, http
 from odoo.http import request, Response
 
+from ..models.bayut_connector import PUSH_PORTALS
+
 _logger = logging.getLogger(__name__)
 
 
@@ -144,35 +146,51 @@ class BayutIntegrationController(http.Controller):
             content_type="application/json; charset=utf-8",
         )
 
-    @http.route(
-        ["/bayut/webhook/leads"],
-        type="http",
-        auth="public",
-        methods=["POST"],
-        csrf=False,
-    )
-    def bayut_leads_webhook(self, token=None, **kwargs):
-        """Receive real-time lead webhooks pushed from Bayut Profolio if configured."""
-        if not self._validate_token(token):
-            return Response(
-                json.dumps({"status": "error", "message": "Unauthorized"}),
-                status=401,
-                content_type="application/json",
-            )
+    @staticmethod
+    def _json_response(data, status=200):
+        return Response(json.dumps(data), status=status, content_type="application/json")
+
+    def _handle_push_lead(self, portal):
+        """Common handler for the Bayut / dubizzle Push API (call & WhatsApp leads).
+
+        Authenticity: header X-Bayut-Signature / X-dubizzle-Signature = md5(secret_key + raw body).
+        """
+        header_name = PUSH_PORTALS[portal][0]
+        raw_body = request.httprequest.get_data(cache=True) or b""
+        signature = request.httprequest.headers.get(header_name, "")
+        Connector = request.env["bayut.connector"].sudo()
+
+        accepted, note = Connector._verify_push_signature(portal, raw_body, signature)
+        if not accepted:
+            _logger.warning("Rejected %s push lead: %s", portal, note)
+            Connector.env["bayut.sync.log"].create({
+                "connector_id": Connector._get_connector().id,
+                "sync_type": "leads",
+                "status": "error",
+                "message": f"WEBHOOK {portal.upper()} rejected: {note}",
+            })
+            return self._json_response({"status": "error", "message": "Invalid signature"}, 401)
+
         try:
-            raw_body = request.httprequest.data.decode("utf-8") or "{}"
-            payload = json.loads(raw_body)
-            connector = request.env["bayut.connector"].sudo()._get_connector()
-            result = connector._process_incoming_leads_payload(payload, source="webhook")
-            return Response(
-                json.dumps(result),
-                status=200,
-                content_type="application/json",
+            payload = json.loads(raw_body.decode("utf-8") or "{}")
+        except (ValueError, UnicodeDecodeError):
+            return self._json_response({"status": "error", "message": "Invalid JSON body"}, 400)
+
+        try:
+            result = Connector._process_incoming_leads_payload(
+                payload, source="webhook", portal=portal, note=note
             )
+            return self._json_response(result, 200)
         except Exception as exc:
-            _logger.exception("Error processing Bayut webhook")
-            return Response(
-                json.dumps({"status": "error", "message": str(exc)}),
-                status=400,
-                content_type="application/json",
-            )
+            _logger.exception("Error processing %s push lead", portal)
+            return self._json_response({"status": "error", "message": str(exc)}, 500)
+
+    @http.route(["/bayut/webhook/leads"], type="http", auth="public", methods=["POST"], csrf=False, save_session=False)
+    def bayut_leads_webhook(self, **kwargs):
+        """Bayut Push API endpoint (call leads & WhatsApp leads)."""
+        return self._handle_push_lead("bayut")
+
+    @http.route(["/dubizzle/webhook/leads"], type="http", auth="public", methods=["POST"], csrf=False, save_session=False)
+    def dubizzle_leads_webhook(self, **kwargs):
+        """dubizzle Push API endpoint (WhatsApp leads)."""
+        return self._handle_push_lead("dubizzle")

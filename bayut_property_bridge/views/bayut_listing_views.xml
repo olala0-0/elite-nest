@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="bayut_listing_view_form_bridge" model="ir.ui.view">
+        <field name="name">bayut.listing.view.form.bridge</field>
+        <field name="model">bayut.listing</field>
+        <field name="inherit_id" ref="bayut_lead_integration.bayut_listing_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_view_property" type="object" class="oe_stat_button"
+                        icon="fa-building" invisible="not property_id">
+                    <div class="o_stat_info">
+                        <span class="o_stat_text">Property</span>
+                        <field name="property_state" readonly="1"/>
+                    </div>
+                </button>
+            </xpath>
+            <xpath expr="//sheet/field[@name='image_1920']" position="before">
+                <div class="alert alert-danger mb-2" role="alert" invisible="unit_status_alert != 'unpublish'">
+                    <strong>Unit occupied:</strong> this unit is rented or sold in Property Management.
+                    Click <em>Unpublish from Bayut</em>.
+                </div>
+                <div class="alert alert-warning mb-2" role="alert" invisible="unit_status_alert != 'relist'">
+                    <strong>Ready to re-list:</strong> the unit is vacant again.
+                    Check the DLD / RERA permit, then click <em>Publish to Bayut Profolio</em>.
+                </div>
+            </xpath>
+            <xpath expr="//div[hasclass('oe_title')]" position="inside">
+                <div class="d-flex gap-3 align-items-center mt-1">
+                    <span class="text-muted">Unit:</span>
+                    <field name="property_id" class="oe_inline" placeholder="Link a property (unit)..."
+                           options="{'no_create': True}"/>
+                </div>
+                <div class="text-muted small mt-1" invisible="not property_id">
+                    Unit data (purpose, type, rooms, parking, furnishing) comes from the property.
+                    Price and size are edited here.
+                    Edit it there; it syncs here instantly.
+                </div>
+                <field name="unit_status_alert" invisible="1"/>
+            </xpath>
+
+            <!-- Property-owned fields are read-only while a property is linked -->
+            <xpath expr="//field[@name='purpose']" position="attributes">
+                <attribute name="readonly">property_id</attribute>
+            </xpath>
+            <xpath expr="//field[@name='category']" position="attributes">
+                <attribute name="readonly">property_id</attribute>
+            </xpath>
+            <xpath expr="//field[@name='property_type']" position="attributes">
+                <attribute name="readonly">property_id</attribute>
+            </xpath>
+            <xpath expr="//field[@name='bedrooms']" position="attributes">
+                <attribute name="readonly">property_id</attribute>
+            </xpath>
+            <xpath expr="//field[@name='bathrooms']" position="attributes">
+                <attribute name="readonly">property_id</attribute>
+            </xpath>
+            <xpath expr="//field[@name='parking_spaces']" position="attributes">
+                <attribute name="readonly">property_id</attribute>
+            </xpath>
+            <xpath expr="//field[@name='furnished']" position="attributes">
+                <attribute name="readonly">property_id</attribute>
+            </xpath>
+            <xpath expr="//field[@name='source_property_ref']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="bayut_listing_view_list_bridge" model="ir.ui.view">
+        <field name="name">bayut.listing.view.list.bridge</field>
+        <field name="model">bayut.listing</field>
+        <field name="inherit_id" ref="bayut_lead_integration.bayut_listing_view_list"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='name']" position="after">
+                <field name="property_id" optional="show"/>
+                <field name="property_state" optional="show" widget="badge"/>
+                <field name="unit_status_alert" optional="show" widget="badge"
+                       decoration-danger="unit_status_alert == 'unpublish'"
+                       decoration-warning="unit_status_alert == 'relist'"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="bayut_listing_view_search_bridge" model="ir.ui.view">
+        <field name="name">bayut.listing.view.search.bridge</field>
+        <field name="model">bayut.listing</field>
+        <field name="inherit_id" ref="bayut_lead_integration.bayut_listing_view_search"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='reference_number']" position="after">
+                <field name="property_id"/>
+            </xpath>
+            <xpath expr="//filter[@name='unpublished']" position="after">
+                <separator/>
+                <filter string="Action Needed" name="action_needed" domain="[('unit_status_alert', '!=', False)]"/>
+                <filter string="Occupied – Unpublish" name="to_unpublish" domain="[('unit_status_alert', '=', 'unpublish')]"/>
+                <filter string="Ready to Re-list" name="ready_to_relist" domain="[('unit_status_alert', '=', 'relist')]"/>
+                <filter string="Linked to a Property" name="linked" domain="[('property_id', '!=', False)]"/>
+                <filter string="Not Linked" name="not_linked" domain="[('property_id', '=', False)]"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

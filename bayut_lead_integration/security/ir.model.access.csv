@@ -1,9 +1,5 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-access_bayut_connector_salesman,bayut.connector.salesman,model_bayut_connector,sales_team.group_sale_salesman,1,0,0,0
-access_bayut_connector_manager,bayut.connector.manager,model_bayut_connector,sales_team.group_sale_manager,1,1,1,1
-access_bayut_sync_log_salesman,bayut.sync.log.salesman,model_bayut_sync_log,sales_team.group_sale_salesman,1,0,0,0
-access_bayut_sync_log_manager,bayut.sync.log.manager,model_bayut_sync_log,sales_team.group_sale_manager,1,1,1,1
-access_bayut_listing_salesman,bayut.listing.salesman,model_bayut_listing,sales_team.group_sale_salesman,1,1,1,0
-access_bayut_listing_manager,bayut.listing.manager,model_bayut_listing,sales_team.group_sale_manager,1,1,1,1
-access_bayut_listing_image_salesman,bayut.listing.image.salesman,model_bayut_listing_image,sales_team.group_sale_salesman,1,1,1,1
-access_bayut_listing_image_manager,bayut.listing.image.manager,model_bayut_listing_image,sales_team.group_sale_manager,1,1,1,1
+access_bayut_connector_user,bayut.connector.user,model_bayut_connector,group_bayut_user,1,1,1,1
+access_bayut_sync_log_user,bayut.sync.log.user,model_bayut_sync_log,group_bayut_user,1,1,1,1
+access_bayut_listing_user,bayut.listing.user,model_bayut_listing,group_bayut_user,1,1,1,1
+access_bayut_listing_image_user,bayut.listing.image.user,model_bayut_listing_image,group_bayut_user,1,1,1,1

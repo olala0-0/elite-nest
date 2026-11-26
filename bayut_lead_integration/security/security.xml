@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Access to the Bayut Integration app. Administrators get it automatically;
+         other users are added later from Settings > Users (group "Bayut Integration"). -->
+    <record id="group_bayut_user" model="res.groups">
+        <field name="name">Bayut Integration</field>
+        <field name="comment">Access to the Bayut Integration app: listings, Bayut leads, connector and sync logs.</field>
+    </record>
+
+    <record id="base.group_system" model="res.groups">
+        <field name="implied_ids" eval="[(4, ref('bayut_lead_integration.group_bayut_user'))]"/>
+    </record>
+</odoo>

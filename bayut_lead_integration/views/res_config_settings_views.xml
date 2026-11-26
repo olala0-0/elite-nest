@@ -150,7 +150,7 @@
     <menuitem id="menu_bayut_root"
               name="Bayut Integration"
               web_icon="bayut_lead_integration,static/description/icon.svg"
-              groups="sales_team.group_sale_salesman"
+              groups="bayut_lead_integration.group_bayut_user"
               sequence="45"/>
 
     <menuitem id="menu_bayut_listings_main"
@@ -181,6 +181,6 @@
               name="Settings"
               parent="menu_bayut_root"
               action="crm.crm_config_settings_action"
-              groups="sales_team.group_sale_manager"
+              groups="base.group_system"
               sequence="50"/>
 </odoo>

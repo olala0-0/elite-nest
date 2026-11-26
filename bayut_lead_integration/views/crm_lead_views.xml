@@ -7,6 +7,7 @@
         <field name="arch" type="xml">
             <xpath expr="//notebook" position="inside">
                 <page string="Bayut Integration" name="bayut_integration"
+                      groups="bayut_lead_integration.group_bayut_user"
                       invisible="not bayut_lead_id and not bayut_lead_type and not bayut_property_ref and not bayut_listing_id">
                     <group>
                         <group string="Bayut Lead Metadata">
@@ -30,7 +31,7 @@
                 <field name="bayut_lead_id"/>
                 <field name="bayut_property_ref"/>
                 <field name="bayut_lead_type"/>
-                <field name="bayut_listing_id"/>
+                <field name="bayut_listing_id" groups="bayut_lead_integration.group_bayut_user"/>
             </xpath>
             <xpath expr="//search" position="inside">
                 <separator/>

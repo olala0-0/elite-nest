@@ -304,7 +304,7 @@ class BayutListing(models.Model):
             })
             return
         if ok and isinstance(body, dict) and isinstance(body.get("data"), dict):
-            self.with_context(skip_bayut_auto_sync=True).write(connector._bayut_status_vals(body["data"]))
+            self.with_context(skip_bayut_auto_sync=True).write(connector._bayut_status_vals(body["data"], self))
             connector._bayut_import_images(self, body["data"])
 
     def _bayut_send(self, publish):

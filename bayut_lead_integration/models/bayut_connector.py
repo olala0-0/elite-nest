@@ -627,8 +627,11 @@ class BayutConnector(models.Model):
         return states, ("published" if live else "unpublished")
 
     @api.model
-    def _bayut_status_vals(self, prop):
-        """Odoo listing values that mirror Bayut's view of a property (status, permit, location)."""
+    def _bayut_status_vals(self, prop, listing=None):
+        """Odoo listing values that mirror Bayut's view of a property (status, permit, location).
+
+        Permit number and location are only filled in when the Odoo listing has none: what the
+        user typed in Odoo is never overwritten by a refresh (it is what the next update sends)."""
         portals, state = self._bayut_portal_states(prop)
         portal_state = portals.get(ACTIVE_PORTAL)
         if state != "published" and portal_state:
@@ -649,7 +652,7 @@ class BayutConnector(models.Model):
                                    portals=portal_text,
                                    permit=" - ".join(x for x in (permit.get("status"), permit.get("comment")) if x) or "-"),
         }
-        if (permit.get("number") or "").strip():
+        if (permit.get("number") or "").strip() and not (listing and listing.permit_number):
             vals["permit_number"] = permit["number"].strip()
         # Details Odoo does not edit but must send back on update (Bayut PUT replaces everything)
         rental = prop.get("rental_details") if isinstance(prop.get("rental_details"), dict) else {}
@@ -662,7 +665,7 @@ class BayutConnector(models.Model):
             "furnishing_status": prop.get("furnishing_status"),
         })
         location = self.env["bayut.location"]._upsert_from_bayut(prop.get("location") or {})
-        if location:
+        if location and not (listing and listing.bayut_location):
             vals["bayut_location"] = location.id
             vals["bayut_location_id"] = str(location.bayut_id)
         return vals
@@ -776,7 +779,7 @@ class BayutConnector(models.Model):
             if not listing and prop.get("reference"):
                 listing = Listing.search([("reference_number", "=", prop["reference"])], limit=1)
 
-            sync_vals = self._bayut_status_vals(prop)
+            sync_vals = self._bayut_status_vals(prop, listing or None)
             if not listing:
                 listing = Listing.create({**self._odoo_vals_from_bayut(prop), **sync_vals})
                 self._bayut_import_images(listing, prop)

@@ -144,7 +144,8 @@ class BayutConnector(models.Model):
     def _compute_endpoints_and_counts(self):
         base_url = self.env["ir.config_parameter"].sudo().get_param("web.base.url", "").rstrip("/")
         Listing = self.env["bayut.listing"].sudo()
-        Lead = self.env["crm.lead"].sudo()
+        # Count leads with the user's own access so the button matches what the list shows
+        Lead = self.env["crm.lead"]
         total_listings = Listing.search_count([])
         pub_listings = Listing.search_count([("state", "=", "published")])
         total_leads = Lead.search_count([("bayut_lead_id", "!=", False)])
@@ -251,6 +252,12 @@ class BayutConnector(models.Model):
         except (ValueError, TypeError):
             sync_interval = 10
 
+        # Company for new leads: the setting, else the sales team's company
+        company_raw = params.get_param("bayut_lead_integration.bayut_company_id")
+        company_id = int(company_raw) if company_raw and str(company_raw).isdigit() else False
+        if not company_id and team_id:
+            company_id = self.env["crm.team"].sudo().browse(team_id).company_id.id or False
+
         return {
             "api_url": api_url,
             "api_key": api_key,
@@ -258,8 +265,24 @@ class BayutConnector(models.Model):
             "listing_api_key": listing_api_key,
             "team_id": team_id,
             "user_id": user_id,
+            "company_id": company_id,
             "sync_interval": sync_interval,
         }
+
+    @api.model
+    def _bayut_move_leads_to_company(self, company):
+        """Move every Bayut lead (active or not) that sits in another company to `company`."""
+        leads = self.env["crm.lead"].sudo().with_context(active_test=False).search([
+            ("bayut_lead_id", "!=", False),
+            "|", ("company_id", "=", False), ("company_id", "!=", company.id),
+        ])
+        # A sales team of the other company is not allowed on the moved lead
+        wrong_team = leads.filtered(lambda l: l.team_id.company_id and l.team_id.company_id != company)
+        if wrong_team:
+            wrong_team.write({"team_id": False})
+        if leads:
+            leads.write({"company_id": company.id})
+        return len(leads)
 
     # =========================================================================
     # 1. ISOLATED BAYUT LEAD PAYLOAD PARSER
@@ -1224,6 +1247,8 @@ class BayutConnector(models.Model):
                 if matched_property and "property_id" in LeadModel._fields:
                     lead_vals["property_id"] = matched_property.id
 
+                if cfg.get("company_id"):
+                    lead_vals["company_id"] = cfg["company_id"]
                 with self.env.cr.savepoint():
                     new_lead = LeadModel.create(lead_vals)
                 if lead_type in INTENT_SIGNAL_TYPES:

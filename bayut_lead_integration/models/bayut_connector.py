@@ -3,6 +3,7 @@ import hashlib
 import hmac
 import logging
 import re
+import time
 from datetime import datetime, timedelta, timezone
 
 import requests
@@ -12,10 +13,20 @@ from odoo import api, fields, models, _
 _logger = logging.getLogger(__name__)
 
 DEFAULT_BAYUT_TOKEN = "96522341|rB11mebGgqYvMIIquvTlT9T23ESdNv3mmjSGbFq876729d9f"
-DEFAULT_LEADS_API_URL = "https://leads-api.bayut.com/"
+BAYUT_API_BASE = "https://api.bayut.com/v1"
+DEFAULT_LEADS_API_URL = BAYUT_API_BASE + "/leads"
 DEFAULT_LISTING_API_URL = "https://api.bayut.com/v1/listings"
 
+# Old placeholder value stored in existing databases -> replaced by DEFAULT_LEADS_API_URL at runtime
 PLACEHOLDER_LEADS_HOSTS = ("leads-api.bayut.com",)
+
+# Lead pull (backup to the push webhook)
+PULL_CHANNELS = ("phone", "whatsapp")
+PULL_PER_PAGE = 100
+PULL_LOOKBACK_DAYS = 3        # re-pull recent days: Bayut backfills enriched data after creation
+PULL_INITIAL_DAYS = 60        # first run: recover leads received before the webhook was registered
+RATE_LIMIT_MAX_RETRIES = 2
+RATE_LIMIT_MAX_WAIT = 60      # seconds
 
 # Push API (Bayut / dubizzle -> Odoo): portal -> (signature header, secret config parameter)
 PUSH_PORTALS = {
@@ -197,6 +208,8 @@ class BayutConnector(models.Model):
             or connector.api_url
             or DEFAULT_LEADS_API_URL
         ).strip()
+        if any(host in api_url for host in PLACEHOLDER_LEADS_HOSTS):
+            api_url = DEFAULT_LEADS_API_URL
         api_key = (
             params.get_param("bayut_lead_integration.bayut_api_key")
             or connector.api_key
@@ -247,6 +260,54 @@ class BayutConnector(models.Model):
     # =========================================================================
     # 1. ISOLATED BAYUT LEAD PAYLOAD PARSER
     # =========================================================================
+    # =========================================================================
+    # HTTP helper: Bearer auth, rate-limit retry, honest result
+    # =========================================================================
+    @api.model
+    def _bayut_request(self, method, url, token, params=None, json_body=None, timeout=30):
+        """Call the Bayut Profolio API.
+
+        Returns (ok, status_code, body) where ok is True only for a 2xx response.
+        On HTTP 429 waits `retry_after` seconds (capped) and retries. Never raises.
+        """
+        headers = {"Authorization": f"Bearer {token}", "Accept": "application/json"}
+        if json_body is not None:
+            headers["Content-Type"] = "application/json"
+        for attempt in range(RATE_LIMIT_MAX_RETRIES + 1):
+            try:
+                resp = requests.request(method, url, headers=headers, params=params,
+                                        json=json_body, timeout=timeout)
+            except requests.exceptions.RequestException as exc:
+                return False, 0, {"message": str(exc)}
+            try:
+                body = resp.json() if resp.content else {}
+            except ValueError:
+                body = {"message": resp.text[:500]}
+            if resp.status_code == 429 and attempt < RATE_LIMIT_MAX_RETRIES:
+                wait = body.get("retry_after") if isinstance(body, dict) else None
+                try:
+                    wait = min(max(int(wait or 2 ** (attempt + 1)), 1), RATE_LIMIT_MAX_WAIT)
+                except (TypeError, ValueError):
+                    wait = 2 ** (attempt + 1)
+                _logger.info("Bayut rate limit hit on %s, retrying in %ss", url, wait)
+                time.sleep(wait)
+                continue
+            return 200 <= resp.status_code < 300, resp.status_code, body
+        return False, 429, body
+
+    @staticmethod
+    def _bayut_error_text(status, body):
+        """Short human-readable error from a Bayut error response (incl. 422 field errors)."""
+        if not isinstance(body, dict):
+            return f"HTTP {status}: {str(body)[:300]}"
+        msg = body.get("message") or body.get("error") or ""
+        errors = body.get("errors")
+        if isinstance(errors, dict):
+            details = "; ".join(f"{k}: {', '.join(map(str, v)) if isinstance(v, list) else v}"
+                                for k, v in errors.items())
+            msg = f"{msg} ({details})" if msg else details
+        return f"HTTP {status}: {msg or 'no error message'}"[:1000]
+
     @staticmethod
     def _str(value):
         return "" if value is None or value is False else str(value).strip()
@@ -284,9 +345,13 @@ class BayutConnector(models.Model):
           * WhatsApp lead (dubizzle): id, enquirer{name,phone_number,contact_link},
                                       listing{url,reference}, received_at
           * Legacy flat format (client_name / email / phone / property_ref ...).
+          * Pull API (GET /v1/leads): {lead{id,source,channel,date_time}, inquirer_details,
+                                      agent_details, listing_details, call_details?} -> _parse_pull_lead
         """
         if not isinstance(raw_lead, dict):
             return {}
+        if isinstance(raw_lead.get("lead"), dict):
+            return self._parse_pull_lead(raw_lead)
         s = self._str
 
         def _sub(key):
@@ -340,7 +405,7 @@ class BayutConnector(models.Model):
             }
 
         return {
-            "bayut_lead_id": s(raw_id),
+            "bayut_lead_id": self._normalize_lead_id(raw_id),
             "portal": portal,
             "lead_type": lead_type,
             "client_name": s(
@@ -373,6 +438,67 @@ class BayutConnector(models.Model):
             ),
         }
 
+    @staticmethod
+    def _normalize_lead_id(raw_id):
+        """Pull API ids are '<channel>|<id>' (e.g. 'phone|b320a3db-...'), push ids are the bare id.
+        Store the bare id so a lead received both ways is only created once."""
+        raw_id = "" if raw_id is None else str(raw_id).strip()
+        return raw_id.split("|", 1)[1].strip() if "|" in raw_id else raw_id
+
+    @api.model
+    def _parse_pull_lead(self, item):
+        """Normalize one record of GET /v1/leads (phone or WhatsApp)."""
+        s = self._str
+
+        def _sub(obj, key):
+            val = obj.get(key) if isinstance(obj, dict) else None
+            return val if isinstance(val, dict) else {}
+
+        lead = _sub(item, "lead")
+        inquirer = _sub(item, "inquirer_details")
+        agent = _sub(item, "agent_details")
+        listing = _sub(item, "listing_details")
+        call = _sub(item, "call_details")
+        callback = _sub(call, "callback")
+
+        channel = s(lead.get("channel")).lower()
+        call_info = {}
+        if call:
+            call_info = {
+                "status": s(call.get("status")),
+                "pickup": s(call.get("pickup_time") or call.get("time")),
+                "duration": s(call.get("connected_duration")) or None,
+                "total_duration": s(call.get("total_duration")) or None,
+                "proxy_number": s(call.get("proxy_number")),
+                "recording_url": s(call.get("recording_url")),
+                "callback": (
+                    f"{s(callback.get('status'))} at {s(callback.get('date_time'))}, "
+                    f"{callback.get('duration')}s talk"
+                ) if callback else "",
+                "callback_recording_url": s(callback.get("recording_url")),
+            }
+        phone = inquirer.get("cell") or inquirer.get("phone")
+        return {
+            "bayut_lead_id": self._normalize_lead_id(lead.get("id")),
+            "portal": s(lead.get("source") or "bayut").lower(),
+            "lead_type": "call" if channel == "phone" else (channel or "email"),
+            "client_name": s(inquirer.get("name")),
+            "email": s(inquirer.get("email")),
+            "phone": self._format_phone(phone) if phone else "",
+            "message": s(inquirer.get("message")),
+            "property_ref": s(listing.get("reference")) or "N/A",
+            "listing_url": "",
+            "bayut_listing_external_id": s(listing.get("id")),
+            "contact_link": "",
+            "intent": "",
+            "enquirer_type": s(inquirer.get("enquirer_type")),
+            "agent_name": s(agent.get("name")),
+            "agent_email": s(agent.get("email")),
+            "agent_phone": s(agent.get("phone")),
+            "call_info": call_info,
+            "created_at": s(lead.get("date_time")),
+        }
+
     @api.model
     def _find_agent_user(self, agent_email):
         """Map the portal agent (by email) to an internal Odoo user."""
@@ -394,6 +520,8 @@ class BayutConnector(models.Model):
             lines.append(_("Received at: %s", parsed["created_at"]))
         if parsed.get("intent"):
             lines.append(_("Enquirer intent: %s", parsed["intent"]))
+        if parsed.get("enquirer_type"):
+            lines.append(_("Enquirer type: %s", parsed["enquirer_type"]))
         if parsed.get("listing_url"):
             lines.append(_("Listing: %s", parsed["listing_url"]))
         if parsed.get("contact_link"):
@@ -411,6 +539,12 @@ class BayutConnector(models.Model):
                 total=call.get("total_duration") if call.get("total_duration") is not None else "-",
                 proxy=call.get("proxy_number") or "-",
             ))
+            if call.get("recording_url"):
+                lines.append(_("Call recording: %s", call["recording_url"]))
+            if call.get("callback"):
+                lines.append(_("Callback: %s", call["callback"]))
+            if call.get("callback_recording_url"):
+                lines.append(_("Callback recording: %s", call["callback_recording_url"]))
         if parsed["lead_type"] in INTENT_SIGNAL_TYPES:
             lines.append(INTENT_SIGNAL_NOTE)
         return "\n".join(lines)
@@ -797,82 +931,38 @@ class BayutConnector(models.Model):
             })
             return {"success": False, "message": msg}
 
-        if "leads-api.bayut.com" in (cfg["api_url"] or ""):
-            msg = _(
-                "Bayut Listing API Key is verified and Profolio Feeds (XML/JSON) are active! "
-                "Note: Bayut Leads API URL is currently using the placeholder ('%s'). "
-                "Bayut support has completed Listing API integration, but has not yet provided the official Leads API endpoint URL. "
-                "Once Bayut provides the real Leads API URL, enter it in Settings or Connector Hub. "
-                "If Bayut sends leads via Webhook, provide them with your Webhook URL: %s"
-            ) % (cfg["api_url"], connector.webhook_url)
-            LogModel.create({
-                "connector_id": connector.id,
-                "sync_datetime": fields.Datetime.now(),
-                "sync_type": "test",
-                "status": "success",
-                "message": msg,
-            })
-            return {"success": True, "message": msg}
-
-        since_dt = fields.Datetime.now() - timedelta(hours=1)
-        headers = {
-            "Authorization": f"Bearer {token}",
-            "Accept": "application/json",
-        }
-        params = {
-            "since": since_dt.strftime("%Y-%m-%dT%H:%M:%SZ"),
-        }
-
-        try:
-            response = requests.get(
-                cfg["api_url"],
-                headers=headers,
-                params=params,
-                timeout=15,
+        # Real check: an authenticated call that every valid Profolio token can make
+        ok, status, body = self._bayut_request(
+            "GET", f"{BAYUT_API_BASE}/users", token, params={"per_page": 50}
+        )
+        if ok:
+            users = body.get("data") or [] if isinstance(body, dict) else []
+            names = ", ".join(
+                f"{(u.get('name') or {}).get('en') or u.get('id')} (ID {u.get('id')})" for u in users[:5]
             )
-            if response.status_code == 200:
-                msg = _(
-                    "Successfully connected to the Bayut API (HTTP 200 OK). "
-                    "Listing Feed URLs are also active at %s"
-                ) % connector.xml_feed_url
-                LogModel.create({
-                    "connector_id": connector.id,
-                    "sync_datetime": fields.Datetime.now(),
-                    "sync_type": "test",
-                    "status": "success",
-                    "message": msg,
-                })
-                return {"success": True, "message": msg}
-
             msg = _(
-                "Bayut API token is configured and Live Profolio XML/JSON Feed (%s) is ready! "
-                "(Direct GET %s returned HTTP %s)."
-            ) % (connector.xml_feed_url, cfg["api_url"], response.status_code)
-            LogModel.create({
-                "connector_id": connector.id,
-                "sync_datetime": fields.Datetime.now(),
-                "sync_type": "test",
-                "status": "success",
-                "message": msg,
-            })
-            return {"success": True, "message": msg}
-        except requests.exceptions.RequestException as exc:
-            msg = _(
-                "Bayut Listing API Key is saved and Live Profolio XML/JSON Feed (%s) is active. "
-                "(Outbound test to %s note: %s)"
-            ) % (connector.xml_feed_url, cfg["api_url"], str(exc))
-            LogModel.create({
-                "connector_id": connector.id,
-                "sync_datetime": fields.Datetime.now(),
-                "sync_type": "test",
-                "status": "success",
-                "message": msg,
-            })
-            return {"success": True, "message": msg}
+                "Connected to Bayut Profolio (HTTP %(status)s). Bayut users in your agency: %(names)s. "
+                "Leads arrive by webhook at %(hook)s and are pulled as backup from %(pull)s.",
+                status=status, names=names or _("none returned"),
+                hook=connector.webhook_url, pull=cfg["api_url"],
+            )
+        else:
+            msg = _("Bayut Profolio connection FAILED: %s. Check the API token in Settings.",
+                    self._bayut_error_text(status, body))
+        LogModel.create({
+            "connector_id": connector.id,
+            "sync_datetime": fields.Datetime.now(),
+            "sync_type": "test",
+            "status": "success" if ok else "error",
+            "message": msg,
+        })
+        return {"success": ok, "message": msg}
 
     @api.model
-    def _process_incoming_leads_payload(self, payload, source="cron", since_str="", portal=None, note=""):
-        """Process a parsed JSON payload containing Bayut leads and create `crm.lead` records."""
+    def _process_incoming_leads_payload(self, payload, source="cron", since_str="", portal=None, note="",
+                                        write_log=True):
+        """Process a parsed JSON payload containing Bayut leads and create `crm.lead` records.
+        With write_log=False no sync log is written (the caller aggregates the counts)."""
         connector = self._get_connector()
         cfg = self._get_config_settings()
         sync_start = fields.Datetime.now()
@@ -915,10 +1005,12 @@ class BayutConnector(models.Model):
                 message = parsed["message"]
                 created_at = parsed["created_at"]
 
-                # 1. Primary De-duplication: skip if a crm.lead with the same bayut_lead_id exists
+                # 1. Primary De-duplication: skip if this Bayut id already created a lead
+                #    or was already attached to one as extra activity (push + pull overlap)
                 if bayut_lead_id:
-                    existing_by_id = LeadModel.search(
-                        [("bayut_lead_id", "=", bayut_lead_id)], limit=1
+                    existing_by_id = LeadModel.with_context(active_test=False).search(
+                        ["|", ("bayut_lead_id", "=", bayut_lead_id),
+                         ("bayut_activity_ids", "ilike", f"|{bayut_lead_id}|")], limit=1
                     )
                     if existing_by_id:
                         leads_skipped += 1
@@ -935,6 +1027,10 @@ class BayutConnector(models.Model):
                 if same_property_lead and same_property_lead.active:
                     if bayut_lead_id and not same_property_lead.bayut_lead_id:
                         same_property_lead.write({"bayut_lead_id": bayut_lead_id})
+                    elif bayut_lead_id:
+                        same_property_lead.write({
+                            "bayut_activity_ids": f"{same_property_lead.bayut_activity_ids or '|'}{bayut_lead_id}|"
+                        })
                     note_body = _(
                         "Additional Bayut activity received (%(type)s) for property %(ref)s: %(msg)s",
                         type=lead_type,
@@ -993,6 +1089,12 @@ class BayutConnector(models.Model):
                 leads_failed += 1
                 _logger.exception("Failed to import individual Bayut lead %s: %s", raw_item, item_exc)
 
+        counts = {"created": leads_created, "attached": leads_attached,
+                  "skipped": leads_skipped, "failed": leads_failed}
+        if not write_log:
+            return {"status": "error" if leads_failed else "success", "leads_created": leads_created,
+                    "counts": counts, "message": ""}
+
         connector.sudo().with_context(skip_param_sync=True).write({"last_sync": sync_start})
 
         summary_msg = _(
@@ -1022,109 +1124,92 @@ class BayutConnector(models.Model):
 
     @api.model
     def cron_sync_leads(self):
-        """Scheduled & manual synchronization entry point for Bayut Leads.
-        Calls the Bayut Leads API via GET with Authorization: Bearer <key> and
-        since=<last_sync or 24h ago>, creates deduplicated CRM leads, and records a sync log.
-        Never raises unhandled exceptions so the cron job never crashes.
+        """Backup pull of Bayut leads (GET /v1/leads) next to the real-time push webhook.
+
+        Pulls phone + WhatsApp leads (is_lead=1) for the last PULL_LOOKBACK_DAYS days
+        (PULL_INITIAL_DAYS on the very first run, to recover leads received before the webhook
+        existed), page by page. Leads already received through the webhook are skipped by id.
+        Writes ONE sync log: success only when every request returned 2xx. Never raises.
         """
         connector = self._get_connector()
         cfg = self._get_config_settings()
+        params_store = self.env["ir.config_parameter"].sudo()
         sync_start = fields.Datetime.now()
         LogModel = self.env["bayut.sync.log"].sudo()
 
-        if not cfg["api_url"] or not cfg["api_key"]:
-            msg = _(
-                "Bayut Sync skipped: Bayut API URL or API Key is not configured."
-            )
-            _logger.warning(msg)
-            LogModel.create({
-                "connector_id": connector.id,
-                "sync_datetime": sync_start,
-                "sync_type": "leads",
-                "status": "error",
-                "leads_created": 0,
-                "message": msg,
-            })
+        if not cfg["api_key"]:
+            msg = _("Bayut lead pull skipped: no Bayut API token configured in Settings.")
+            LogModel.create({"connector_id": connector.id, "sync_datetime": sync_start,
+                             "sync_type": "leads", "status": "error", "message": msg})
             return {"status": "error", "leads_created": 0, "message": msg}
 
-        if any(host in (cfg["api_url"] or "") for host in PLACEHOLDER_LEADS_HOSTS):
-            # Leads arrive via the Push API (webhook). Polling is optional and only runs
-            # once a real V1 leads URL is configured -> skip quietly, no error log spam.
-            msg = _(
-                "Lead polling is disabled (no Leads API URL configured). Leads are received in real time "
-                "via the Push API webhooks: %(bayut)s and %(dubizzle)s",
-                bayut=connector.webhook_url,
-                dubizzle=connector.dubizzle_webhook_url,
-            )
-            _logger.debug(msg)
-            return {"status": "skipped", "leads_created": 0, "message": msg}
+        first_run = not params_store.get_param("bayut_lead_integration.leads_pull_done")
+        days = PULL_INITIAL_DAYS if first_run else PULL_LOOKBACK_DAYS
+        today = fields.Date.context_today(self)
+        date_from = today - timedelta(days=days)
+        totals = {"created": 0, "attached": 0, "skipped": 0, "failed": 0}
+        fetched = 0
+        errors = []
 
-        since_dt = connector.last_sync or (sync_start - timedelta(hours=24))
-        since_str = since_dt.strftime("%Y-%m-%dT%H:%M:%SZ")
+        for channel in PULL_CHANNELS:
+            page = 1
+            while True:
+                query = {
+                    "channel": channel,
+                    "is_lead": 1,
+                    "created_from": date_from.isoformat(),
+                    "created_to": today.isoformat(),
+                    "page": page,
+                    "per_page": PULL_PER_PAGE,
+                }
+                if channel == "whatsapp":
+                    query["target"] = "listing"
+                ok, status, body = self._bayut_request("GET", cfg["api_url"], cfg["api_key"], params=query)
+                if not ok:
+                    errors.append(f"{channel} page {page}: {self._bayut_error_text(status, body)}")
+                    break
+                items = body.get("data") if isinstance(body, dict) else None
+                if not items:
+                    break
+                fetched += len(items)
+                res = self._process_incoming_leads_payload(
+                    items, source="pull", write_log=False
+                )
+                for k, v in res.get("counts", {}).items():
+                    totals[k] += v
+                meta = body.get("meta") or {}
+                if page * PULL_PER_PAGE >= int(meta.get("total") or 0) or len(items) < PULL_PER_PAGE:
+                    break
+                page += 1
 
-        headers = {
-            "Authorization": f"Bearer {cfg['api_key']}",
-            "Accept": "application/json",
+        ok_run = not errors
+        if ok_run:
+            connector.sudo().with_context(skip_param_sync=True).write({"last_sync": sync_start})
+            if first_run:
+                params_store.set_param("bayut_lead_integration.leads_pull_done", "1")
+
+        msg = _(
+            "Lead pull (%(frm)s to %(to)s): %(fetched)d received from Bayut, %(created)d new lead(s) created, "
+            "%(attached)d added to existing leads, %(skipped)d already in Odoo, %(failed)d failed.",
+            frm=date_from.isoformat(), to=today.isoformat(), fetched=fetched, **totals,
+        )
+        if errors:
+            msg = f"{msg} " + _("Errors: %s", " | ".join(errors))
+        # Quiet runs (nothing new, no error) are not logged, to keep Sync Logs readable
+        if errors or totals["created"] or totals["attached"] or totals["failed"] or first_run:
+            LogModel.create({
+                "connector_id": connector.id,
+                "sync_datetime": sync_start,
+                "sync_type": "leads",
+                "status": "success" if ok_run and not totals["failed"] else "error",
+                "leads_created": totals["created"],
+                "message": msg,
+            })
+        return {
+            "status": "success" if ok_run else "error",
+            "leads_created": totals["created"],
+            "message": msg,
         }
-        params = {
-            "since": since_str,
-        }
-
-        try:
-            response = requests.get(
-                cfg["api_url"],
-                headers=headers,
-                params=params,
-                timeout=30,
-            )
-            response.raise_for_status()
-            payload = response.json()
-        except requests.exceptions.RequestException as exc:
-            err_str = str(exc)
-            if "Failed to resolve" in err_str or "NameResolutionError" in err_str:
-                error_msg = _(
-                    "Unable to resolve host for '%s'. This indicates Bayut has not yet provided the official Leads API endpoint. "
-                    "Once received from Bayut support, update the Leads API URL in Settings or Connector Hub. "
-                    "Alternatively, Bayut can push leads directly to your Webhook URL: %s"
-                ) % (cfg["api_url"], connector.webhook_url)
-            else:
-                error_msg = _("Bayut Leads API connection error: %s") % err_str
-            _logger.warning("Bayut Leads sync note: %s", error_msg)
-            LogModel.create({
-                "connector_id": connector.id,
-                "sync_datetime": sync_start,
-                "sync_type": "leads",
-                "status": "error",
-                "leads_created": 0,
-                "message": error_msg,
-            })
-            return {"status": "error", "leads_created": 0, "message": error_msg}
-        except ValueError as exc:
-            error_msg = _("Bayut API returned invalid JSON response: %s") % str(exc)
-            _logger.error("Bayut Leads JSON decode error: %s", error_msg)
-            LogModel.create({
-                "connector_id": connector.id,
-                "sync_datetime": sync_start,
-                "sync_type": "leads",
-                "status": "error",
-                "leads_created": 0,
-                "message": error_msg,
-            })
-            return {"status": "error", "leads_created": 0, "message": error_msg}
-        except Exception as exc:
-            error_msg = _("Unexpected error calling Bayut API: %s") % str(exc)
-            _logger.exception("Unexpected error in Bayut cron_sync_leads")
-            LogModel.create({
-                "connector_id": connector.id,
-                "sync_datetime": sync_start,
-                "sync_type": "leads",
-                "status": "error",
-                "leads_created": 0,
-                "message": error_msg,
-            })
-            return {"status": "error", "leads_created": 0, "message": error_msg}
-
-        return self._process_incoming_leads_payload(payload, source="cron", since_str=since_str)
 
     # =========================================================================
     # CONNECTOR FORM BUTTON ACTIONS

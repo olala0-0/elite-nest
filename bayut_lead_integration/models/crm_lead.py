@@ -25,6 +25,12 @@ class CrmLead(models.Model):
         copy=False,
         help="Property reference code associated with the Bayut listing.",
     )
+    bayut_activity_ids = fields.Char(
+        string="Other Bayut Lead IDs",
+        copy=False,
+        readonly=True,
+        help="Bayut lead ids added to this lead as extra activity ('|id1|id2|'), used to avoid duplicates.",
+    )
     bayut_listing_id = fields.Many2one(
         comodel_name="bayut.listing",
         string="Bayut Listing",

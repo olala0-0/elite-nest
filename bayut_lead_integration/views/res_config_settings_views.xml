@@ -30,8 +30,8 @@
                             <div class="mt16 d-flex gap-2">
                                 <button name="action_bayut_sync_listings_now"
                                         type="object"
-                                        string="Sync Listings Now"
-                                        icon="fa-cloud-upload"
+                                        string="Refresh Listings from Bayut"
+                                        icon="fa-cloud-download"
                                         class="btn-primary"/>
                             </div>
                         </div>

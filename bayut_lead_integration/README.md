@@ -1,38 +1,31 @@
 # Bayut Lead & Listing Integration (`bayut_lead_integration`)
 
-Standalone Odoo application that manages **Bayut & Dubizzle Profolio Property Listings** (`bayut.listing`) and imports **Bayut Leads** (`crm.lead`) into Odoo CRM.
+Connects Odoo with **Bayut / dubizzle Profolio**:
 
----
+- **Leads → Odoo CRM**
+  - Real time through the Push API webhooks:
+    - `POST /bayut/webhook/leads` (header `X-Bayut-Signature`)
+    - `POST /dubizzle/webhook/leads` (header `X-dubizzle-Signature`)
+    - Signature = `md5(secret_key + raw_body)`; the secret is entered in Settings.
+  - Backup pull from `GET https://api.bayut.com/v1/leads` (phone + WhatsApp, `is_lead=1`).
+    First run looks back 60 days, then the last 3 days on every run. Duplicates are skipped.
+- **Listings**
+  - Odoo reads the real status of your listings from `GET https://api.bayut.com/v1/properties`
+    (every 15 minutes, or **Refresh from Bayut** in the Connector Hub).
+  - Publishing from Odoo is not connected yet: create, edit and publish listings in Profolio.
 
-## 1. Why This Standalone App Is Needed
+## Setup
 
-When the Bayut team activates **Listing API Integration** on an agency's **Profolio™** account, manual editing of property listings inside Profolio is locked and all listing creation, pricing, photo updates, DLD permits, and publishing must be done from the CRM.
+1. **Settings → CRM → Bayut**: enter the Profolio API token (Bayut Leads API Key / Listing API Key)
+   and the Push secret keys. Tokens are never stored in the module code.
+2. Give the webhook URLs to Bayut support (support@bayut.com) and dubizzle (ps-reply@dubizzle.com).
+3. **Connector Hub → Test Connection** must report "Connected to Bayut Profolio (HTTP 200)".
 
-This module works **100% standalone** (requiring only `crm`) and provides:
-1. **Top-Level "Bayut Integration" App** in the Odoo App Switcher:
-   - **Listings (`bayut.listing`)**: Create, edit, price, upload photos, set DLD/RERA Permit numbers, and click **Publish to Bayut Profolio** / **Push Update to Bayut** / **Unpublish from Bayut**.
-   - **Bayut Leads (`crm.lead`)**: View and manage all incoming Bayut inquiries, call logs, WhatsApp leads, and intent signals (`phone_view`, `sms_click`).
-   - **Connector Hub (`bayut.connector`)**: Pre-loaded with your Bayut Listing API Key (`96522341|rB11mebGgqYvMIIquvTlT9T23ESdNv3mmjSGbFq876729d9f`), live XML/JSON Feed URLs, Webhook URL, **Test Connection**, **Sync Listings to Bayut**, **Sync Leads Now**, and one-click **Import Units from Property Management**.
-   - **Sync Logs (`bayut.sync.log`)**: Complete execution history for both Listing pushes and Lead syncs.
-2. **Live Profolio XML & JSON Feed Endpoints**:
-   - `GET /bayut/feed/listings.xml`
-   - `GET /bayut/feed/listings.json`
-   - `POST /bayut/webhook/leads`
+## Access
 
----
+Only members of the **Bayut Integration** group (administrators by default) see the app.
 
-## 2. Pre-Configured Token & Setup
+## API reference
 
-- **Pre-loaded Listing & Leads API Key**:
-  `96522341|rB11mebGgqYvMIIquvTlT9T23ESdNv3mmjSGbFq876729d9f`
-- You can view or update the API URLs and keys at any time in:
-  - **Bayut Integration > Connector Hub**, or
-  - **Settings > CRM > Bayut Lead & Listing Integration**.
-
----
-
-## 3. Adapting Payload Schemas (`models/bayut_connector.py`)
-
-All payload mapping is isolated in two methods inside [`models/bayut_connector.py`](models/bayut_connector.py):
-- `_parse_lead(self, raw_lead)` — parses incoming lead dictionaries from Bayut.
-- `_prepare_listing_payload(self, listing, action="publish")` — formats outgoing property listing payloads for Bayut Profolio.
+Base URL `https://api.bayut.com/v1`, header `Authorization: Bearer <token>`.
+Rate limit is read from the `X-RateLimit-*` headers; HTTP 429 is retried after `retry_after`.

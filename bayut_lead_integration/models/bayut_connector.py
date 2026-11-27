@@ -12,10 +12,12 @@ from odoo import api, fields, models, _
 
 _logger = logging.getLogger(__name__)
 
-DEFAULT_BAYUT_TOKEN = "96522341|rB11mebGgqYvMIIquvTlT9T23ESdNv3mmjSGbFq876729d9f"
+# The Profolio API token is NEVER stored in code: it lives only in Settings
+# (ir.config_parameter bayut_lead_integration.bayut_api_key / bayut_listing_api_key).
 BAYUT_API_BASE = "https://api.bayut.com/v1"
 DEFAULT_LEADS_API_URL = BAYUT_API_BASE + "/leads"
-DEFAULT_LISTING_API_URL = "https://api.bayut.com/v1/listings"
+DEFAULT_LISTING_API_URL = BAYUT_API_BASE + "/properties"
+OLD_LISTING_API_URLS = ("https://api.bayut.com/v1/listings",)
 
 # Old placeholder value stored in existing databases -> replaced by DEFAULT_LEADS_API_URL at runtime
 PLACEHOLDER_LEADS_HOSTS = ("leads-api.bayut.com",)
@@ -59,7 +61,6 @@ class BayutConnector(models.Model):
     )
     api_key = fields.Char(
         string="Bayut Leads API Key",
-        default=DEFAULT_BAYUT_TOKEN,
         help="Bearer API token used for Bayut Leads API authentication.",
     )
     listing_api_url = fields.Char(
@@ -69,7 +70,6 @@ class BayutConnector(models.Model):
     )
     listing_api_key = fields.Char(
         string="Bayut Listing API Key",
-        default=DEFAULT_BAYUT_TOKEN,
         help="Bearer API token provided by the Bayut team for Profolio Listing integration.",
     )
     default_team_id = fields.Many2one(
@@ -166,9 +166,9 @@ class BayutConnector(models.Model):
             connector = self.sudo().create({
                 "name": "Bayut Profolio Connector",
                 "api_url": params.get_param("bayut_lead_integration.bayut_api_url") or DEFAULT_LEADS_API_URL,
-                "api_key": params.get_param("bayut_lead_integration.bayut_api_key") or DEFAULT_BAYUT_TOKEN,
+                "api_key": params.get_param("bayut_lead_integration.bayut_api_key") or "",
                 "listing_api_url": params.get_param("bayut_lead_integration.bayut_listing_api_url") or DEFAULT_LISTING_API_URL,
-                "listing_api_key": params.get_param("bayut_lead_integration.bayut_listing_api_key") or DEFAULT_BAYUT_TOKEN,
+                "listing_api_key": params.get_param("bayut_lead_integration.bayut_listing_api_key") or "",
             })
         return connector
 
@@ -213,7 +213,7 @@ class BayutConnector(models.Model):
         api_key = (
             params.get_param("bayut_lead_integration.bayut_api_key")
             or connector.api_key
-            or DEFAULT_BAYUT_TOKEN
+            or ""
         ).strip()
 
         listing_api_url = (
@@ -221,11 +221,13 @@ class BayutConnector(models.Model):
             or connector.listing_api_url
             or DEFAULT_LISTING_API_URL
         ).strip()
+        if listing_api_url in OLD_LISTING_API_URLS:
+            listing_api_url = DEFAULT_LISTING_API_URL
         listing_api_key = (
             params.get_param("bayut_lead_integration.bayut_listing_api_key")
             or connector.listing_api_key
             or api_key
-            or DEFAULT_BAYUT_TOKEN
+            or ""
         ).strip()
 
         team_id_raw = params.get_param("bayut_lead_integration.bayut_default_team_id")
@@ -590,102 +592,183 @@ class BayutConnector(models.Model):
         using Bearer token authentication (`listing_api_key`), and update feed state.
         Never crashes on network errors; logs every operation to `bayut.sync.log`.
         """
-        connector = self._get_connector()
-        cfg = self._get_config_settings()
-        sync_time = fields.Datetime.now()
-        LogModel = self.env["bayut.sync.log"].sudo()
-
-        if listings is None:
-            listings = self.env["bayut.listing"].sudo().search([("state", "=", "published")])
-        else:
-            listings = listings.sudo()
-
-        if not listings:
-            msg = _("No Bayut listings selected to synchronize.")
-            return {"status": "error", "listings_synced": 0, "message": msg}
-
-        target_state = "unpublished" if action == "unpublish" else "published"
-        listings.with_context(skip_bayut_auto_sync=True).write({
-            "state": target_state,
-            "last_bayut_sync": sync_time,
-        })
-
-        token = cfg["listing_api_key"] or cfg["api_key"] or DEFAULT_BAYUT_TOKEN
-        api_url = cfg["listing_api_url"]
-        headers = {
-            "Authorization": f"Bearer {token}",
-            "Accept": "application/json",
-            "Content-Type": "application/json",
-        }
-
-        payload = {
-            "action": action,
-            "listings": [self._prepare_listing_payload(l, action=action) for l in listings],
-        }
-
-        api_note = ""
-        try:
-            if api_url:
-                response = requests.post(
-                    api_url,
-                    headers=headers,
-                    json=payload,
-                    timeout=20,
-                )
-                if response.status_code in (200, 201, 202):
-                    api_note = _("Direct API push succeeded (HTTP %s).") % response.status_code
-                    try:
-                        resp_json = response.json()
-                        if isinstance(resp_json, dict) and resp_json.get("listing_id") and len(listings) == 1:
-                            listings.with_context(skip_bayut_auto_sync=True).write({
-                                "bayut_external_id": str(resp_json["listing_id"])
-                            })
-                    except Exception:
-                        pass
-                else:
-                    api_note = _(
-                        "Listing saved & published in Live Bayut XML/JSON Feed (Direct Push endpoint returned HTTP %s)."
-                    ) % response.status_code
-        except requests.exceptions.RequestException as exc:
-            _logger.info("Bayut direct listing push note (feed active): %s", exc)
-            api_note = _(
-                "Listing saved & published in Live Bayut Profolio XML/JSON Feed (%s)."
-            ) % connector.xml_feed_url
-
-        summary_msg = _(
-            "%(count)d listing(s) updated (Action: %(action)s). %(note)s",
-            count=len(listings),
-            action=action.upper(),
-            note=api_note,
+        # Publishing from Odoo (POST /v1/properties + /products/attach) is not connected yet.
+        # Never change the listing state or claim success here: the real status is read
+        # from Bayut by _sync_listings_from_bayut().
+        msg = _(
+            "Publishing from Odoo to Bayut is not connected yet. Create, edit or remove the listing "
+            "in Profolio; Odoo reads the live status from Bayut every 15 minutes (or click Refresh from Bayut)."
         )
-        listings.with_context(skip_bayut_auto_sync=True).write({
-            "last_sync_message": summary_msg,
-        })
-        connector.sudo().write({"last_listing_sync": sync_time})
+        return {"status": "error", "listings_synced": 0, "message": msg}
 
-        LogModel.create({
-            "connector_id": connector.id,
-            "sync_datetime": sync_time,
-            "sync_type": "listings",
-            "status": "success",
-            "listings_synced": len(listings),
-            "message": summary_msg,
-        })
+    # =========================================================================
+    # READ THE TRUTH FROM BAYUT: GET /v1/properties -> Odoo listings
+    # =========================================================================
+    @staticmethod
+    def _bayut_text(value):
+        """Bayut returns translatable fields as {"en": ..., "ar": ...}."""
+        if isinstance(value, dict):
+            return (value.get("en") or value.get("ar") or "").strip()
+        return ("" if value is None else str(value)).strip()
+
+    @api.model
+    def _bayut_portal_states(self, prop):
+        """-> ({'bayut': 'active', 'dubizzle': 'active'}, 'published'|'unpublished')"""
+        states = {}
+        for portal in prop.get("portals") or []:
+            if isinstance(portal, dict) and portal.get("name"):
+                states[portal["name"]] = portal.get("state") or ""
+        live = any(s == "active" for s in states.values())
+        return states, ("published" if live else "unpublished")
+
+    @api.model
+    def _odoo_vals_from_bayut(self, prop):
+        """Listing values for a Bayut property that has no Odoo listing yet."""
+        t = self._bayut_text
+        purpose = t(prop.get("purpose")).lower()
+        category = prop.get("category") or {}
+        cat_title = t(category.get("title")).lower()
+        type_map = [("penthouse", "Penthouse"), ("villa", "Villa"), ("townhouse", "Townhouse"),
+                    ("hotel", "Hotel Apartment"), ("office", "Office"), ("shop", "Shop"),
+                    ("warehouse", "Warehouse")]
+        prop_type = next((v for k, v in type_map if k in cat_title), "Apartment")
+        beds = prop.get("bedrooms")
+        beds = 0 if beds in (None, -1) else min(int(beds), 7)
+        location = prop.get("location") or {}
+        crumbs = (location.get("breadcrumb") or {}).get("en") or []
+        rental = prop.get("rental_details") or {}
+        furnishing = prop.get("furnishing_status")
         return {
-            "status": "success",
-            "listings_synced": len(listings),
-            "message": summary_msg,
+            "name": t(prop.get("title"))[:255] or prop.get("reference"),
+            "reference_number": prop.get("reference"),
+            "purpose": "for-sale" if "sale" in purpose or "buy" in purpose else "for-rent",
+            "category": "commercial" if (category.get("parent_title") or "").lower() == "commercial" else "residential",
+            "property_type": prop_type,
+            "price": float(prop.get("price") or 0.0),
+            "rent_frequency": rental.get("rent_frequency") or "yearly",
+            "bedrooms": str(beds),
+            "bathrooms": int(prop.get("bathrooms") or 0),
+            "size_sqft": float(prop.get("area") or 0.0),
+            "furnished": "furnished" if furnishing == "furnished" else "unfurnished",
+            "completion_status": "off_plan" if prop.get("completion_status") == "off_plan" else "completed",
+            "city": crumbs[1] if len(crumbs) > 1 else "Dubai",
+            "community": crumbs[2] if len(crumbs) > 2 else "",
+            "sub_community": crumbs[3] if len(crumbs) > 3 else "",
+            "building_name": t(location.get("title")),
+            "bayut_location_id": str(location.get("id") or ""),
+            "description_en": t(prop.get("description")),
+            "title_ar": ((prop.get("title") or {}).get("ar") or "") if isinstance(prop.get("title"), dict) else "",
         }
 
     @api.model
+    def _sync_listings_from_bayut(self):
+        """Mirror the real Bayut status into Odoo (read-only towards Bayut).
+
+        * every Bayut property is linked to an Odoo listing (by Bayut ID, permit number or
+          reference) or created as a new Odoo listing;
+        * state = published when live on at least one portal, else unpublished;
+        * Odoo listings marked published that are NOT on Bayut go back to draft.
+        """
+        connector = self._get_connector()
+        cfg = self._get_config_settings()
+        token = cfg["listing_api_key"] or cfg["api_key"]
+        Listing = self.env["bayut.listing"].sudo().with_context(skip_bayut_auto_sync=True, active_test=False)
+        LogModel = self.env["bayut.sync.log"].sudo()
+        now = fields.Datetime.now()
+
+        if not token:
+            msg = _("Listing status sync skipped: no Bayut API token configured in Settings.")
+            LogModel.create({"connector_id": connector.id, "sync_datetime": now, "sync_type": "listings",
+                             "status": "error", "message": msg})
+            return {"status": "error", "listings_synced": 0, "message": msg}
+
+        props, page = [], 1
+        while True:
+            ok, status, body = self._bayut_request(
+                "GET", f"{BAYUT_API_BASE}/properties", token, params={"page": page, "per_page": 100}
+            )
+            if not ok:
+                msg = _("Could not read listings from Bayut: %s", self._bayut_error_text(status, body))
+                LogModel.create({"connector_id": connector.id, "sync_datetime": now, "sync_type": "listings",
+                                 "status": "error", "message": msg})
+                return {"status": "error", "listings_synced": 0, "message": msg}
+            data = body.get("data") or []
+            props.extend(data)
+            if not (body.get("links") or {}).get("next") or not data:
+                break
+            page += 1
+
+        created = linked = changed = 0
+        seen_ids = set()
+        for prop in props:
+            bayut_id = str(prop.get("id") or "")
+            if not bayut_id:
+                continue
+            seen_ids.add(bayut_id)
+            permit = ((prop.get("permit") or {}).get("number") or "").strip()
+            portals, state = self._bayut_portal_states(prop)
+            portal_text = ", ".join(f"{k}: {v}" for k, v in sorted(portals.items())) or "-"
+
+            listing = Listing.search([("bayut_external_id", "=", bayut_id)], limit=1)
+            if not listing and permit:
+                listing = Listing.search([("permit_number", "=", permit), ("bayut_external_id", "=", False)], limit=1)
+            if not listing and prop.get("reference"):
+                listing = Listing.search([("reference_number", "=", prop["reference"])], limit=1)
+
+            sync_vals = {
+                "bayut_external_id": bayut_id,
+                "state": state,
+                "active": True,
+                "last_bayut_sync": now,
+                "last_sync_message": _("Bayut status: %s", portal_text),
+            }
+            if permit:
+                sync_vals["permit_number"] = permit
+            if not listing:
+                Listing.create({**self._odoo_vals_from_bayut(prop), **sync_vals})
+                created += 1
+                continue
+            if not listing.bayut_external_id:
+                linked += 1
+            if listing.state != state or listing.bayut_external_id != bayut_id:
+                changed += 1
+            listing.write(sync_vals)
+
+        # Listings Odoo believed were live but that are not on Bayut
+        stale = Listing.search([("state", "=", "published"), "|",
+                                ("bayut_external_id", "=", False),
+                                ("bayut_external_id", "not in", list(seen_ids) or ["-"])])
+        if stale:
+            stale.write({
+                "state": "draft",
+                "last_bayut_sync": now,
+                "last_sync_message": _("Not found on Bayut: set back to Draft."),
+            })
+        # Attach Bayut leads that arrived before their listing existed in Odoo
+        Lead = self.env["crm.lead"].sudo()
+        for listing in Listing.search([("bayut_external_id", "in", list(seen_ids) or ["-"])]):
+            orphan_leads = Lead.search([("bayut_listing_id", "=", False),
+                                        ("bayut_property_ref", "=", listing.reference_number)])
+            if orphan_leads:
+                orphan_leads.write({"bayut_listing_id": listing.id})
+
+        connector.sudo().with_context(skip_param_sync=True).write({"last_listing_sync": now})
+
+        msg = _(
+            "Bayut status sync: %(total)d listing(s) on Bayut, %(created)d added to Odoo, %(linked)d linked, "
+            "%(changed)d status update(s), %(stale)d Odoo listing(s) not on Bayut set back to Draft.",
+            total=len(props), created=created, linked=linked, changed=changed, stale=len(stale),
+        )
+        if created or linked or changed or stale:
+            LogModel.create({"connector_id": connector.id, "sync_datetime": now, "sync_type": "listings",
+                             "status": "success", "listings_synced": len(props), "message": msg})
+        return {"status": "success", "listings_synced": len(props), "message": msg}
+
+    @api.model
     def cron_sync_listings(self):
-        """Scheduled cron job to sync all published listings and keep them aligned with Odoo Properties."""
+        """Scheduled job: read the real listing status from Bayut (no pushes)."""
         try:
-            self._auto_sync_from_odoo_properties()
-            published = self.env["bayut.listing"].sudo().search([("state", "=", "published")])
-            if published:
-                return self.push_listings_to_bayut(published, action="update")
-            return {"status": "success", "listings_synced": 0, "message": _("No published listings to sync.")}
+            return self._sync_listings_from_bayut()
         except Exception as exc:
             _logger.exception("Error in cron_sync_listings")
             return {"status": "error", "listings_synced": 0, "message": str(exc)}
@@ -800,8 +883,7 @@ class BayutConnector(models.Model):
                 existing.with_context(skip_bayut_auto_sync=True).write(vals)
                 updated_count += 1
             else:
-                if getattr(prop, "state", "") in ("available", "vacant", "on_sale"):
-                    vals["state"] = "published"
+                # Always Draft: a listing is only "Published" once Bayut confirms it is live
                 ListingModel.with_context(skip_bayut_auto_sync=True).create(vals)
                 created_count += 1
 

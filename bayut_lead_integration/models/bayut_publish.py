@@ -313,7 +313,7 @@ class BayutListing(models.Model):
         token = cfg["listing_api_key"] or cfg["api_key"]
         if not token:
             raise UserError(_("Enter the Bayut Profolio API token in Settings first."))
-        done, failed = [], []
+        done, pending, failed = [], [], []
         for listing in self:
             if listing.bayut_external_id:
                 # Load Bayut's current amenities / photos / terms first: PUT replaces everything
@@ -356,25 +356,29 @@ class BayutListing(models.Model):
                     listing.message_post(body=_("Bayut publish failed: %s", reason))
             listing._bayut_refresh_one(connector, token)
             state_label = dict(listing._fields["state"].selection).get(listing.state)
-            if publish and listing.state != "published":
-                failed.append(_("%(ref)s was sent but is %(state)s: %(why)s",
-                                ref=listing.reference_number, state=state_label,
-                                why=listing.permit_status or _("Bayut has not made it live yet")))
+            if listing.state == "inactive":
+                failed.append(_("%(ref)s was refused by Bayut: %(why)s",
+                                ref=listing.reference_number,
+                                why=listing.permit_status or _("no reason given")))
+            elif listing.state == "pending":
+                pending.append(_("%(ref)s is on Bayut, waiting for Bayut's permit review (%(why)s). "
+                                 "It goes live automatically once approved.",
+                                 ref=listing.reference_number, why=listing.permit_status or "-"))
             else:
                 done.append(f"{listing.reference_number}: {state_label}")
             listing.message_post(body=_("Sent to Bayut (%(step)s). Bayut status: %(st)s",
                                         step=step, st=listing.bayut_portal_status or "-"))
-        msg = _("Bayut: %(ok)d listing(s) sent, %(ko)d failed.", ok=len(done), ko=len(failed))
-        if done:
-            msg += "\n" + "\n".join(done)
-        if failed:
-            msg += "\n" + _("Errors:") + "\n" + "\n".join(failed)
+        msg = _("Bayut: %(ok)d live, %(wait)d waiting for review, %(ko)d refused or failed.",
+                ok=len(done), wait=len(pending), ko=len(failed))
+        for lines in (done, pending, failed):
+            if lines:
+                msg += "\n" + "\n".join(lines)
         self._bayut_log("error" if failed else "success", msg)
+        notif = "danger" if failed else ("warning" if pending else "success")
         return {
             "type": "ir.actions.client",
             "tag": "display_notification",
-            "params": {"title": _("Bayut"), "message": msg,
-                       "type": "danger" if failed else "success", "sticky": bool(failed)},
+            "params": {"title": _("Bayut"), "message": msg, "type": notif, "sticky": notif != "success"},
         }
 
     # ------------------------------------------------------------------

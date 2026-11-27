@@ -634,10 +634,11 @@ class BayutConnector(models.Model):
         user typed in Odoo is never overwritten by a refresh (it is what the next update sends)."""
         portals, state = self._bayut_portal_states(prop)
         portal_state = portals.get(ACTIVE_PORTAL)
+        bayut_comment = (prop.get("comment") or "").strip()    # Bayut's rejection reason, e.g. "Invalid Permit Number"
         if state != "published" and portal_state:
-            # inactive = Bayut refused / deactivated it (duplicate permit, permit mismatch...);
-            # anything else (draft, pending) = still being processed / permit validation
-            state = "inactive" if portal_state == "inactive" else "pending"
+            # inactive = Bayut refused / deactivated it (duplicate or invalid permit, mismatch...);
+            # anything else (draft, unpublished without a reason) = still under Bayut review
+            state = "inactive" if (portal_state == "inactive" or bayut_comment) else "pending"
         portal_text = ", ".join(f"{k}: {v}" for k, v in sorted(portals.items())) or "-"
         permit = prop.get("permit") or {}
         vals = {
@@ -645,7 +646,8 @@ class BayutConnector(models.Model):
             "state": state,
             "active": True,
             "bayut_portal_status": portal_text,
-            "permit_status": " - ".join(x for x in (permit.get("status"), permit.get("comment")) if x) or False,
+            "permit_status": " - ".join(
+                x for x in (bayut_comment, permit.get("status"), permit.get("comment")) if x) or False,
             "verification_state": prop.get("verification_state") or False,
             "last_bayut_sync": fields.Datetime.now(),
             "last_sync_message": _("Bayut status: %(portals)s. Permit: %(permit)s",

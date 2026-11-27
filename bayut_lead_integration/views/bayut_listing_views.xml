@@ -24,8 +24,11 @@
                     <t t-name="card">
                         <div class="d-flex justify-content-between align-items-start mb-1">
                             <span class="badge rounded-pill text-bg-secondary" t-esc="record.reference_number.value"/>
-                            <field name="state" widget="label_selection"
-                                   options="{'classes': {'draft': 'secondary', 'published': 'success', 'unpublished': 'warning', 'error': 'danger'}}"/>
+                            <div class="d-flex align-items-center gap-1 small" name="status_badges">
+                                <span class="text-muted">Bayut</span>
+                                <field name="state" widget="label_selection"
+                                       options="{'classes': {'draft': 'secondary', 'published': 'success', 'pending': 'info', 'unpublished': 'warning', 'inactive': 'danger', 'error': 'danger'}}"/>
+                            </div>
                         </div>
                         <div class="fw-bold fs-6 text-truncate mb-1">
                             <field name="name"/>

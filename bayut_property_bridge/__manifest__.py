@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     "name": "Bayut ↔ Property Management Bridge",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "category": "Sales/CRM",
     "summary": "Links Bayut listings to Property Management units: the property is the master "
                "record for unit data, the Bayut listing is its marketing layer.",

@@ -31,8 +31,8 @@
                            options="{'no_create': True}"/>
                 </div>
                 <div class="text-muted small mt-1" invisible="not property_id">
-                    Unit data (purpose, type, rooms, parking, furnishing) comes from the property.
-                    Price and size are edited here.
+                    Purpose, type, bedrooms (from the Residential Type) and furnishing come from the property.
+                    Price, size, bathrooms and parking are edited here.
                     Edit it there; it syncs here instantly.
                 </div>
                 <field name="unit_status_alert" invisible="1"/>
@@ -51,12 +51,6 @@
             <xpath expr="//field[@name='bedrooms']" position="attributes">
                 <attribute name="readonly">property_id</attribute>
             </xpath>
-            <xpath expr="//field[@name='bathrooms']" position="attributes">
-                <attribute name="readonly">property_id</attribute>
-            </xpath>
-            <xpath expr="//field[@name='parking_spaces']" position="attributes">
-                <attribute name="readonly">property_id</attribute>
-            </xpath>
             <xpath expr="//field[@name='furnished']" position="attributes">
                 <attribute name="readonly">property_id</attribute>
             </xpath>
@@ -73,10 +67,30 @@
         <field name="arch" type="xml">
             <xpath expr="//field[@name='name']" position="after">
                 <field name="property_id" optional="show"/>
-                <field name="property_state" optional="show" widget="badge"/>
+            </xpath>
+            <!-- Bayut status and Unit status side by side -->
+            <xpath expr="//field[@name='state']" position="after">
+                <field name="property_state" string="Unit Status" widget="badge"
+                       decoration-success="property_state in ('available', 'vacant', 'on_sale')"
+                       decoration-danger="property_state in ('on_rent', 'rent', 'sold')"
+                       decoration-muted="property_state == 'draft'"/>
                 <field name="unit_status_alert" optional="show" widget="badge"
                        decoration-danger="unit_status_alert == 'unpublish'"
                        decoration-warning="unit_status_alert == 'relist'"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="bayut_listing_view_kanban_bridge" model="ir.ui.view">
+        <field name="name">bayut.listing.view.kanban.bridge</field>
+        <field name="model">bayut.listing</field>
+        <field name="inherit_id" ref="bayut_lead_integration.bayut_listing_view_kanban"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@name='status_badges']" position="inside">
+                <span class="text-muted ms-2" invisible="not property_id">Unit</span>
+                <field name="property_id" invisible="1"/>
+                <field name="property_state" widget="label_selection" invisible="not property_id"
+                       options="{'classes': {'draft': 'secondary', 'available': 'success', 'vacant': 'success', 'on_sale': 'success', 'on_rent': 'danger', 'rent': 'danger', 'sold': 'danger'}}"/>
             </xpath>
         </field>
     </record>

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import logging
+import re
 
 from odoo import api, fields, models, _
 
@@ -11,8 +12,7 @@ VACANT_STATES = ("available", "vacant", "on_sale")
 
 # property.detail fields whose change must refresh the linked listing
 PROPERTY_SYNC_TRIGGERS = {
-    "property_for", "property_type", "residential_type_id", "bedrooms", "bathrooms",
-    "parking", "furnishing",
+    "property_for", "property_type", "residential_type_id", "bedrooms", "bathrooms", "furnishing",
 }
 
 FURNISHING_MAP = {
@@ -71,15 +71,29 @@ class PropertyDetail(models.Model):
     def _bayut_unit_vals(self):
         """Unit data the property owns (always overwritten on the listing)."""
         self.ensure_one()
-        return {
+        vals = {
             "purpose": "for-sale" if self.property_for == "sale" else "for-rent",
             "category": "commercial" if self.property_type == "commercial" else "residential",
             "property_type": self._bayut_property_type(),
-            "bedrooms": str(min(max(int(self.bedrooms or 0), 0), 7)),
-            "bathrooms": int(self.bathrooms or 0),
-            "parking_spaces": int(self.parking or 0),
+            "bedrooms": self._bayut_bedrooms(),
             "furnished": FURNISHING_MAP.get(self.furnishing or "unfurnished", "unfurnished"),
         }
+        # Bathrooms are hidden on the property form (Studio) -> only sync a real value
+        if self.bathrooms:
+            vals["bathrooms"] = int(self.bathrooms)
+        return vals
+
+    def _bayut_bedrooms(self):
+        """Bedrooms field is hidden by Studio here; the count lives in the Residential Type
+        name ("STUDIO FLAT", "1 BED ROOM FLAT", "2 BED ROOM FLAT"...)."""
+        self.ensure_one()
+        if self.bedrooms:
+            return str(min(int(self.bedrooms), 7))
+        res_type = (self.residential_type or "").lower()
+        if "studio" in res_type:
+            return "0"
+        match = re.search(r"(\d+)\s*(?:bed|br\b|bhk)", res_type)
+        return str(min(int(match.group(1)), 7)) if match else "1"
 
     def _bayut_initial_vals(self):
         """Marketing / location defaults, only used when the listing is created."""

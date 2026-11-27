@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="property_detail_form_view_bayut" model="ir.ui.view">
+        <field name="name">property.detail.form.bayut</field>
+        <field name="model">property.detail</field>
+        <field name="inherit_id" ref="eg_property_management.property_detail_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <button name="action_bayut_listing" type="object" string="Create Bayut Listing"
+                        icon="fa-bullhorn" class="btn-secondary"
+                        invisible="bayut_listing_count > 0 or state in ['draft','on_rent','rent','sold']"/>
+            </xpath>
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_bayut_listing" type="object" class="oe_stat_button"
+                        icon="fa-bullhorn" invisible="bayut_listing_count == 0">
+                    <div class="o_stat_info">
+                        <span class="o_stat_text">Bayut Listing</span>
+                    </div>
+                    <field name="bayut_listing_count" invisible="1"/>
+                </button>
+            </xpath>
+        </field>
+    </record>
+</odoo>

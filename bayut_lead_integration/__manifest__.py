@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     "name": "Bayut Lead & Listing Integration",
-    "version": "1.0.5",
+    "version": "1.0.6",
     "category": "Sales/CRM",
     "summary": "Bayut / dubizzle Profolio: real-time leads into Odoo CRM and live listing status from Bayut",
     "description": """

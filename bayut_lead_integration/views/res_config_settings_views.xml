@@ -92,6 +92,10 @@
                              help="Default Sales Team, Salesperson, and cron interval for imported Bayut leads.">
                         <div class="content-group">
                             <div class="row mt16">
+                                <label for="bayut_company_id" class="col-lg-4 o_light_label"/>
+                                <field name="bayut_company_id" options="{'no_create': True}"/>
+                            </div>
+                            <div class="row mt8">
                                 <label for="bayut_default_team_id" class="col-lg-4 o_light_label"/>
                                 <field name="bayut_default_team_id"/>
                             </div>

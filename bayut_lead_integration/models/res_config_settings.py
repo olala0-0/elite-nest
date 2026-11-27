@@ -58,6 +58,13 @@ class ResConfigSettings(models.TransientModel):
         domain=[("share", "=", False)],
         help="Salesperson automatically assigned to newly imported Bayut leads.",
     )
+    bayut_company_id = fields.Many2one(
+        comodel_name="res.company",
+        string="Bayut Company",
+        config_parameter="bayut_lead_integration.bayut_company_id",
+        help="Company that owns imported Bayut leads. Saving moves existing Bayut leads "
+             "to this company as well.",
+    )
     bayut_sync_interval = fields.Integer(
         string="Sync Interval (Minutes)",
         default=10,
@@ -131,6 +138,8 @@ class ResConfigSettings(models.TransientModel):
             "default_user_id": self.bayut_default_user_id.id or False,
             "sync_interval": interval,
         })
+        if self.bayut_company_id:
+            self.env["bayut.connector"].sudo()._bayut_move_leads_to_company(self.bayut_company_id)
 
     def action_bayut_test_connection(self):
         """Save current settings and test the Bayut API connection."""

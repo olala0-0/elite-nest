@@ -85,7 +85,7 @@
                        decoration-success="state == 'published'"
                        decoration-info="state in ('draft', 'pending')"
                        decoration-warning="state == 'unpublished'"
-                       decoration-danger="state == 'error'"/>
+                       decoration-danger="state in ('error', 'inactive')"/>
             </list>
         </field>
     </record>
@@ -120,7 +120,7 @@
                             type="object"
                             class="btn-secondary"
                             icon="fa-eye-slash"
-                            invisible="state not in ('published', 'pending') or not bayut_external_id"
+                            invisible="state not in ('published', 'pending', 'inactive') or not bayut_external_id"
                             confirm="This removes the listing from Bayut. Its views, lead statistics and history on Bayut will be lost, and publishing it again creates a new listing (permit validation may be needed again). Continue?"/>
                     <button name="action_set_draft"
                             string="Reset to Draft"
@@ -136,6 +136,11 @@
                                 icon="fa-star">
                             <field name="lead_count" widget="statinfo" string="Bayut Leads"/>
                         </button>
+                    </div>
+                    <div class="alert alert-danger" role="alert" invisible="state != 'inactive'">
+                        <strong>Not live on Bayut.</strong> Bayut keeps this listing inactive.
+                        Reason from Bayut: <field name="permit_status" readonly="1" class="d-inline"/>.
+                        Check that the permit is not used by another listing and that price and size match the DLD permit.
                     </div>
                     <field name="image_1920" widget="image" class="oe_avatar"/>
                     <div class="oe_title">
@@ -259,6 +264,7 @@
                 <filter string="Published on Bayut" name="published" domain="[('state', '=', 'published')]"/>
                 <filter string="Draft" name="draft" domain="[('state', '=', 'draft')]"/>
                 <filter string="Pending on Bayut" name="pending" domain="[('state', '=', 'pending')]"/>
+                <filter string="Inactive on Bayut" name="inactive" domain="[('state', '=', 'inactive')]"/>
                 <filter string="Unpublished" name="unpublished" domain="[('state', '=', 'unpublished')]"/>
                 <separator/>
                 <filter string="For Rent" name="for_rent" domain="[('purpose', '=', 'for-rent')]"/>

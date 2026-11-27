@@ -131,8 +131,8 @@ class BayutListing(models.Model):
     _inherit = "bayut.listing"
 
     state = fields.Selection(
-        selection_add=[("pending", "Pending on Bayut")],
-        ondelete={"pending": "set default"},
+        selection_add=[("pending", "Pending on Bayut"), ("inactive", "Inactive on Bayut")],
+        ondelete={"pending": "set default", "inactive": "set default"},
     )
     bayut_location = fields.Many2one(
         "bayut.location", string="Bayut Location",
@@ -217,8 +217,20 @@ class BayutListing(models.Model):
             problems.append(_("Property type"))
         if not self._bayut_images_payload():
             problems.append(_("At least one photo"))
-        if not (self.permit_number or "").strip():
+        permit = (self.permit_number or "").strip()
+        if not permit:
             problems.append(_("DLD / RERA permit number"))
+        else:
+            # One DLD permit = one unit = one live listing on Bayut
+            other = self.sudo().with_context(active_test=False).search([
+                ("permit_number", "=", permit), ("id", "!=", self.id),
+                ("state", "in", ("published", "pending")),
+            ], limit=1)
+            if other:
+                problems.append(_(
+                    "Permit %(permit)s is already used by listing %(ref)s, which is live or pending on Bayut. "
+                    "Each permit can only be advertised once",
+                    permit=permit, ref=other.reference_number))
         return problems
 
     def _bayut_property_payload(self, user_fields):
@@ -343,7 +355,13 @@ class BayutListing(models.Model):
                     failed.append(f"{listing.reference_number} (publish): {reason}")
                     listing.message_post(body=_("Bayut publish failed: %s", reason))
             listing._bayut_refresh_one(connector, token)
-            done.append(f"{listing.reference_number}: {dict(listing._fields['state'].selection).get(listing.state)}")
+            state_label = dict(listing._fields["state"].selection).get(listing.state)
+            if publish and listing.state != "published":
+                failed.append(_("%(ref)s was sent but is %(state)s: %(why)s",
+                                ref=listing.reference_number, state=state_label,
+                                why=listing.permit_status or _("Bayut has not made it live yet")))
+            else:
+                done.append(f"{listing.reference_number}: {state_label}")
             listing.message_post(body=_("Sent to Bayut (%(step)s). Bayut status: %(st)s",
                                         step=step, st=listing.bayut_portal_status or "-"))
         msg = _("Bayut: %(ok)d listing(s) sent, %(ko)d failed.", ok=len(done), ko=len(failed))

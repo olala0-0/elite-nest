@@ -630,8 +630,11 @@ class BayutConnector(models.Model):
     def _bayut_status_vals(self, prop):
         """Odoo listing values that mirror Bayut's view of a property (status, permit, location)."""
         portals, state = self._bayut_portal_states(prop)
-        if state != "published" and ACTIVE_PORTAL in portals:
-            state = "pending"      # on Bayut but not live yet (draft / permit validation)
+        portal_state = portals.get(ACTIVE_PORTAL)
+        if state != "published" and portal_state:
+            # inactive = Bayut refused / deactivated it (duplicate permit, permit mismatch...);
+            # anything else (draft, pending) = still being processed / permit validation
+            state = "inactive" if portal_state == "inactive" else "pending"
         portal_text = ", ".join(f"{k}: {v}" for k, v in sorted(portals.items())) or "-"
         permit = prop.get("permit") or {}
         vals = {
@@ -642,7 +645,9 @@ class BayutConnector(models.Model):
             "permit_status": " - ".join(x for x in (permit.get("status"), permit.get("comment")) if x) or False,
             "verification_state": prop.get("verification_state") or False,
             "last_bayut_sync": fields.Datetime.now(),
-            "last_sync_message": _("Bayut status: %s", portal_text),
+            "last_sync_message": _("Bayut status: %(portals)s. Permit: %(permit)s",
+                                   portals=portal_text,
+                                   permit=" - ".join(x for x in (permit.get("status"), permit.get("comment")) if x) or "-"),
         }
         if (permit.get("number") or "").strip():
             vals["permit_number"] = permit["number"].strip()

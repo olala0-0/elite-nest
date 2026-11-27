@@ -15,6 +15,7 @@ _logger = logging.getLogger(__name__)
 # The Profolio API token is NEVER stored in code: it lives only in Settings
 # (ir.config_parameter bayut_lead_integration.bayut_api_key / bayut_listing_api_key).
 BAYUT_API_BASE = "https://api.bayut.com/v1"
+ACTIVE_PORTAL = "bayut"       # listings scope: Bayut only for now (dubizzle later)
 DEFAULT_LEADS_API_URL = BAYUT_API_BASE + "/leads"
 DEFAULT_LISTING_API_URL = BAYUT_API_BASE + "/properties"
 OLD_LISTING_API_URLS = ("https://api.bayut.com/v1/listings",)
@@ -613,12 +614,15 @@ class BayutConnector(models.Model):
 
     @api.model
     def _bayut_portal_states(self, prop):
-        """-> ({'bayut': 'active', 'dubizzle': 'active'}, 'published'|'unpublished')"""
+        """-> ({'bayut': 'active', 'dubizzle': 'active'}, 'published'|'unpublished')
+
+        Scope is Bayut only for now: "published" means live on the Bayut portal.
+        Other portals (dubizzle) are reported for information only."""
         states = {}
         for portal in prop.get("portals") or []:
             if isinstance(portal, dict) and portal.get("name"):
                 states[portal["name"]] = portal.get("state") or ""
-        live = any(s == "active" for s in states.values())
+        live = states.get(ACTIVE_PORTAL) == "active"
         return states, ("published" if live else "unpublished")
 
     @api.model

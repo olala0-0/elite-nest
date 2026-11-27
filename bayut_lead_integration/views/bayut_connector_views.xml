@@ -12,7 +12,7 @@
                             class="btn-secondary"
                             icon="fa-plug"/>
                     <button name="action_sync_listings_now"
-                            string="Sync Listings to Bayut"
+                            string="Refresh from Bayut"
                             type="object"
                             class="btn-primary"
                             icon="fa-cloud-upload"/>

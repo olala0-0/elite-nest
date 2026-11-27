@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from odoo import fields, models, _
-from .bayut_connector import DEFAULT_BAYUT_TOKEN, DEFAULT_LEADS_API_URL, DEFAULT_LISTING_API_URL
+from .bayut_connector import DEFAULT_LEADS_API_URL, DEFAULT_LISTING_API_URL
 
 
 class ResConfigSettings(models.TransientModel):
@@ -14,7 +14,6 @@ class ResConfigSettings(models.TransientModel):
     )
     bayut_api_key = fields.Char(
         string="Bayut Leads API Key",
-        default=DEFAULT_BAYUT_TOKEN,
         config_parameter="bayut_lead_integration.bayut_api_key",
         help="Bearer API token provided by Bayut Support.",
     )
@@ -26,7 +25,6 @@ class ResConfigSettings(models.TransientModel):
     )
     bayut_listing_api_key = fields.Char(
         string="Bayut Listing API Key",
-        default=DEFAULT_BAYUT_TOKEN,
         config_parameter="bayut_lead_integration.bayut_listing_api_key",
         help="Listing API Bearer token provided by the Bayut team.",
     )
@@ -126,9 +124,9 @@ class ResConfigSettings(models.TransientModel):
         connector = self.env["bayut.connector"].sudo()._get_connector()
         connector.with_context(skip_param_sync=True).write({
             "api_url": self.bayut_api_url or DEFAULT_LEADS_API_URL,
-            "api_key": self.bayut_api_key or DEFAULT_BAYUT_TOKEN,
+            "api_key": self.bayut_api_key or "",
             "listing_api_url": self.bayut_listing_api_url or DEFAULT_LISTING_API_URL,
-            "listing_api_key": self.bayut_listing_api_key or DEFAULT_BAYUT_TOKEN,
+            "listing_api_key": self.bayut_listing_api_key or "",
             "default_team_id": self.bayut_default_team_id.id or False,
             "default_user_id": self.bayut_default_user_id.id or False,
             "sync_interval": interval,

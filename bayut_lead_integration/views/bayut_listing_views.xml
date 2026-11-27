@@ -24,8 +24,11 @@
                     <t t-name="card">
                         <div class="d-flex justify-content-between align-items-start mb-1">
                             <span class="badge rounded-pill text-bg-secondary" t-esc="record.reference_number.value"/>
-                            <field name="state" widget="label_selection"
-                                   options="{'classes': {'draft': 'secondary', 'published': 'success', 'unpublished': 'warning', 'error': 'danger'}}"/>
+                            <div class="d-flex align-items-center gap-1 small" name="status_badges">
+                                <span class="text-muted">Bayut</span>
+                                <field name="state" widget="label_selection"
+                                       options="{'classes': {'draft': 'secondary', 'published': 'success', 'pending': 'info', 'unpublished': 'warning', 'inactive': 'danger', 'error': 'danger'}}"/>
+                            </div>
                         </div>
                         <div class="fw-bold fs-6 text-truncate mb-1">
                             <field name="name"/>
@@ -83,9 +86,9 @@
                 <field name="last_bayut_sync" optional="show"/>
                 <field name="state" widget="badge"
                        decoration-success="state == 'published'"
-                       decoration-info="state == 'draft'"
+                       decoration-info="state in ('draft', 'pending')"
                        decoration-warning="state == 'unpublished'"
-                       decoration-danger="state == 'error'"/>
+                       decoration-danger="state in ('error', 'inactive')"/>
             </list>
         </field>
     </record>
@@ -98,28 +101,34 @@
             <form string="Bayut Property Listing">
                 <header>
                     <button name="action_publish_to_bayut"
-                            string="Publish to Bayut Profolio"
+                            string="Publish to Bayut"
                             type="object"
                             class="btn-primary"
                             icon="fa-cloud-upload"
                             invisible="state == 'published'"/>
                     <button name="action_update_on_bayut"
-                            string="Push Update to Bayut"
+                            string="Update on Bayut"
                             type="object"
                             class="btn-primary"
                             icon="fa-refresh"
-                            invisible="state != 'published'"/>
+                            invisible="not bayut_external_id"
+                            confirm="Send all details of this listing to Bayut now? Bayut replaces its current version with this one."/>
+                    <button name="action_refresh_from_bayut"
+                            string="Refresh Status"
+                            type="object"
+                            icon="fa-cloud-download"
+                            invisible="not bayut_external_id"/>
                     <button name="action_unpublish_from_bayut"
                             string="Unpublish from Bayut"
                             type="object"
                             class="btn-secondary"
                             icon="fa-eye-slash"
-                            invisible="state != 'published'"/>
+                            invisible="state not in ('published', 'pending', 'inactive') or not bayut_external_id"/>
                     <button name="action_set_draft"
                             string="Reset to Draft"
                             type="object"
-                            invisible="state == 'draft'"/>
-                    <field name="state" widget="statusbar" statusbar_visible="draft,published,unpublished"/>
+                            invisible="state in ('draft', 'published', 'pending')"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,pending,published,unpublished"/>
                 </header>
                 <sheet>
                     <div class="oe_button_box" name="button_box">
@@ -129,6 +138,11 @@
                                 icon="fa-star">
                             <field name="lead_count" widget="statinfo" string="Bayut Leads"/>
                         </button>
+                    </div>
+                    <div class="alert alert-danger" role="alert" invisible="state != 'inactive'">
+                        <strong>Not live on Bayut.</strong> Bayut keeps this listing inactive.
+                        Reason from Bayut: <field name="permit_status" readonly="1" class="d-inline"/>.
+                        Check that the permit is not used by another listing and that price and size match the DLD permit.
                     </div>
                     <field name="image_1920" widget="image" class="oe_avatar"/>
                     <div class="oe_title">
@@ -152,6 +166,7 @@
                             <field name="rent_frequency" invisible="purpose != 'for-rent'"/>
                             <field name="permit_number" placeholder="e.g. 71123456789"/>
                             <field name="completion_status"/>
+                            <field name="ownership_status"/>
                         </group>
                         <group string="Property Specifications">
                             <field name="bedrooms"/>
@@ -167,11 +182,13 @@
                         <page string="Location &amp; Building" name="location">
                             <group>
                                 <group string="Address &amp; Tower">
+                                    <field name="bayut_location" options="{'no_create': True}"
+                                           placeholder="Type 3+ letters, e.g. La Perla Blanca"/>
                                     <field name="city"/>
                                     <field name="community" placeholder="e.g. Business Bay"/>
                                     <field name="sub_community" placeholder="e.g. Executive Towers"/>
                                     <field name="building_name" placeholder="e.g. Executive Tower B"/>
-                                    <field name="bayut_location_id"/>
+                                    <field name="bayut_location_id" readonly="1"/>
                                 </group>
                                 <group string="Geo Coordinates">
                                     <field name="latitude"/>
@@ -203,7 +220,7 @@
                                     <field name="sequence" widget="handle"/>
                                     <field name="name"/>
                                     <field name="image" widget="image" options="{'size': [80, 60]}"/>
-                                    <field name="external_url" readonly="1"/>
+                                    <field name="remote_url" readonly="1" optional="show"/>
                                 </list>
                             </field>
                         </page>
@@ -219,6 +236,9 @@
                                 </group>
                                 <group string="Bayut Profolio Synchronization">
                                     <field name="bayut_external_id"/>
+                                    <field name="bayut_portal_status"/>
+                                    <field name="permit_status"/>
+                                    <field name="verification_state"/>
                                     <field name="source_property_ref"/>
                                     <field name="last_bayut_sync"/>
                                     <field name="last_sync_message"/>
@@ -245,6 +265,8 @@
                 <field name="permit_number"/>
                 <filter string="Published on Bayut" name="published" domain="[('state', '=', 'published')]"/>
                 <filter string="Draft" name="draft" domain="[('state', '=', 'draft')]"/>
+                <filter string="Pending on Bayut" name="pending" domain="[('state', '=', 'pending')]"/>
+                <filter string="Inactive on Bayut" name="inactive" domain="[('state', '=', 'inactive')]"/>
                 <filter string="Unpublished" name="unpublished" domain="[('state', '=', 'unpublished')]"/>
                 <separator/>
                 <filter string="For Rent" name="for_rent" domain="[('purpose', '=', 'for-rent')]"/>
@@ -272,6 +294,29 @@
             <p>
                 Manage your property listings, prices, photos, and DLD permits here, or import existing units from Odoo Properties in the <b>Connector Hub</b>.
             </p>
+        </field>
+    </record>
+
+    <!-- Unpublish confirmation: shows what is live / paid on each portal before removing -->
+    <record id="bayut_unpublish_wizard_view_form" model="ir.ui.view">
+        <field name="name">bayut.unpublish.wizard.form</field>
+        <field name="model">bayut.unpublish.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Unpublish from Bayut">
+                <field name="listing_id" invisible="1"/>
+                <p>
+                    You are about to remove listing <b><field name="reference" readonly="1" class="d-inline"/></b>
+                    from Bayut. This is what Bayut shows for it right now:
+                </p>
+                <field name="summary" readonly="1" nolabel="1"/>
+                <group>
+                    <field name="confirm_reference" placeholder="Type the reference shown above"/>
+                </group>
+                <footer>
+                    <button name="action_confirm" type="object" string="Remove from Bayut" class="btn-danger"/>
+                    <button string="Cancel" special="cancel" class="btn-secondary"/>
+                </footer>
+            </form>
         </field>
     </record>
 </odoo>

@@ -76,7 +76,7 @@
                 No Bayut synchronization logs recorded yet.
             </p>
             <p>
-                Use <b>Test Connection</b>, <b>Sync Leads Now</b>, or <b>Sync Listings Now</b> in the Connector Hub.
+                Use <b>Test Connection</b>, <b>Sync Leads Now</b>, or <b>Refresh from Bayut</b> in the Connector Hub.
             </p>
         </field>
     </record>

@@ -300,26 +300,8 @@ class BayutListing(models.Model):
                 vals["reference_number"] = seq
         return super().create(vals_list)
 
-    def write(self, vals):
-        res = super().write(vals)
-        # Automatically push updates to Bayut when a published listing's details are edited
-        sync_trigger_fields = {
-            "name", "title_ar", "permit_number", "purpose", "category", "property_type",
-            "price", "rent_frequency", "bedrooms", "bathrooms", "size_sqft", "furnished",
-            "city", "community", "sub_community", "building_name", "description_en",
-            "description_ar", "publish_on_bayut", "agent_name",
-            "agent_email", "agent_phone",
-        }
-        if not self.env.context.get("skip_bayut_auto_sync") and (sync_trigger_fields & set(vals.keys())):
-            published_listings = self.filtered(lambda l: l.state == "published")
-            if published_listings:
-                try:
-                    self.env["bayut.connector"].sudo().push_listings_to_bayut(
-                        published_listings, action="update"
-                    )
-                except Exception as exc:
-                    _logger.warning("Auto-sync to Bayut on listing write failed: %s", exc)
-        return res
+    # Saving a listing no longer pushes to Bayut automatically: the agent sends changes
+    # explicitly with "Update on Bayut" (see models/bayut_publish.py).
 
     def _to_bayut_dict(self):
         """Serialize this listing into the normalized dictionary used by both
@@ -375,56 +357,7 @@ class BayutListing(models.Model):
             "updated_at": (self.write_date or fields.Datetime.now()).strftime("%Y-%m-%d %H:%M:%S"),
         }
 
-    # =========================================================================
-    # USER ACTIONS ON LISTING FORM / LIST
-    # =========================================================================
-    def action_publish_to_bayut(self):
-        """Publish and push selected listing(s) to Bayut Profolio."""
-        connector = self.env["bayut.connector"].sudo()._get_connector()
-        result = connector.push_listings_to_bayut(self, action="publish")
-        notif_type = "success" if result.get("status") == "success" else "warning"
-        return {
-            "type": "ir.actions.client",
-            "tag": "display_notification",
-            "params": {
-                "title": _("Bayut Listing Sync"),
-                "message": result.get("message", ""),
-                "type": notif_type,
-                "sticky": notif_type != "success",
-            },
-        }
-
-    def action_update_on_bayut(self):
-        """Push updated details for selected listing(s) to Bayut Profolio."""
-        connector = self.env["bayut.connector"].sudo()._get_connector()
-        result = connector.push_listings_to_bayut(self, action="update")
-        notif_type = "success" if result.get("status") == "success" else "warning"
-        return {
-            "type": "ir.actions.client",
-            "tag": "display_notification",
-            "params": {
-                "title": _("Bayut Listing Update"),
-                "message": result.get("message", ""),
-                "type": notif_type,
-                "sticky": notif_type != "success",
-            },
-        }
-
-    def action_unpublish_from_bayut(self):
-        """Unpublish selected listing(s) from Bayut Profolio."""
-        connector = self.env["bayut.connector"].sudo()._get_connector()
-        result = connector.push_listings_to_bayut(self, action="unpublish")
-        notif_type = "success" if result.get("status") == "success" else "warning"
-        return {
-            "type": "ir.actions.client",
-            "tag": "display_notification",
-            "params": {
-                "title": _("Bayut Listing Unpublish"),
-                "message": result.get("message", ""),
-                "type": notif_type,
-                "sticky": False,
-            },
-        }
+    # Publish / Update / Unpublish / Refresh actions: see models/bayut_publish.py
 
     def action_set_draft(self):
         self.with_context(skip_bayut_auto_sync=True).write({"state": "draft"})

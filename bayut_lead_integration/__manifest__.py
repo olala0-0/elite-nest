@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     "name": "Bayut Lead & Listing Integration",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "category": "Sales/CRM",
     "summary": "Bayut / dubizzle Profolio: real-time leads into Odoo CRM and live listing status from Bayut",
     "description": """
@@ -10,8 +10,9 @@ Bayut Lead & Listing Integration
 * **Leads**: real-time Push API webhooks (Bayut + dubizzle, calls + WhatsApp, signed with
   X-Bayut-Signature / X-dubizzle-Signature) and a backup pull from ``GET /v1/leads``.
   Leads are de-duplicated and assigned to the matching agent / default sales team.
-* **Listings**: Odoo mirrors the real status of your Profolio listings (``GET /v1/properties``).
-  Publishing from Odoo is not connected yet; create and publish listings in Profolio.
+* **Listings**: publish, update and unpublish on Bayut from Odoo (``/v1/properties`` +
+  ``/products/attach``, Bayut portal only), with validation before sending, public photo links
+  and live location search. Odoo mirrors the real status of every Profolio listing.
 * **Honest logging**: Sync Logs show success only for real 2xx answers from Bayut.
 * The Profolio API token is entered in Settings; it is never shipped with the module.
     """,

@@ -49,6 +49,10 @@
                                 <label for="bayut_api_key" class="col-lg-3 o_light_label"/>
                                 <field name="bayut_api_key" password="True" placeholder="Enter Bayut Bearer API Key"/>
                             </div>
+                            <div class="row mt8">
+                                <label for="bayut_default_bayut_user_id" class="col-lg-3 o_light_label"/>
+                                <field name="bayut_default_bayut_user_id" placeholder="Filled by Test Connection, e.g. 2881310"/>
+                            </div>
                             <div class="mt16 text-muted">
                                 Real-time leads (Push API): send each URL to the portal, then paste the secret key they issue.
                             </div>

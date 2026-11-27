@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import hashlib
 import hmac
+import json
 import logging
 import re
 import time
@@ -626,6 +627,57 @@ class BayutConnector(models.Model):
         return states, ("published" if live else "unpublished")
 
     @api.model
+    def _bayut_status_vals(self, prop):
+        """Odoo listing values that mirror Bayut's view of a property (status, permit, location)."""
+        portals, state = self._bayut_portal_states(prop)
+        if state != "published" and ACTIVE_PORTAL in portals:
+            state = "pending"      # on Bayut but not live yet (draft / permit validation)
+        portal_text = ", ".join(f"{k}: {v}" for k, v in sorted(portals.items())) or "-"
+        permit = prop.get("permit") or {}
+        vals = {
+            "bayut_external_id": str(prop.get("id")),
+            "state": state,
+            "active": True,
+            "bayut_portal_status": portal_text,
+            "permit_status": " - ".join(x for x in (permit.get("status"), permit.get("comment")) if x) or False,
+            "verification_state": prop.get("verification_state") or False,
+            "last_bayut_sync": fields.Datetime.now(),
+            "last_sync_message": _("Bayut status: %s", portal_text),
+        }
+        if (permit.get("number") or "").strip():
+            vals["permit_number"] = permit["number"].strip()
+        # Details Odoo does not edit but must send back on update (Bayut PUT replaces everything)
+        rental = prop.get("rental_details") if isinstance(prop.get("rental_details"), dict) else {}
+        vals["bayut_extra_json"] = json.dumps({
+            "amenities": [{"id": str(a.get("id")), "value": str(a.get("value") if a.get("value") is not None else "true")}
+                          for a in (prop.get("amenities") or []) if isinstance(a, dict) and a.get("id")],
+            "rental_details": {k: rental.get(k) for k in (
+                "occupancy_status", "rent_frequency", "minimum_contract_period", "vacating_notice_period",
+                "maintenance_fee", "maintenance_fee_paid_by") if rental.get(k) not in (None, "", 0)},
+            "furnishing_status": prop.get("furnishing_status"),
+        })
+        location = self.env["bayut.location"]._upsert_from_bayut(prop.get("location") or {})
+        if location:
+            vals["bayut_location"] = location.id
+            vals["bayut_location_id"] = str(location.bayut_id)
+        return vals
+
+    @api.model
+    def _bayut_import_images(self, listing, prop):
+        """Keep Bayut-hosted photos on listings that have none in Odoo, so an update from
+        Odoo (which must resend every field) never wipes the photos on Bayut."""
+        if listing.image_ids or listing.image_1920:
+            return
+        vals = []
+        for seq, img in enumerate(prop.get("images") or []):
+            url = img.get("url") or img.get("path") if isinstance(img, dict) else None
+            if url:
+                vals.append((0, 0, {"sequence": seq if not img.get("is_main") else -1,
+                                    "name": img.get("title") or False, "remote_url": url}))
+        if vals:
+            listing.with_context(skip_bayut_auto_sync=True).write({"image_ids": vals})
+
+    @api.model
     def _odoo_vals_from_bayut(self, prop):
         """Listing values for a Bayut property that has no Odoo listing yet."""
         t = self._bayut_text
@@ -662,6 +714,8 @@ class BayutConnector(models.Model):
             "bayut_location_id": str(location.get("id") or ""),
             "description_en": t(prop.get("description")),
             "title_ar": ((prop.get("title") or {}).get("ar") or "") if isinstance(prop.get("title"), dict) else "",
+            "description_ar": ((prop.get("description") or {}).get("ar") or "")
+            if isinstance(prop.get("description"), dict) else "",
         }
 
     @api.model
@@ -710,8 +764,6 @@ class BayutConnector(models.Model):
                 continue
             seen_ids.add(bayut_id)
             permit = ((prop.get("permit") or {}).get("number") or "").strip()
-            portals, state = self._bayut_portal_states(prop)
-            portal_text = ", ".join(f"{k}: {v}" for k, v in sorted(portals.items())) or "-"
 
             listing = Listing.search([("bayut_external_id", "=", bayut_id)], limit=1)
             if not listing and permit:
@@ -719,24 +771,18 @@ class BayutConnector(models.Model):
             if not listing and prop.get("reference"):
                 listing = Listing.search([("reference_number", "=", prop["reference"])], limit=1)
 
-            sync_vals = {
-                "bayut_external_id": bayut_id,
-                "state": state,
-                "active": True,
-                "last_bayut_sync": now,
-                "last_sync_message": _("Bayut status: %s", portal_text),
-            }
-            if permit:
-                sync_vals["permit_number"] = permit
+            sync_vals = self._bayut_status_vals(prop)
             if not listing:
-                Listing.create({**self._odoo_vals_from_bayut(prop), **sync_vals})
+                listing = Listing.create({**self._odoo_vals_from_bayut(prop), **sync_vals})
+                self._bayut_import_images(listing, prop)
                 created += 1
                 continue
             if not listing.bayut_external_id:
                 linked += 1
-            if listing.state != state or listing.bayut_external_id != bayut_id:
+            if listing.state != sync_vals["state"] or listing.bayut_external_id != bayut_id:
                 changed += 1
             listing.write(sync_vals)
+            self._bayut_import_images(listing, prop)
 
         # Listings Odoo believed were live but that are not on Bayut
         stale = Listing.search([("state", "=", "published"), "|",
@@ -1023,6 +1069,9 @@ class BayutConnector(models.Model):
         )
         if ok:
             users = body.get("data") or [] if isinstance(body, dict) else []
+            params = self.env["ir.config_parameter"].sudo()
+            if len(users) == 1 and not params.get_param("bayut_lead_integration.bayut_default_bayut_user_id"):
+                params.set_param("bayut_lead_integration.bayut_default_bayut_user_id", str(users[0].get("id")))
             names = ", ".join(
                 f"{(u.get('name') or {}).get('en') or u.get('id')} (ID {u.get('id')})" for u in users[:5]
             )

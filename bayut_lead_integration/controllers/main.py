@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import hmac
 import json
 import logging
 import xml.etree.ElementTree as ET
@@ -7,8 +8,28 @@ from odoo import fields, http
 from odoo.http import request, Response
 
 from ..models.bayut_connector import PUSH_PORTALS
+from ..models.bayut_publish import _image_token
 
 _logger = logging.getLogger(__name__)
+
+PUBLIC_IMAGE_FIELDS = {"bayut.listing": "image_1920", "bayut.listing.image": "image"}
+
+
+class BayutImageController(http.Controller):
+    """Listing photos for Bayut: Bayut downloads images by URL, without an Odoo login.
+    Each URL carries a per-photo token derived from the database secret."""
+
+    @http.route("/bayut/image/<string:model>/<int:res_id>/<string:token>.jpg",
+                type="http", auth="public", methods=["GET"], save_session=False)
+    def bayut_listing_image(self, model, res_id, token, **kwargs):
+        field = PUBLIC_IMAGE_FIELDS.get(model)
+        if not field or not hmac.compare_digest(token, _image_token(request.env, model, res_id)):
+            return request.not_found()
+        record = request.env[model].sudo().browse(res_id).exists()
+        if not record or not record[field]:
+            return request.not_found()
+        stream = request.env["ir.binary"]._get_image_stream_from(record, field)
+        return stream.get_response(max_age=86400)
 
 
 class BayutIntegrationController(http.Controller):

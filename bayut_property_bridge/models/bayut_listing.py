@@ -75,8 +75,9 @@ class BayutListing(models.Model):
         self._bayut_clear_alert("relist")
         return res
 
-    def action_unpublish_from_bayut(self):
-        res = super().action_unpublish_from_bayut()
+    def _bayut_unpublish(self):
+        # Clear the "Unit occupied – unpublish" alert only once the removal is confirmed and done
+        res = super()._bayut_unpublish()
         self._bayut_clear_alert("unpublish")
         return res
 

@@ -10,6 +10,8 @@ import hmac
 import json
 import logging
 
+from markupsafe import Markup
+
 from odoo import api, fields, models, _
 from odoo.exceptions import UserError
 
@@ -393,8 +395,22 @@ class BayutListing(models.Model):
         return self._bayut_send(publish=False)
 
     def action_unpublish_from_bayut(self):
+        """Open the confirmation window: it shows what is live / paid on each portal first."""
+        self.ensure_one()
+        if not self.bayut_external_id:
+            raise UserError(_("This listing is not on Bayut."))
+        return {
+            "name": _("Unpublish from Bayut"),
+            "type": "ir.actions.act_window",
+            "res_model": "bayut.unpublish.wizard",
+            "view_mode": "form",
+            "target": "new",
+            "context": {"default_listing_id": self.id},
+        }
+
+    def _bayut_unpublish(self):
         """Remove the listing from the Bayut portal (Bayut has no 'deactivate', only delete).
-        The form button asks for confirmation first."""
+        Called only from the confirmation window."""
         connector = self.env["bayut.connector"].sudo()
         cfg = connector._get_config_settings()
         token = cfg["listing_api_key"] or cfg["api_key"]
@@ -429,6 +445,70 @@ class BayutListing(models.Model):
         for listing in self.filtered("bayut_external_id"):
             listing._bayut_refresh_one(connector, token)
         return True
+
+
+class BayutUnpublishWizard(models.TransientModel):
+    """Confirmation before removing a listing from Bayut: shows, live from Bayut, on which
+    portals the listing is live and which paid products would be affected."""
+    _name = "bayut.unpublish.wizard"
+    _description = "Unpublish from Bayut - confirmation"
+
+    listing_id = fields.Many2one("bayut.listing", required=True, readonly=True, ondelete="cascade")
+    reference = fields.Char(related="listing_id.reference_number", string="Reference")
+    summary = fields.Html(string="On Bayut now", readonly=True, sanitize=True)
+    confirm_reference = fields.Char(string="Type the reference to confirm")
+
+    @api.model
+    def default_get(self, fields_list):
+        res = super().default_get(fields_list)
+        listing = self.env["bayut.listing"].browse(res.get("listing_id") or self.env.context.get("default_listing_id"))
+        if listing:
+            res["summary"] = self._build_summary(listing)
+        return res
+
+    @api.model
+    def _build_summary(self, listing):
+        connector = self.env["bayut.connector"].sudo()
+        cfg = connector._get_config_settings()
+        token = cfg["listing_api_key"] or cfg["api_key"]
+        ok, status, body = connector._bayut_request(
+            "GET", f"{BAYUT_API_BASE}/properties/{listing.bayut_external_id}", token)
+        if not ok or not isinstance(body.get("data"), dict):
+            return Markup("<p class='text-danger'>%s</p>") % _(
+                "Could not read this listing from Bayut (%s). Check it in Profolio before removing it.",
+                connector._bayut_error_text(status, body))
+        rows = Markup()
+        paid_elsewhere = False
+        for portal in body["data"].get("portals") or []:
+            if not isinstance(portal, dict):
+                continue
+            products = [p for p in portal.get("ad_products") or [] if isinstance(p, dict)]
+            product_text = ", ".join(
+                f"{(p.get('alias') or {}).get('l1') or p.get('name')} (until {(p.get('expires_at') or '')[:10]})"
+                for p in products) or _("Standard listing")
+            if portal.get("name") != ACTIVE_PORTAL and portal.get("state") == "active":
+                paid_elsewhere = True
+            rows += Markup("<tr><td><b>%s</b></td><td>%s</td><td>%s</td></tr>") % (
+                (portal.get("name") or "").capitalize(), portal.get("state") or "-", product_text)
+        html = Markup(
+            "<table class='table table-sm'><thead><tr><th>%s</th><th>%s</th><th>%s</th></tr></thead>"
+            "<tbody>%s</tbody></table>"
+        ) % (_("Portal"), _("Status"), _("Paid product"), rows or Markup("<tr><td colspan='3'>-</td></tr>"))
+        html += Markup("<p>%s</p>") % _(
+            "Removing deletes this listing from Bayut: its views, lead statistics and history on Bayut are lost, "
+            "and paid products on Bayut end. Publishing again creates a new listing and the permit may be "
+            "validated again.")
+        if paid_elsewhere:
+            html += Markup("<p class='text-danger'><b>%s</b></p>") % _(
+                "This listing is also live on another portal (see above). Bayut has not yet confirmed that "
+                "removing it from Bayut keeps it there. If unsure, remove it in Profolio instead.")
+        return html
+
+    def action_confirm(self):
+        self.ensure_one()
+        if (self.confirm_reference or "").strip() != (self.listing_id.reference_number or "").strip():
+            raise UserError(_("Type the reference %s exactly to confirm.", self.listing_id.reference_number))
+        return self.listing_id._bayut_unpublish()
 
 
 class ResConfigSettings(models.TransientModel):

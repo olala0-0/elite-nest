@@ -4,3 +4,4 @@ access_bayut_sync_log_user,bayut.sync.log.user,model_bayut_sync_log,group_bayut_
 access_bayut_listing_user,bayut.listing.user,model_bayut_listing,group_bayut_user,1,1,1,1
 access_bayut_listing_image_user,bayut.listing.image.user,model_bayut_listing_image,group_bayut_user,1,1,1,1
 access_bayut_location_user,bayut.location.user,model_bayut_location,group_bayut_user,1,1,1,1
+access_bayut_unpublish_wizard_user,bayut.unpublish.wizard.user,model_bayut_unpublish_wizard,group_bayut_user,1,1,1,1

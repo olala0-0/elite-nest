@@ -354,6 +354,8 @@ class BayutListing(models.Model):
                     reason = connector._bayut_error_text(status, body)
                     failed.append(f"{listing.reference_number} (publish): {reason}")
                     listing.message_post(body=_("Bayut publish failed: %s", reason))
+                    listing._bayut_refresh_one(connector, token)
+                    continue      # already reported once; don't count the same listing twice
             listing._bayut_refresh_one(connector, token)
             state_label = dict(listing._fields["state"].selection).get(listing.state)
             if listing.state == "inactive":
